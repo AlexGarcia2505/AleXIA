@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V48 - Traductor y Docencia</title>
+    <title>AleXIA V49 - Cerebro Flexible</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
     
     <style>
-        /* --- ESTILOS VISUALES --- */
+        /* --- ESTILOS VISUALES (Mantenemos el diseño V48 que ya funcionaba bien) --- */
         :root {
             --bg-body: #131314; --bg-sidebar: #1e1f20; --bg-input: #282a2c;
             --text-main: #e3e3e3; --text-muted: #c4c7c5;
@@ -40,7 +40,6 @@
         .new-chat-btn { background: #282a2c; color: var(--text-muted); border: none; padding: 10px; width: 90%; margin: 0 auto; display:flex; align-items:center; gap:10px; border-radius: 20px; cursor: pointer; transition: 0.2s; }
         .new-chat-btn:hover { background: #333; color: white; }
 
-        /* HISTORIAL */
         .history-list { flex: 1; overflow-y: auto; padding: 10px; margin-top: 10px; }
         .chat-item {
             padding: 10px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
@@ -67,7 +66,6 @@
         .msg-row.user-row { justify-content: flex-end; }
         .msg-icon { width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #4285f4, #9b72cb); color: white; flex-shrink: 0; position: relative; }
         
-        /* BURBUJAS */
         .msg-bubble { 
             max-width: 85%; 
             line-height: 1.6; 
@@ -77,7 +75,6 @@
         }
         .user-row .msg-bubble { background: var(--user-msg); padding: 10px 18px; border-radius: 20px 20px 4px 20px; }
         
-        /* CONTENEDOR IA */
         .ai-row .msg-bubble { 
             background: transparent; 
             padding: 0 10px;
@@ -107,12 +104,10 @@
         .rich-source a { color: var(--accent); text-decoration: none; display: flex; align-items: center; gap: 10px; padding: 5px 0; }
         .rich-source a:hover { text-decoration: underline; }
 
-        /* SUGERENCIAS A, B, C */
         .suggestion-prompt { margin-top: 25px; font-weight: 500; color: var(--accent); display: block; margin-bottom: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
         .suggestion-item { display: block; margin-top: 12px; padding: 8px 12px; border-radius: 8px; background: rgba(255,255,255,0.03); font-size: 0.95rem; cursor: pointer; transition: all 0.2s; line-height: 1.5; border: 1px solid transparent; white-space: normal; }
         .suggestion-item:hover { background: rgba(168, 199, 250, 0.1); border-color: var(--accent); color: white; }
 
-        /* BOTONES DE FEEDBACK (Enseñar) */
         .feedback-area { margin-top: 15px; display: flex; gap: 10px; }
         .feedback-btn {
             background: rgba(255,255,255,0.05); border: 1px solid #444; color: #ccc;
@@ -122,7 +117,6 @@
         .feedback-btn:hover { background: var(--accent); color: black; border-color: var(--accent); }
         .feedback-btn.bad:hover { background: var(--danger); color: white; border-color: var(--danger); }
 
-        /* --- CORRECCIÓN BOTÓN DE AUDIO MOVIDO A LA IZQUIERDA --- */
         .tts-btn {
             background: rgba(255,255,255,0.08); border: 1px solid #444; color: var(--accent);
             width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
@@ -130,7 +124,7 @@
             font-size: 0.9rem;
             position: absolute;
             top: 0; 
-            right: 15px; /* MOVIDO 15px A LA IZQUIERDA */
+            right: 15px; 
             z-index: 10;
             transition: 0.2s;
         }
@@ -256,7 +250,8 @@
     const globalCities = ["Cancún", "Ciudad de México", "Madrid", "Tokio", "Nueva York", "Buenos Aires", "Londres", "París", "Monterrey", "Guadalajara", "Bogotá", "Lima", "Berlín", "Roma"];
 
     const slangMap = { "andas": "estas", "onda": "pasa", "hubo": "paso", "pex": "pasa", "pedo": "problema", "chido": "bueno", "padre": "bueno", "gwey": "amigo", "wey": "amigo", "camara": "adios", "simon": "si", "nelson": "no", "chale": "que mal", "neto": "verdad", "neta": "verdad", "jalo": "acepto", "sobres": "esta bien" };
-    const stopWords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'de', 'del', 'al', 'a', 'en', 'por', 'para', 'con', 'sin', 'que', 'como', 'cual', 'quien', 'es', 'son', 'fue', 'era', 'me', 'te', 'se', 'lo', 'mi', 'tu', 'su', 'nos', 'yo', 'tu', 'el', 'ella', 'dime', 'sobre', 'acerca', 'significa', 'busco']);
+    // --- CORRECCIÓN STOPWORDS: Agregamos "esta", "está", "como" para que no las defina por error ---
+    const stopWords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'de', 'del', 'al', 'a', 'en', 'por', 'para', 'con', 'sin', 'que', 'como', 'cual', 'quien', 'es', 'son', 'fue', 'era', 'me', 'te', 'se', 'lo', 'mi', 'tu', 'su', 'nos', 'yo', 'tu', 'el', 'ella', 'dime', 'sobre', 'acerca', 'significa', 'busco', 'esta', 'está', 'cómo', 'hay']);
     const contextualReplies = { "que tal como estas": ["¿Qué gusto saludarte, yo muy bien, y tú?", "¿Cómo te ha ido últimamente?"], "hola": ["¡Hola! ¿Cómo andas?", "Saludos. ¿Qué me cuentas?"], "si": ["Perfecto.", "Excelente."], "no": ["Entendido."], "adios": ["¡Hasta luego!", "¡Cuídate mucho!"], "estoy bien y tu": ["Me alegra. Yo muy bien."] };
     
     if(auth) {
@@ -345,21 +340,17 @@
         });
     }
 
-    // --- FUNCIÓN DE TRADUCCIÓN AUTOMÁTICA ---
     async function translateToSpanish(text) {
         if (!text || text.length < 5) return text;
-        // Si parece español (tiene tildes o ñ), lo dejamos
         if (text.match(/[áéíóúñ]/i)) return text; 
-        
         try {
-            // API gratuita MyMemory (limitada, pero funciona para demos)
             const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text.substring(0, 500))}&langpair=en|es`);
             const data = await res.json();
             if(data.responseData && data.responseData.translatedText) {
                 return data.responseData.translatedText + " <small style='color:#777'>(Traducido)</small>";
             }
         } catch(e) {}
-        return text; // Fallback al original
+        return text; 
     }
 
     window.sendMessage = async function() {
@@ -367,28 +358,24 @@
         const originalText = input.value.trim();
         if(!originalText) return;
 
-        // --- MODO CORRECCIÓN (ENSEÑANZA) ---
         if (chatState.mode === 'waiting_correction') {
             const correction = originalText;
             const userEmail = currentUser ? currentUser.email : "invitado";
-            
-            // Guardar en cola de revisión
             if(db) {
                 await updateDoc(doc(db, "alexia_db", "main_brain"), {
                     reviewQueue: arrayUnion({ q: chatState.lastQuery, a: correction, user: userEmail, date: new Date().toISOString() })
                 });
             }
-            
             input.value = '';
             appendMsg('user', originalText);
             appendMsg('ai', `¡Gracias! He guardado tu respuesta. Un administrador la revisará para que yo pueda aprender.`);
-            
-            chatState = { mode: 'normal' }; // Volver a normal
+            chatState = { mode: 'normal' }; 
             return;
         }
         
         const normInput = normalize(originalText);
         
+        // Detección de opción A, B, C
         const flexibleMatch = normInput.match(/\b([abc])\b/i);
         const isShortResponse = normInput.length < 30;
 
@@ -428,6 +415,7 @@
         const interpretedText = processSynonyms(originalText);
         const words = interpretedText.split(/\s+/).filter(w => !stopWords.has(w) && w.length > 2);
 
+        // --- 1. PRIORIDAD: Intentos Específicos (Clima, Libro, Artículo) ---
         const specificIntent = checkSpecificIntent(originalText);
         if (specificIntent) {
             await processSpecificIntent(specificIntent.query, specificIntent.source);
@@ -435,6 +423,7 @@
             return;
         }
 
+        // --- 2. PRIORIDAD: Memoria (Firebase) ---
         let bestMatch = null, maxScore = 0;
         brain.memory.forEach(mem => {
             mem.inputs.forEach(key => {
@@ -447,11 +436,12 @@
             const key = normalize(bestMatch.inputs[0]);
             let finalResponse = bestMatch.output;
             if (contextualReplies[key]) finalResponse = contextualReplies[key][Math.floor(Math.random() * contextualReplies[key].length)];
-            await finishResponse(originalText, finalResponse, true, true); // True = Poner botones de feedback
+            await finishResponse(originalText, finalResponse, true, true); 
             wasVoiceInput = false;
             return;
         }
 
+        // --- 3. FALLBACK: Descomposición de Palabras (Wikipedia) ---
         const synthesis = await runWordDecomposition(interpretedText, words);
         if (synthesis.length > 0) {
             let aiResponse = synthesis.length === 1 && synthesis[0].src !== "Memoria" ? 
@@ -461,16 +451,19 @@
             await finishResponse(originalText, aiResponse + "<br><br>¿Te sirve esta información?", true, true);
         } else {
             await finishResponse(originalText, "No logré encontrar información detallada.", true, true);
-            // Ya no forzamos el modo corrección aquí, dejamos que el usuario pulse el botón "Enseñar"
         }
         wasVoiceInput = false;
     };
 
     async function processSpecificIntent(query, source) {
+        // Limpiar query de palabras clave redundantes para la búsqueda final
         let cleanQuery = query;
-        if (source.includes('Biblioteca')) cleanQuery = query.replace(/^libro de\s*/i, '');
-        else if (source.includes('Meteo')) cleanQuery = query.replace(/^clima en\s*/i, '');
-        else if (source.includes('Wikipedia')) cleanQuery = query.replace(/^articulo de\s*/i, '');
+        // La limpieza ya se hace mayormente en checkSpecificIntent, pero aseguramos:
+        // No hace falta limpiar "libro de" aquí si el regex ya lo capturó limpio, 
+        // pero por si acaso viene de sugerencias A/B/C:
+        if (source.includes('Biblioteca')) cleanQuery = query.replace(/^libro (de )?/i, '');
+        else if (source.includes('Meteo')) cleanQuery = query.replace(/^clima (en )?/i, '');
+        else if (source.includes('Wikipedia')) cleanQuery = query.replace(/^articulo (de )?/i, '');
 
         const searchData = await fetchExternalData(cleanQuery, source);
 
@@ -532,7 +525,6 @@
                         return fetchExternalData(term, 'Wikipedia/WEB');
                     }
                     
-                    // --- TRADUCIR DESCRIPCIÓN SI ES NECESARIO ---
                     let translatedDesc = await translateToSpanish(description);
                     const formattedDesc = translatedDesc.split('\n').map(p => `<p>${p}</p>`).join('').substring(0, 1500);
                     
@@ -587,12 +579,10 @@
         return null;
     }
 
-    // --- FUNCIÓN PARA FEEDBACK ---
     window.rateAnswer = (type, query) => {
         if (type === 'good') {
             alert("¡Me alegra haber ayudado! 😊");
         } else {
-            // Activar modo corrección
             chatState = { mode: 'waiting_correction', lastQuery: query };
             appendMsg('ai', "Entendido. 😔 ¿Qué respuesta debería haberte dado? Escríbela y aprenderé.");
         }
@@ -601,7 +591,6 @@
     async function finishResponse(userTxt, aiTxt, shouldSuggest, showFeedback = false) {
         const msgId = 'ai-msg-' + Date.now();
         
-        // Agregar botones de feedback si se solicita
         let feedbackHTML = "";
         if (showFeedback) {
             feedbackHTML = `<div class="feedback-area">
@@ -618,7 +607,6 @@
         if (wasVoiceInput) {
             setTimeout(() => {
                 const btnId = `btn-${msgId}`;
-                // Limpiamos el HTML de los botones antes de hablar
                 const cleanSpeakTxt = aiTxt.replace(/<[^>]*>/g, " "); 
                 window.speakText(cleanSpeakTxt, btnId);
             }, 500);
@@ -703,20 +691,30 @@
         }, 100);
     }
 
+    // --- CEREBRO INTELIGENTE: Detecta intención sin importar cómo empieza la frase ---
     function checkSpecificIntent(originalText) {
         const normText = normalize(originalText);
-        let match = normText.match(/^(libro de|articulo de|clima en)\s*(.*)$/);
+        
+        // Regex flexible: Busca "clima en" en cualquier parte, no solo al inicio (^)
+        let match = normText.match(/(?:clima|tiempo)\s+(?:en|de)\s+(.+)/);
         if (match) {
-            const trigger = match[1].trim(); 
-            const query = match[2].trim(); 
-            if (query.length > 0) {
-                let source;
-                if (trigger.includes('libro')) source = 'Biblioteca/WEB';
-                else if (trigger.includes('articulo')) source = 'Wikipedia/WEB';
-                else if (trigger.includes('clima')) source = 'Meteo/WEB';
-                return { action: 'execute_search', source: source, query: query };
-            }
+            return { action: 'execute_search', source: 'Meteo/WEB', query: match[1] };
         }
+
+        // Regex flexible: Busca "libro de/sobre" o solo "libro X"
+        match = normText.match(/(?:libro|obra)\s+(?:de|titulado|sobre)?\s*(.+)/);
+        if (match) {
+            // Limpieza extra: Si el usuario dice "libro de la selva", quitamos "de" si el regex no lo hizo bien
+            const cleanQuery = match[1].replace(/^(de|sobre|el|la|los|las)\s+/, '');
+            return { action: 'execute_search', source: 'Biblioteca/WEB', query: cleanQuery };
+        }
+
+        // Regex flexible: Busca "articulo de" explícitamente
+        match = normText.match(/(?:articulo|informacion|biografia)\s+(?:de|sobre|del|de la)\s+(.+)/);
+        if (match) {
+            return { action: 'execute_search', source: 'Wikipedia/WEB', query: match[1] };
+        }
+
         return null;
     }
     
