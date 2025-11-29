@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
     
     <style>
-        /* --- ESTILOS VISUALES (Sin cambios mayores) --- */
+        /* --- ESTILOS VISUALES --- */
         :root {
             --bg-body: #131314; --bg-sidebar: #1e1f20; --bg-input: #282a2c;
             --text-main: #e3e3e3; --text-muted: #c4c7c5;
@@ -35,8 +35,22 @@
         }
 
         .sidebar-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .new-chat-btn { background: #282a2c; color: var(--text-muted); border: none; padding: 10px; width: 90%; margin: 0 auto; display:flex; align-items:center; gap:10px; border-radius: 20px; cursor: pointer; }
-        .history-list { flex: 1; overflow-y: auto; padding: 10px; }
+        .new-chat-btn { background: #282a2c; color: var(--text-muted); border: none; padding: 10px; width: 90%; margin: 0 auto; display:flex; align-items:center; gap:10px; border-radius: 20px; cursor: pointer; transition: 0.2s; }
+        .new-chat-btn:hover { background: #333; color: white; }
+
+        /* HISTORIAL ESTILOS */
+        .history-list { flex: 1; overflow-y: auto; padding: 10px; margin-top: 10px; }
+        .chat-item {
+            padding: 10px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+            color: #e3e3e3; transition: background 0.2s; font-size: 0.9rem; border-radius: 8px; margin: 2px 10px;
+        }
+        .chat-item:hover { background-color: #282a2c; }
+        .chat-item.active { background-color: #3c4043; font-weight: 500; }
+        .chat-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
+        .pin-btn { background: none; border: none; color: #555; cursor: pointer; font-size: 0.8rem; padding: 5px; }
+        .pin-btn:hover { color: var(--accent); }
+        .pin-btn.pinned { color: var(--accent); opacity: 1; transform: rotate(-45deg); }
+
         .user-panel { padding: 15px; border-top: 1px solid #333; display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: #000; display: flex; justify-content: center; align-items: center; font-weight: bold; }
 
@@ -51,33 +65,24 @@
         .msg-icon { width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #4285f4, #9b72cb); color: white; flex-shrink: 0; }
         .msg-bubble { max-width: 75%; line-height: 1.6; font-size: 1rem; }
         .user-row .msg-bubble { background: var(--user-msg); padding: 10px 18px; border-radius: 20px 20px 4px 20px; }
-        
-        .dict-card { background: #1e293b; padding: 15px; border-radius: 12px; border-left: 3px solid var(--accent); margin-top: 5px; }
-        .dict-word { font-weight: bold; font-size: 1.1rem; color: var(--accent); text-transform: capitalize; }
         .dict-type { font-size: 0.75rem; color: #94a3b8; font-style: italic; display:block; margin-top:5px; }
 
         /* INPUT AREA */
         .input-container { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px 20px 10px 20px; background: var(--bg-body); display: flex; flex-direction: column; align-items: center; z-index: 20; border-top: 1px solid #222; }
         .input-wrapper { background: var(--bg-input); width: 100%; max-width: 800px; border-radius: 30px; display: flex; align-items: center; padding: 8px 15px; border: 1px solid #444; }
-        
-        /* FIX AUTOCOMPLETE: name aleatorio */
         .chat-input { flex: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; font-size: 16px; }
-        
         .send-btn { background: var(--text-main); color: #000; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; }
         .footer-info { font-size: 0.7rem; color: #555; text-align: center; margin-bottom: 5px; }
 
         /* MODALES */
         .modal { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.85); z-index: 200; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .card { background: #1e1f20; padding: 30px; border-radius: 24px; width: 90%; max-width: 380px; text-align: center; border: 1px solid #444; }
-        
         .tab-btn { background: none; border: none; color: #777; padding: 10px; cursor: pointer; font-weight: bold; border-bottom: 2px solid transparent; width: 50%; }
         .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); color: white; }
-        
         .field { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #444; background: #282a2c; color: white; box-sizing: border-box; }
         .btn-full { width: 100%; padding: 12px; border-radius: 20px; border: none; cursor: pointer; font-weight: bold; margin-top: 10px; }
         .btn-primary { background: var(--accent); color: #001d35; }
         .btn-google { background: white; color: #1f1f1f; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        
         .btn-login { background: var(--accent); color: #000; border: none; padding: 6px 14px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: 0; } }
@@ -92,8 +97,30 @@
         <span style="font-weight:bold; font-size:1.1rem; display:flex; align-items:center; gap:10px;"><i class="fas fa-brain" style="color:var(--accent)"></i> AleXIA</span>
         <button onclick="toggleSidebar()" style="background:none; border:none; color:white; cursor:pointer;" class="toggle-btn"><i class="fas fa-times"></i></button>
     </div>
-    <button class="new-chat-btn" onclick="clearChat()"><i class="fas fa-plus"></i> Nuevo chat</button>
-    <div class="history-list" id="history-container" style="margin-top:20px; text-align:center; color:#555; font-size:0.9rem;">Inicia sesión...</div>
+    
+    <button class="new-chat-btn" onclick="startNewChat()">
+        <i class="fas fa-plus"></i> Nuevo chat
+    </button>
+
+    <div id="admin-menu-container" style="display:none; padding: 15px 15px 5px 15px;">
+        <button onclick="openDash()" style="width:100%; background: #3c2f4d; color: #d4bbfb; border: 1px solid #8e6ec2; padding: 10px; border-radius: 12px; cursor: pointer; font-weight: bold; display:flex; align-items:center; gap:10px; font-size:0.9rem;">
+            <i class="fas fa-chalkboard-teacher"></i> Panel Docente
+        </button>
+    </div>
+
+    <div class="history-list">
+        <div id="pinned-section" style="display:none; margin-bottom:15px;">
+            <small style="padding:0 15px; color:#666; font-size:0.7rem; text-transform:uppercase; font-weight:bold;">Fijados</small>
+            <div id="pinned-container"></div>
+            <div style="height:1px; background:#333; margin:10px 15px;"></div>
+        </div>
+
+        <small style="padding:0 15px; color:#666; font-size:0.7rem; text-transform:uppercase; font-weight:bold;">Recientes</small>
+        <div id="history-container">
+            <div style="text-align:center; padding:20px; color:#555; font-size:0.85rem;">Historial vacío</div>
+        </div>
+    </div>
+
     <div class="user-panel" id="user-panel" onclick="checkLoginAction()">
         <div class="user-avatar" id="u-avatar"><i class="fas fa-user"></i></div>
         <div style="flex:1; text-align:left;">
@@ -136,33 +163,27 @@
             <h2 style="margin:0;">Únete a AleXIA</h2>
             <p style="color:#aaa; font-size:0.85rem; margin-top:5px;">El servicio es <b>100% gratuito</b>.</p>
         </div>
-
         <div style="display:flex; margin-bottom:20px; border-bottom:1px solid #333;">
             <button class="tab-btn active" onclick="showAuth('login')" id="tab-login">Entrar</button>
             <button class="tab-btn" onclick="showAuth('register')" id="tab-register">Registrarse</button>
         </div>
-
         <form id="section-login" onsubmit="emailLogin(); return false;">
             <input type="email" id="l-email" class="field" placeholder="Correo electrónico" autocomplete="username" required>
             <input type="password" id="l-pass" class="field" placeholder="Contraseña" autocomplete="current-password" required>
             <button type="submit" class="btn-full btn-primary">Iniciar Sesión</button>
         </form>
-
         <form id="section-register" style="display:none;" onsubmit="emailRegister(); return false;">
             <input type="email" id="r-email" class="field" placeholder="Tu Correo Real" autocomplete="username" required>
             <input type="password" id="r-pass" class="field" placeholder="Crea una Contraseña" autocomplete="new-password" required>
             <button type="submit" class="btn-full btn-primary">Crear Cuenta Gratis</button>
             <p style="font-size:0.75rem; color:#aaa; margin-top:10px;">* Te enviaremos un link de verificación.</p>
         </form>
-
         <div style="margin:20px 0; border-top:1px solid #333; position:relative;">
             <span style="background:#1e1f20; padding:0 10px; position:absolute; top:-10px; left:45%; color:#777; font-size:0.8rem;">O</span>
         </div>
-
         <button class="btn-full btn-google" onclick="googleLogin()">
             <i class="fab fa-google"></i> Continuar con Google
         </button>
-        
         <button onclick="closeModal()" style="background:none; border:none; color:#777; margin-top:15px; cursor:pointer;">Cerrar</button>
     </div>
 </div>
@@ -189,21 +210,18 @@
             <button onclick="uploadDictionary()" style="background:var(--accent); color:#000; border:none; padding:5px 10px; border-radius:5px; margin-top:5px; cursor:pointer; font-weight:bold;">Procesar (Lotes)</button>
             <div id="upload-status" style="margin-top:5px; font-size:0.8rem; color:var(--success);"></div>
         </div>
-
         <div id="dash-content" style="flex:1; overflow-y:auto; text-align:left;"></div>
     </div>
 </div>
 
 <script type="module">
-    // 1. IMPORTACIONES (AGREGADO APP CHECK)
+    // 1. IMPORTACIONES
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
     import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app-check.js";
     import { getFirestore, doc, onSnapshot, setDoc, updateDoc, arrayUnion, arrayRemove, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
-    // -----------------------------------------------------------
-    //  ⚠️ TUS LLAVES DE FIREBASE (NO TOCAR)
-    // -----------------------------------------------------------
+    // 2. CONFIGURACIÓN FIREBASE
     const firebaseConfig = {
         apiKey: "AIzaSyAeNVoB1ZasZSauIf6G7GbIa4bbJJ3_5cw",
         authDomain: "alexia-1c4f2.firebaseapp.com",
@@ -212,35 +230,29 @@
         messagingSenderId: "483778313354",
         appId: "1:483778313354:web:c28c9da35d5674b174c173"
     };
-    // -----------------------------------------------------------
 
     let app, db, auth, provider;
     try {
         app = initializeApp(firebaseConfig);
-        
-        // -----------------------------------------------------------
-        // 🛡️ 2. ACTIVAR APP CHECK (RECAPTCHA)
-        // -----------------------------------------------------------
-        // IMPORTANTE: REEMPLAZA EL TEXTO DE ABAJO CON TU "CLAVE DE SITIO" (PÚBLICA) DE GOOGLE RECAPTCHA
         const appCheck = initializeAppCheck(app, {
             provider: new ReCaptchaV3Provider('6LdzoRssAAAAAP7-cYQQiGv_bM9TKCb4BINojkYM'),
             isTokenAutoRefreshEnabled: true
         });
-        console.log("App Check activado con éxito 🛡️");
-        // -----------------------------------------------------------
-
         db = getFirestore(app);
         auth = getAuth(app);
         provider = new GoogleAuthProvider();
-    } catch(e) { console.error("Error Firebase:", e); }
+    } catch(e) { console.error("Error init:", e); }
 
     // VARIABLES
     let currentUser = null;
     let brain = { memory: [], reviewQueue: [], missingLog: [], userDebts: {} };
     let learningState = { active: false, question: "", isDebt: false };
     const ADMIN_EMAIL = "eljacksonyt@gmail.com";
+    
+    // VARIABLES LOCALES (HISTORIAL EN NAVEGADOR)
+    let currentChatId = null; // ID único del chat actual
 
-    // AUTH OBSERVER
+    // --- AUTH OBSERVER ---
     if(auth) {
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -252,195 +264,194 @@
                 if(user.email === ADMIN_EMAIL) role = "admin";
                 else if (userSnap.exists()) role = userSnap.data().role || "user";
                 
-                if (!userSnap.exists()) {
-                    await setDoc(userRef, { email: user.email, role: role, createdAt: new Date().toISOString() });
-                }
+                if (!userSnap.exists()) await setDoc(userRef, { email: user.email, role: role, createdAt: new Date().toISOString() });
+                
                 currentUser = { uid: user.uid, name: user.displayName || user.email.split('@')[0], role: role };
                 updateUserUI(currentUser);
+                renderLocalHistory(); // Cargar historial del LocalStorage
                 closeModal(); 
             } else {
                 currentUser = null;
                 updateUserUI(null);
+                currentChatId = null;
+                renderLocalHistory(); // Limpiar visualmente
             }
         });
     }
 
-    // CEREBRO
+    // --- CEREBRO & CHAT LOGIC ---
     if(db) {
         onSnapshot(doc(db, "alexia_db", "main_brain"), (snap) => {
             if(snap.exists()) brain = snap.data();
-            else setDoc(doc(db, "alexia_db", "main_brain"), brain);
         });
     }
 
-    // CHAT
     window.sendMessage = async function() {
         const input = document.getElementById('chat-input');
         const text = input.value.trim();
         if(!text) return;
-        
         input.value = '';
+        
+        // 1. Mostrar user msg
         appendMsg('user', text);
 
-        if (currentUser && currentUser.role === 'admin' && text.toLowerCase().includes("tarea")) {
-            openDash();
-            learningState = { active: false, question: "", isDebt: false };
-            appendMsg('ai', "Abriendo panel...");
-            return;
-        }
+        let aiResponse = "";
 
         if (learningState.active) { handleTeaching(text); return; }
 
         const mem = brain.memory.find(m => m.inputs.some(i => text.toLowerCase().includes(i)));
-        if (mem) { 
-            setTimeout(() => appendMsg('ai', mem.output), 500); 
-            return; 
-        }
-
-        // BUSCAR DICCIONARIO
-        if(text.split(" ").length < 3) {
-            const dictRef = doc(db, "dictionary", text.toLowerCase());
+        
+        if (mem) {
+            aiResponse = mem.output;
+        } 
+        else if(text.split(" ").length < 3) {
             try {
-                const dictSnap = await getDoc(dictRef);
+                const dictSnap = await getDoc(doc(db, "dictionary", text.toLowerCase()));
                 if (dictSnap.exists()) {
-                    const data = dictSnap.data();
-                    setTimeout(() => appendMsg('ai', `📖 <strong>${data.id}:</strong><br>${data.def}<br><span class="dict-type">${data.type}</span>`), 500);
-                    return;
+                    const d = dictSnap.data();
+                    aiResponse = `📖 <strong>${d.id}:</strong><br>${d.def}<br><span class="dict-type">${d.type}</span>`;
                 }
-            } catch(e) { console.log("No en diccionario"); }
+            } catch(e) {}
         }
 
-        // SI NO SABE
-        if (!currentUser) {
-            if(db) {
-                await updateDoc(doc(db, "alexia_db", "main_brain"), { 
-                    missingLog: arrayUnion({ q: text, date: new Date().toISOString(), user: "Invitado" }) 
-                });
-            }
-            
-            setTimeout(() => {
-                appendMsg('ai', "No tengo esa información. ¿Tú la sabes? (Escríbela para enseñarme o pon 'no se' para saltar).");
-                learningState = { active: true, question: text, isDebt: false };
-            }, 600);
-            return;
-        }
-
-        setTimeout(() => {
-            appendMsg('ai', "No sé la respuesta. ¿Tú la sabes? (Responde o escribe 'no se').");
+        if (!aiResponse) {
+             if(db) updateDoc(doc(db, "alexia_db", "main_brain"), { missingLog: arrayUnion({ q: text, date: new Date().toISOString(), user: currentUser ? currentUser.name : "Guest" }) });
+            aiResponse = "No tengo esa información. ¿Tú la sabes? (Escríbela para enseñarme o pon 'no se').";
             learningState = { active: true, question: text, isDebt: false };
+        }
+
+        // 2. Respuesta AI y GUARDADO LOCAL
+        setTimeout(() => {
+            appendMsg('ai', aiResponse);
+            // GUARDAR EN LOCALSTORAGE
+            saveLocalChat(text, aiResponse);
         }, 600);
     }
 
     async function handleTeaching(ans) {
         if (ans.match(/no s(e|é)|saltar/i)) {
-            await updateDoc(doc(db, "alexia_db", "main_brain"), { missingLog: arrayUnion({ q: learningState.question, date: new Date().toISOString() }) });
-            appendMsg('ai', "Comprendido. Agregado a pendientes.");
+            appendMsg('ai', "Entendido, saltado.");
+            saveLocalChat(ans, "Entendido, saltado.");
         } else {
             const userName = currentUser ? currentUser.name : "Invitado";
             await updateDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayUnion({ q: learningState.question, a: ans, user: userName }) });
-            
-            if(!currentUser) {
-                appendMsg('ai', "¡Gracias! Respuesta enviada.<br><br>💡 <em>Soy nueva. Para seguir enseñándome, por favor regístrate (es gratis y ayudas a la comunidad).</em>");
-            } else {
-                appendMsg('ai', "Gracias, enviado a validación.");
-            }
+            appendMsg('ai', "Gracias, enviado a revisión.");
+            saveLocalChat(ans, "Gracias, enviado a revisión.");
         }
         learningState = { active: false, question: "", isDebt: false };
     }
 
-    // --- CARGA MASIVA CORREGIDA (BATCHING) ---
-    window.uploadDictionary = async () => {
-        const fileInput = document.getElementById('json-upload');
-        const statusDiv = document.getElementById('upload-status');
-        
-        if(fileInput.files.length === 0) return alert("Selecciona archivo");
-        
-        statusDiv.innerHTML = "Analizando...";
-        const reader = new FileReader();
-        
-        reader.onload = async (e) => {
-            try {
-                const words = JSON.parse(e.target.result);
-                let added = 0;
-                
-                // FIRESTORE LIMIT: 500
-                const chunkSize = 400; 
-                for (let i = 0; i < words.length; i += chunkSize) {
-                    const chunk = words.slice(i, i + chunkSize);
-                    const batch = writeBatch(db);
-                    
-                    chunk.forEach(word => {
-                        const ref = doc(db, "dictionary", word.id.toLowerCase());
-                        batch.set(ref, word); 
-                        added++;
-                    });
-                    
-                    await batch.commit();
-                    statusDiv.innerHTML = `Subiendo... (${added})`;
-                }
-
-                statusDiv.innerHTML = `✅ <b>¡Terminado!</b><br>Total palabras: ${added}`;
-
-            } catch (err) {
-                statusDiv.innerHTML = "❌ Error JSON: " + err.message;
-            }
-        };
-        reader.readAsText(fileInput.files[0]);
-    };
-
-    // UI & AUTH
-    window.emailLogin = () => {
-        const e = document.getElementById('l-email').value;
-        const p = document.getElementById('l-pass').value;
-        if(!e || !p) return alert("Completa los campos");
-        signInWithEmailAndPassword(auth, e, p).then((cred)=>{
-            if(!cred.user.emailVerified){ 
-                document.getElementById('verify-modal').style.display='flex'; signOut(auth);
-            } else closeModal();
-        }).catch(e => alert(e.message));
-    };
-    window.emailRegister = () => {
-        const e = document.getElementById('r-email').value;
-        const p = document.getElementById('r-pass').value;
-        if(!e || !p) return alert("Completa los campos");
-        createUserWithEmailAndPassword(auth, e, p).then(async(cred)=>{
-            await sendEmailVerification(cred.user);
-            document.getElementById('auth-modal').style.display='none';
-            document.getElementById('verify-modal').style.display='flex';
-        }).catch(e => alert(e.message));
-    };
-    window.googleLogin = () => signInWithPopup(auth, provider).then(()=>closeModal()).catch(e=>alert(e.message));
-    window.logout = (e) => { if(e) e.stopPropagation(); signOut(auth); }
-
-    window.openDash = () => {
-        document.getElementById('admin-dash').style.display = 'flex';
-        const content = document.getElementById('dash-content');
-        content.innerHTML = "<h4>Pendientes</h4>";
-        brain.reviewQueue.forEach((item, idx) => {
-            content.innerHTML += `<div style="background:#27272a; padding:10px; margin-bottom:5px; border-radius:5px;">
-                <b>¿${item.q}?</b><br><span style="color:#aaa">${item.a}</span>
-                <div style="margin-top:5px;">
-                    <button onclick="window.dashAct('app', ${idx})" style="background:var(--accent); border:none; padding:5px;">OK</button>
-                    <button onclick="window.dashAct('rej', ${idx})" style="background:var(--danger); border:none; padding:5px;">NO</button>
-                </div>
-            </div>`;
-        });
+    // --- 💾 SISTEMA DE HISTORIAL LOCAL (LOCALSTORAGE) ---
+    function getLocalKey() {
+        // Clave única por usuario (o 'guest' si no hay usuario)
+        return `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`;
     }
-    window.closeDash = () => document.getElementById('admin-dash').style.display = 'none';
-    
-    window.dashAct = async (act, idx) => {
-        const item = brain.reviewQueue[idx];
-        if(act === 'app') {
-            await updateDoc(doc(db, "alexia_db", "main_brain"), {
-                memory: arrayUnion({ inputs: [item.q.toLowerCase()], output: item.a }),
-                reviewQueue: arrayRemove(item)
-            });
+
+    function saveLocalChat(uMsg, aiMsg) {
+        const key = getLocalKey();
+        let chats = JSON.parse(localStorage.getItem(key)) || [];
+        
+        if (!currentChatId) {
+            // Nuevo Chat
+            currentChatId = Date.now().toString();
+            const newChat = {
+                id: currentChatId,
+                title: uMsg.substring(0, 25) + "...",
+                timestamp: Date.now(),
+                isPinned: false,
+                messages: [{r:'user', t:uMsg}, {r:'ai', t:aiMsg}]
+            };
+            chats.unshift(newChat); // Agregar al principio
         } else {
-            await updateDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayRemove(item) });
+            // Chat Existente
+            const chatIndex = chats.findIndex(c => c.id === currentChatId);
+            if (chatIndex > -1) {
+                chats[chatIndex].messages.push({r:'user', t:uMsg}, {r:'ai', t:aiMsg});
+                chats[chatIndex].timestamp = Date.now();
+                // Mover al principio si no está fijado
+                if(!chats[chatIndex].isPinned) {
+                    const updatedChat = chats.splice(chatIndex, 1)[0];
+                    chats.unshift(updatedChat);
+                }
+            }
         }
-        window.openDash(); 
+        localStorage.setItem(key, JSON.stringify(chats));
+        renderLocalHistory();
     }
 
+    function renderLocalHistory() {
+        const key = getLocalKey();
+        const chats = JSON.parse(localStorage.getItem(key)) || [];
+        
+        const pinContainer = document.getElementById('pinned-container');
+        const histContainer = document.getElementById('history-container');
+        const pinSection = document.getElementById('pinned-section');
+        
+        pinContainer.innerHTML = "";
+        histContainer.innerHTML = "";
+        
+        let hasPinned = false;
+
+        chats.forEach(chat => {
+            const activeClass = (chat.id === currentChatId) ? 'active' : '';
+            const pinClass = chat.isPinned ? 'pinned' : '';
+            
+            const html = `
+                <div class="chat-item ${activeClass}" onclick="loadLocalChat('${chat.id}')">
+                    <div class="chat-title"><i class="far fa-comment-alt" style="margin-right:8px; opacity:0.7;"></i>${chat.title}</div>
+                    <button class="pin-btn ${pinClass}" onclick="togglePinLocal(event, '${chat.id}')">
+                        <i class="fas fa-thumbtack"></i>
+                    </button>
+                </div>
+            `;
+
+            if (chat.isPinned) {
+                pinContainer.innerHTML += html;
+                hasPinned = true;
+            } else {
+                histContainer.innerHTML += html;
+            }
+        });
+
+        pinSection.style.display = hasPinned ? 'block' : 'none';
+    }
+
+    window.loadLocalChat = (id) => {
+        const key = getLocalKey();
+        const chats = JSON.parse(localStorage.getItem(key)) || [];
+        const chat = chats.find(c => c.id === id);
+        
+        if (chat) {
+            currentChatId = id;
+            const box = document.getElementById('chat-box');
+            box.innerHTML = "";
+            chat.messages.forEach(m => appendMsg(m.r, m.t));
+            renderLocalHistory(); // Para actualizar clase 'active'
+            if(window.innerWidth < 800) toggleSidebar();
+        }
+    }
+
+    window.togglePinLocal = (e, id) => {
+        e.stopPropagation();
+        const key = getLocalKey();
+        let chats = JSON.parse(localStorage.getItem(key)) || [];
+        const idx = chats.findIndex(c => c.id === id);
+        
+        if (idx > -1) {
+            chats[idx].isPinned = !chats[idx].isPinned;
+            localStorage.setItem(key, JSON.stringify(chats));
+            renderLocalHistory();
+        }
+    }
+
+    window.startNewChat = () => {
+        currentChatId = null;
+        document.getElementById('chat-box').innerHTML = `<div style="text-align:center; margin-top:80px; opacity:0.7; animation:fadeIn 1s;"><div style="width:80px; height:80px; background:linear-gradient(135deg, var(--accent), #ec4899); border-radius:50%; margin:0 auto 25px auto; display:flex; align-items:center; justify-content:center; box-shadow:0 0 40px var(--accent-glow);"><i class="fas fa-robot" style="font-size:40px; color:white;"></i></div><h2 style="font-weight:500; letter-spacing:-0.5px;">¿En qué puedo ayudarte?</h2></div>`;
+        renderLocalHistory(); // Quitar selección activa
+        if(window.innerWidth < 800) toggleSidebar();
+    }
+
+    // --- UI HELPERS ---
     function appendMsg(role, text) {
         const box = document.getElementById('chat-box');
         const row = document.createElement('div');
@@ -453,59 +464,119 @@
     }
 
     function updateUserUI(u) {
-        const hist = document.getElementById('history-container');
+        const adminBtn = document.getElementById('admin-menu-container');
         if(u) {
             document.getElementById('u-name').innerText = u.name;
             document.getElementById('u-role').innerText = u.role === 'admin' ? 'Admin' : 'Usuario';
             document.getElementById('u-avatar').innerHTML = u.name[0].toUpperCase();
             document.getElementById('btn-logout').style.display = 'block';
             document.getElementById('top-login-btn').style.display = 'none';
-            hist.innerHTML = "Historial activo";
+            // Mostrar Botón Admin si corresponde
+            if(u.role === 'admin') adminBtn.style.display = 'block';
+            else adminBtn.style.display = 'none';
         } else {
             document.getElementById('u-name').innerText = "Invitado";
             document.getElementById('u-role').innerText = "Clic para entrar";
             document.getElementById('u-avatar').innerHTML = `<i class="fas fa-user"></i>`;
             document.getElementById('btn-logout').style.display = 'none';
             document.getElementById('top-login-btn').style.display = 'block';
-            hist.innerHTML = "Inicia sesión...";
+            adminBtn.style.display = 'none';
         }
     }
 
-    window.toggleSidebar = () => {
-        document.getElementById('sidebar').classList.toggle('open');
-        document.getElementById('overlay').classList.toggle('active');
-    }
-    window.checkLoginAction = () => {
-        if(currentUser) { if(confirm("¿Cerrar sesión?")) signOut(auth); } else { openLogin(); }
-    }
-    window.clearChat = () => {
-        document.getElementById('chat-box').innerHTML = `<div style="text-align:center; margin-top:80px; opacity:0.7; animation:fadeIn 1s;"><div style="width:80px; height:80px; background:linear-gradient(135deg, var(--accent), #ec4899); border-radius:50%; margin:0 auto 25px auto; display:flex; align-items:center; justify-content:center; box-shadow:0 0 40px var(--accent-glow);"><i class="fas fa-robot" style="font-size:40px; color:white;"></i></div><h2 style="font-weight:500; letter-spacing:-0.5px;">¿En qué puedo ayudarte?</h2></div>`;
-        toggleSidebar(); 
-    }
+    // --- FUNCIONES SISTEMA (SIN CAMBIOS) ---
+    window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('active'); }
+    window.checkLoginAction = () => { if(currentUser) { if(confirm("¿Cerrar sesión?")) signOut(auth); } else { openLogin(); } }
+    window.clearChat = () => window.startNewChat();
     window.openLogin = () => { if(!currentUser) document.getElementById('auth-modal').style.display = 'flex'; }
     window.closeModal = () => document.getElementById('auth-modal').style.display = 'none';
     window.closeVerify = () => document.getElementById('verify-modal').style.display = 'none';
-    
-    // CORRECCIÓN VISUAL DE PESTAÑAS LOGIN
-    window.showAuth = (type) => {
-        const loginForm = document.getElementById('section-login');
-        const regForm = document.getElementById('section-register');
-        const loginBtn = document.getElementById('tab-login');
-        const regBtn = document.getElementById('tab-register');
-
+    window.showAuth = (type) => { 
         if(type === 'login') {
-            loginForm.style.display = 'block';
-            regForm.style.display = 'none';
-            loginBtn.classList.add('active');
-            regBtn.classList.remove('active');
+            document.getElementById('section-login').style.display = 'block'; document.getElementById('section-register').style.display = 'none';
+            document.getElementById('tab-login').classList.add('active'); document.getElementById('tab-register').classList.remove('active');
         } else {
-            loginForm.style.display = 'none';
-            regForm.style.display = 'block';
-            loginBtn.classList.remove('active');
-            regBtn.classList.add('active');
+            document.getElementById('section-login').style.display = 'none'; document.getElementById('section-register').style.display = 'block';
+            document.getElementById('tab-login').classList.remove('active'); document.getElementById('tab-register').classList.add('active');
         }
     }
-    
+
+    // --- PANEL ADMIN ---
+    window.openDash = () => { document.getElementById('admin-dash').style.display = 'flex'; renderAdminQueue(); }
+    window.closeDash = () => document.getElementById('admin-dash').style.display = 'none';
+
+    function renderAdminQueue() {
+        const content = document.getElementById('dash-content');
+        content.innerHTML = "<h4>Pendientes de Revisión</h4>";
+        if(brain.reviewQueue.length === 0) content.innerHTML += "<p style='color:#777'>No hay tareas pendientes.</p>";
+        brain.reviewQueue.forEach((item, idx) => {
+            content.innerHTML += `<div style="background:#27272a; padding:10px; margin-bottom:5px; border-radius:5px;">
+                <b>¿${item.q}?</b><br><span style="color:#aaa">${item.a}</span><br>
+                <small style="color:#555">Usuario: ${item.user}</small>
+                <div style="margin-top:5px;">
+                    <button onclick="window.dashAct('app', ${idx})" style="background:var(--accent); border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-right:5px;">Aprobar</button>
+                    <button onclick="window.dashAct('rej', ${idx})" style="background:var(--danger); border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">Rechazar</button>
+                </div>
+            </div>`;
+        });
+    }
+
+    window.dashAct = async (act, idx) => {
+        const item = brain.reviewQueue[idx];
+        if(act === 'app') {
+            await updateDoc(doc(db, "alexia_db", "main_brain"), { memory: arrayUnion({ inputs: [item.q.toLowerCase()], output: item.a }), reviewQueue: arrayRemove(item) });
+        } else {
+            await updateDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayRemove(item) });
+        }
+        setTimeout(renderAdminQueue, 500); 
+    };
+
+    // --- UPLOAD DICTIONARY (TU FUNCIÓN ORIGINAL) ---
+    window.uploadDictionary = async () => {
+        const fileInput = document.getElementById('json-upload');
+        const statusDiv = document.getElementById('upload-status');
+        if(fileInput.files.length === 0) return alert("Selecciona archivo");
+        statusDiv.innerHTML = "Analizando...";
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const words = JSON.parse(e.target.result);
+                let added = 0;
+                const chunkSize = 400; 
+                for (let i = 0; i < words.length; i += chunkSize) {
+                    const chunk = words.slice(i, i + chunkSize);
+                    const batch = writeBatch(db);
+                    chunk.forEach(word => {
+                        const ref = doc(db, "dictionary", word.id.toLowerCase());
+                        batch.set(ref, word); 
+                        added++;
+                    });
+                    await batch.commit();
+                    statusDiv.innerHTML = `Subiendo... (${added})`;
+                }
+                statusDiv.innerHTML = `✅ <b>¡Terminado!</b><br>Total palabras: ${added}`;
+            } catch (err) { statusDiv.innerHTML = "❌ Error JSON: " + err.message; }
+        };
+        reader.readAsText(fileInput.files[0]);
+    };
+
+    window.emailLogin = () => {
+        const e = document.getElementById('l-email').value; const p = document.getElementById('l-pass').value;
+        if(!e || !p) return alert("Completa los campos");
+        signInWithEmailAndPassword(auth, e, p).then((cred)=>{
+            if(!cred.user.emailVerified){ document.getElementById('verify-modal').style.display='flex'; signOut(auth); } else closeModal();
+        }).catch(e => alert(e.message));
+    };
+    window.emailRegister = () => {
+        const e = document.getElementById('r-email').value; const p = document.getElementById('r-pass').value;
+        if(!e || !p) return alert("Completa los campos");
+        createUserWithEmailAndPassword(auth, e, p).then(async(cred)=>{
+            await sendEmailVerification(cred.user); document.getElementById('auth-modal').style.display='none'; document.getElementById('verify-modal').style.display='flex';
+        }).catch(e => alert(e.message));
+    };
+    window.googleLogin = () => signInWithPopup(auth, provider).then(()=>closeModal()).catch(e=>alert(e.message));
+    window.logout = (e) => { if(e) e.stopPropagation(); signOut(auth); }
+
     document.getElementById('chat-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
 </script>
 </body>
