@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AleXIA - Modo Invitado</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- ESTILOS VISUALES --- */
+        :root {
+            --bg-body: #131314;
+            --bg-sidebar: #1e1f20;
+            --bg-input: #282a2c;
+            --text-main: #e3e3e3;
+            --text-muted: #c4c7c5;
+            --accent: #a8c7fa; 
+            --user-msg: #282a2c; 
+            --ai-msg: transparent;
+            --danger: #ff897d;
+        }
+
+        body { font-family: 'Outfit', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; height: 100vh; display: flex; overflow: hidden; }
+        
+        /* SIDEBAR */
+        .sidebar {
+            width: 280px; background: var(--bg-sidebar); height: 100%;
+            display: flex; flex-direction: column; transition: transform 0.3s ease;
+            position: absolute; z-index: 50; left: 0; top: 0; bottom: 0;
+            transform: translateX(-100%); border-right: 1px solid #333;
+        }
+        .sidebar.open { transform: translateX(0); }
+        @media(min-width: 800px) {
+            .sidebar { position: relative; transform: translateX(0); }
+            .toggle-btn { display: none !important; }
+        }
+
+        .sidebar-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .new-chat-btn { background: #282a2c; color: var(--text-muted); border: none; padding: 10px 15px; border-radius: 20px; cursor: pointer; width: 90%; margin: 0 auto; display:flex; align-items:center; gap:10px; }
+        .history-list { flex: 1; overflow-y: auto; padding: 10px; }
+        .user-panel { padding: 15px; border-top: 1px solid #333; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: #000; display: flex; justify-content: center; align-items: center; font-weight: bold; }
+
+        /* MAIN CHAT */
+        .main-content { flex: 1; display: flex; flex-direction: column; position: relative; height: 100%; }
+        .top-bar { padding: 15px; display: flex; align-items: center; gap: 15px; position: absolute; top: 0; left: 0; right: 0; z-index: 10; background: linear-gradient(to bottom, var(--bg-body) 80%, transparent); }
+        .menu-btn { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; }
+
+        #chat-box { flex: 1; overflow-y: auto; padding: 80px 20px 100px 20px; display: flex; flex-direction: column; gap: 20px; max-width: 800px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+
+        .msg-row { display: flex; gap: 15px; animation: fadeIn 0.3s; }
+        .msg-row.user-row { justify-content: flex-end; }
+        .msg-icon { width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; display: flex; justify-content: center; align-items: center; }
+        .icon-ai { background: linear-gradient(135deg, #4285f4, #9b72cb); color: white; }
+        .msg-bubble { max-width: 75%; line-height: 1.6; font-size: 1rem; color: var(--text-main); }
+        .user-row .msg-bubble { background: var(--user-msg); padding: 10px 18px; border-radius: 20px 20px 4px 20px; }
+        
+        /* INPUT */
+        .input-container { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; background: var(--bg-body); display: flex; justify-content: center; }
+        .input-wrapper { background: var(--bg-input); width: 100%; max-width: 800px; border-radius: 30px; display: flex; align-items: center; padding: 8px 15px; border: 1px solid #444; }
+        .chat-input { flex: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; }
+        .send-btn { background: var(--text-main); color: #000; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+
+        /* MODALES */
+        .modal { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.85); z-index: 200; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .card { background: #1e1f20; padding: 30px; border-radius: 24px; width: 90%; max-width: 380px; text-align: center; border: 1px solid #444; position: relative; }
+        
+        .tab-btn { background: none; border: none; color: #777; padding: 10px; cursor: pointer; font-weight: bold; border-bottom: 2px solid transparent; width: 50%; }
+        .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+        
+        .field { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #444; background: #282a2c; color: white; box-sizing: border-box; }
+        .btn-full { width: 100%; padding: 12px; border-radius: 20px; border: none; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .btn-primary { background: var(--accent); color: #001d35; }
+        .btn-google { background: white; color: #1f1f1f; display: flex; align-items: center; justify-content: center; gap: 10px; }
+
+        /* CONTADOR INVITADO */
+        .guest-badge { position: absolute; top: 10px; right: 10px; background: #333; color: #aaa; padding: 4px 8px; border-radius: 12px; font-size: 0.7rem; pointer-events: none; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: 0; } }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <span style="font-weight:bold; font-size:1.1rem;">AleXIA</span>
+        <button onclick="toggleSidebar()" style="background:none; border:none; color:white; cursor:pointer;" class="toggle-btn"><i class="fas fa-times"></i></button>
+    </div>
+    
+    <button class="new-chat-btn" onclick="clearChat()">
+        <i class="fas fa-plus"></i> Nuevo chat
+    </button>
+
+    <div class="history-list" id="history-container" style="margin-top:20px; text-align:center; color:#555; font-size:0.9rem;">
+        <!-- Historial o mensaje -->
+        Inicia sesión para guardar tu historial.
+    </div>
+
+    <div class="user-panel" id="user-panel" onclick="openLogin()">
+        <div class="user-avatar" id="u-avatar"><i class="fas fa-user"></i></div>
+        <div style="flex:1; text-align:left;">
+            <div id="u-name" style="font-size:0.9rem;">Invitado</div>
+            <div id="u-role" style="font-size:0.75rem; color:#aaa;">Clic para entrar</div>
+        </div>
+        <button id="btn-logout" onclick="logout(event)" style="background:none; border:none; color:var(--danger); display:none;"><i class="fas fa-sign-out-alt"></i></button>
+    </div>
+</div>
+
+<!-- MAIN CHAT -->
+<div class="main-content">
+    <div class="top-bar">
+        <button class="menu-btn toggle-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+        <span style="font-weight:500;">AleXIA</span>
+        <div id="guest-counter" class="guest-badge" style="display:none;">5 restantes</div>
+    </div>
+
+    <div id="chat-box">
+        <div style="text-align:center; margin-top:60px; opacity:0.6;">
+            <i class="fas fa-sparkles" style="font-size:3rem; margin-bottom:20px; background:linear-gradient(45deg, #4285f4, #d96570); -webkit-background-clip:text; color:transparent;"></i>
+            <h2>¿Qué tienes en mente?</h2>
+        </div>
+    </div>
+
+    <div class="input-container">
+        <div class="input-wrapper">
+            <input type="text" id="chat-input" class="chat-input" placeholder="Pregunta algo..." autocomplete="off">
+            <button class="send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL LOGIN/REGISTRO -->
+<div id="auth-modal" class="modal">
+    <div class="card">
+        <div style="display:flex; margin-bottom:20px;">
+            <button class="tab-btn active" onclick="showAuth('login')" id="tab-login">Entrar</button>
+            <button class="tab-btn" onclick="showAuth('register')" id="tab-register">Registrarse</button>
+        </div>
+
+        <!-- LOGIN -->
+        <div id="section-login">
+            <input type="email" id="l-email" class="field" placeholder="Correo electrónico">
+            <input type="password" id="l-pass" class="field" placeholder="Contraseña">
+            <button class="btn-full btn-primary" onclick="emailLogin()">Iniciar Sesión</button>
+        </div>
+
+        <!-- REGISTRO -->
+        <div id="section-register" style="display:none;">
+            <p style="font-size:0.85rem; color:#aaa; margin-bottom:15px;">Te enviaremos un correo para verificar tu cuenta.</p>
+            <input type="email" id="r-email" class="field" placeholder="Tu Correo Real">
+            <input type="password" id="r-pass" class="field" placeholder="Crea una Contraseña">
+            <button class="btn-full btn-primary" onclick="emailRegister()">Crear Cuenta</button>
+        </div>
+
+        <div style="margin:20px 0; border-top:1px solid #333; position:relative;">
+            <span style="background:#1e1f20; padding:0 10px; position:absolute; top:-10px; left:45%; color:#777; font-size:0.8rem;">O</span>
+        </div>
+
+        <button class="btn-full btn-google" onclick="googleLogin()">
+            <i class="fab fa-google"></i> Continuar con Google
+        </button>
+        
+        <button onclick="closeModal()" style="background:none; border:none; color:#777; margin-top:15px; cursor:pointer;">Cerrar</button>
+    </div>
+</div>
+
+<!-- MODAL ALERTA VERIFICACIÓN -->
+<div id="verify-modal" class="modal">
+    <div class="card">
+        <i class="fas fa-envelope" style="font-size:3rem; color:var(--accent); margin-bottom:15px;"></i>
+        <h3>Revisa tu Correo</h3>
+        <p style="color:#ccc; font-size:0.9rem;">Hemos enviado un enlace de confirmación. <br>Por seguridad, no puedes iniciar sesión hasta verificarlo.</p>
+        <button class="btn-full btn-primary" onclick="closeVerify()">Entendido</button>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import { getFirestore, doc, onSnapshot, setDoc, updateDoc, arrayUnion, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+    // --- TUS LLAVES ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyAeNVoB1ZasZSauIf6G7GbIa4bbJJ3_5cw",
+        authDomain: "alexia-1c4f2.firebaseapp.com",
+        projectId: "alexia-1c4f2",
+        storageBucket: "alexia-1c4f2.firebasestorage.app",
+        messagingSenderId: "483778313354",
+        appId: "1:483778313354:web:c28c9da35d5674b174c173"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    // VARIABLES
+    let currentUser = null;
+    let brain = { memory: [], reviewQueue: [], missingLog: [], userDebts: {} };
+    let learningState = { active: false, question: "", isDebt: false };
+    
+    // CONTROL DE INVITADOS (5 Preguntas)
+    let guestCount = parseInt(localStorage.getItem('alexia_guest_count') || "0");
+    const MAX_GUEST_CHATS = 5;
+
+    // --- SESIÓN ---
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            // Verificar si el email está validado
+            if (!user.emailVerified) {
+                // Si se acaba de registrar y no ha verificado, mostramos alerta y cerramos
+                // Pero permitimos que el modal se cierre para que vaya a su correo
+                return; 
+            }
+
+            const userRef = doc(db, "users", user.uid);
+            const userSnap = await getDoc(userRef);
+            let role = "user";
+            
+            if (userSnap.exists()) {
+                role = userSnap.data().role || "user";
+            } else {
+                await setDoc(userRef, { email: user.email, role: "user", createdAt: new Date().toISOString() });
+            }
+
+            currentUser = { uid: user.uid, name: user.displayName || user.email.split('@')[0], role: role };
+            updateUserUI(currentUser);
+            closeModal(); // Cerrar modal si estaba abierto
+        } else {
+            currentUser = null;
+            updateUserUI(null);
+        }
+    });
+
+    // --- CEREBRO ---
+    onSnapshot(doc(db, "alexia_db", "main_brain"), (snap) => {
+        if(snap.exists()) brain = snap.data();
+        else setDoc(doc(db, "alexia_db", "main_brain"), brain);
+    });
+
+    // --- CHAT LOGIC ---
+    window.sendMessage = async function() {
+        const input = document.getElementById('chat-input');
+        const text = input.value.trim();
+        if(!text) return;
+        
+        // 1. RESTRICCIÓN DE INVITADO
+        if (!currentUser) {
+            if (guestCount >= MAX_GUEST_CHATS) {
+                appendMsg('ai', "🔒 <strong>Límite gratuito alcanzado.</strong><br>Para seguir chateando y aprendiendo, por favor regístrate.");
+                setTimeout(() => openLogin(), 1500); // Abrir login auto
+                input.value = '';
+                return;
+            }
+            // Incrementar contador
+            guestCount++;
+            localStorage.setItem('alexia_guest_count', guestCount);
+            updateGuestCounter();
+        }
+
+        input.value = '';
+        appendMsg('user', text);
+
+        if (learningState.active) { handleTeaching(text); return; }
+
+        // Buscar en memoria
+        const mem = brain.memory.find(m => m.inputs.some(i => text.toLowerCase().includes(i)));
+        if (mem) { 
+            setTimeout(() => appendMsg('ai', mem.output), 500); 
+            return; 
+        }
+
+        // Si no sabe y es invitado -> Respuesta genérica (no puede enseñar)
+        if (!currentUser) {
+            setTimeout(() => appendMsg('ai', "No sé la respuesta. (Regístrate para enseñarme y desbloquear mi potencial)."), 500);
+            return;
+        }
+
+        // Si es usuario -> Verificar Deuda
+        const debts = brain.userDebts[currentUser.email] || [];
+        if (debts.length >= 2 && currentUser.role !== 'admin') {
+            const debtQ = debts[0];
+            setTimeout(() => {
+                appendMsg('ai', `⛔ <strong>Preguntas pendientes:</strong><br>¿${debtQ}?`);
+                learningState = { active: true, question: debtQ, isDebt: true };
+            }, 600);
+            return;
+        }
+
+        setTimeout(() => {
+            appendMsg('ai', "No sé la respuesta. ¿Tú la sabes? (Responde o escribe 'no se').");
+            learningState = { active: true, question: text, isDebt: false };
+        }, 600);
+    }
+
+    async function handleTeaching(ans) {
+        if (ans.match(/no s(e|é)|saltar/i)) {
+            if(learningState.isDebt) { appendMsg('ai', "Necesito una respuesta."); return; }
+            await updateDoc(doc(db, "alexia_db", "main_brain"), { missingLog: arrayUnion({ q: learningState.question, date: new Date().toISOString() }) });
+            
+            let debts = brain.userDebts;
+            if(!debts[currentUser.email]) debts[currentUser.email] = [];
+            if(!debts[currentUser.email].includes(learningState.question)){
+                debts[currentUser.email].push(learningState.question);
+                await updateDoc(doc(db, "alexia_db", "main_brain"), { userDebts: debts });
+            }
+            appendMsg('ai', "Guardado en pendientes.");
+        } else {
+            await updateDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayUnion({ q: learningState.question, a: ans, user: currentUser.name }) });
+            appendMsg('ai', "Gracias, enviado a revisión.");
+            if (learningState.isDebt) {
+                // Lógica simple de pago
+                appendMsg('ai', "Deuda saldada.");
+            }
+        }
+        learningState = { active: false, question: "", isDebt: false };
+    }
+
+    // --- AUTH ACTIONS ---
+    window.emailLogin = () => {
+        const e = document.getElementById('l-email').value;
+        const p = document.getElementById('l-pass').value;
+        signInWithEmailAndPassword(auth, e, p)
+            .then((cred) => {
+                if(!cred.user.emailVerified) {
+                    document.getElementById('verify-modal').style.display = 'flex';
+                    signOut(auth); // Salir para forzar verificación
+                } else {
+                    closeModal();
+                }
+            })
+            .catch(e => alert("Error: " + e.message));
+    };
+
+    window.emailRegister = () => {
+        const e = document.getElementById('r-email').value;
+        const p = document.getElementById('r-pass').value;
+        createUserWithEmailAndPassword(auth, e, p).then(async (cred) => {
+            await sendEmailVerification(cred.user);
+            document.getElementById('auth-modal').style.display = 'none'; // Ocultar login
+            document.getElementById('verify-modal').style.display = 'flex'; // Mostrar alerta
+        }).catch(e => alert(e.message));
+    };
+
+    window.googleLogin = () => {
+        signInWithPopup(auth, provider).then(() => closeModal()).catch(e => alert(e.message));
+    };
+
+    window.logout = (e) => {
+        e.stopPropagation();
+        signOut(auth);
+    }
+
+    // --- UI ---
+    function appendMsg(role, text) {
+        const box = document.getElementById('chat-box');
+        const row = document.createElement('div');
+        row.className = `msg-row ${role}-row`;
+        
+        let iconHtml = '';
+        if(role === 'ai') iconHtml = `<div class="msg-icon icon-ai"><i class="fas fa-sparkles"></i></div>`;
+        
+        row.innerHTML = `
+            ${role === 'ai' ? iconHtml : ''}
+            <div class="msg-bubble">${text}</div>
+        `;
+        
+        if(box.querySelector('h2')) box.innerHTML = ''; // Limpiar bienvenida
+        box.appendChild(row);
+        box.scrollTop = box.scrollHeight;
+    }
+
+    function updateUserUI(u) {
+        const counter = document.getElementById('guest-counter');
+        const histContainer = document.getElementById('history-container');
+        
+        if(u) {
+            document.getElementById('u-name').innerText = u.name;
+            document.getElementById('u-role').innerText = u.role === 'admin' ? 'Admin' : 'Usuario';
+            document.getElementById('u-avatar').innerHTML = u.name[0].toUpperCase();
+            document.getElementById('btn-logout').style.display = 'block';
+            counter.style.display = 'none';
+            histContainer.innerHTML = `<div style="padding:10px; font-size:0.8rem;">Historial activado.</div>`;
+        } else {
+            document.getElementById('u-name').innerText = "Invitado";
+            document.getElementById('u-role').innerText = "Clic para entrar";
+            document.getElementById('u-avatar').innerHTML = `<i class="fas fa-user"></i>`;
+            document.getElementById('btn-logout').style.display = 'none';
+            updateGuestCounter(); // Mostrar contador
+            histContainer.innerHTML = `<div style="padding:20px; text-align:center; font-size:0.8rem; color:#666;">Inicia sesión para ver tu historial.</div>`;
+        }
+    }
+
+    function updateGuestCounter() {
+        const counter = document.getElementById('guest-counter');
+        if (!currentUser) {
+            const remaining = MAX_GUEST_CHATS - guestCount;
+            counter.style.display = 'block';
+            counter.innerText = remaining > 0 ? `${remaining} gratuitos` : "Límite alcanzado";
+            counter.style.color = remaining >
