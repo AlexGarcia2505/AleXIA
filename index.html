@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V52 - Sistema Blindado</title>
+    <title>AleXIA V53 - Final Ultimate</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -224,7 +224,10 @@
     const globalCities = ["Cancún", "Ciudad de México", "Madrid", "Tokio", "Nueva York", "Buenos Aires", "Londres", "París", "Monterrey", "Guadalajara", "Bogotá", "Lima", "Berlín", "Roma"];
 
     const slangMap = { "andas": "estas", "onda": "pasa", "hubo": "paso", "pex": "pasa", "pedo": "problema", "chido": "bueno", "padre": "bueno", "gwey": "amigo", "wey": "amigo", "camara": "adios", "simon": "si", "nelson": "no", "chale": "que mal", "neto": "verdad", "neta": "verdad", "jalo": "acepto", "sobres": "esta bien" };
-    const stopWords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'de', 'del', 'al', 'a', 'en', 'por', 'para', 'con', 'sin', 'que', 'como', 'cual', 'quien', 'es', 'son', 'fue', 'era', 'me', 'te', 'se', 'lo', 'mi', 'tu', 'su', 'nos', 'yo', 'tu', 'el', 'ella', 'dime', 'sobre', 'acerca', 'significa', 'busco', 'esta', 'está', 'cómo', 'hay']);
+    
+    // --- CORRECCIÓN STOP WORDS PARA EVITAR QUE DEFINA "ERES" ---
+    const stopWords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'de', 'del', 'al', 'a', 'en', 'por', 'para', 'con', 'sin', 'que', 'como', 'cual', 'quien', 'es', 'son', 'fue', 'era', 'me', 'te', 'se', 'lo', 'mi', 'tu', 'su', 'nos', 'yo', 'tu', 'el', 'ella', 'dime', 'sobre', 'acerca', 'significa', 'busco', 'esta', 'está', 'cómo', 'hay', 'eres', 'soy', 'somos']);
+    
     const contextualReplies = { "que tal como estas": ["¿Qué gusto saludarte, yo muy bien, y tú?", "¿Cómo te ha ido últimamente?"], "hola": ["¡Hola! ¿Cómo andas?", "Saludos. ¿Qué me cuentas?"], "si": ["Perfecto.", "Excelente."], "no": ["Entendido."], "adios": ["¡Hasta luego!", "¡Cuídate mucho!"], "estoy bien y tu": ["Me alegra. Yo muy bien."] };
     
     if(auth) {
@@ -331,12 +334,11 @@
         const originalText = input.value.trim();
         if(!originalText) return;
 
-        // --- MODO CORRECCIÓN (ENSEÑANZA) ---
+        // --- MODO CORRECCIÓN BLINDADO (V53) ---
         if (chatState.mode === 'waiting_correction') {
             const correction = originalText;
             const userEmail = currentUser ? currentUser.email : "invitado";
             
-            // Feedback inmediato visual
             input.value = '';
             appendMsg('user', originalText);
             const sendingMsgId = 'sending-' + Date.now();
@@ -344,9 +346,9 @@
 
             try {
                 if(db) {
-                    // PROTECCIÓN DE DATOS: Asegurar que nunca enviamos undefined
-                    const qData = chatState.lastQuery || "Pregunta no registrada";
-                    const aData = correction || "Respuesta vacía";
+                    // --- PARCHE DE SEGURIDAD: EVITAR UNDEFINED A TODA COSTA ---
+                    const qData = (chatState.lastQuery && chatState.lastQuery.trim() !== "") ? chatState.lastQuery : "Pregunta recuperada";
+                    const aData = (correction && correction.trim() !== "") ? correction : "Respuesta recuperada";
                     
                     await setDoc(doc(db, "alexia_db", "main_brain"), {
                         reviewQueue: arrayUnion({ 
@@ -357,7 +359,6 @@
                         })
                     }, { merge: true });
                     
-                    // Actualizar mensaje de éxito
                     const sendingEl = document.getElementById(sendingMsgId);
                     if(sendingEl) {
                         const bubble = sendingEl.querySelector('.msg-bubble') || sendingEl;
@@ -382,10 +383,11 @@
         
         const normInput = normalize(originalText);
         
-        if (normInput.match(/quien (te )?creo|quien es tu creador|quien te hizo/)) {
+        // --- IDENTIDAD MEJORADA (V53) ---
+        if (normInput.match(/quien (te )?(creo|hizo)|quien eres|que eres|como te llamas|quien es tu creador/i)) {
             input.value = '';
             appendMsg('user', originalText);
-            const creatorResponse = "Fui creada por <b>Alexis García</b>, un desarrollador apasionado por la tecnología.";
+            const creatorResponse = "Soy <b>AleXIA</b>, una inteligencia artificial creada por <b>Alexis García</b>.";
             await finishResponse(originalText, creatorResponse, false, false);
             return;
         }
@@ -610,8 +612,7 @@
         const msgId = 'ai-msg-' + Date.now();
         
         let feedbackHTML = "";
-        // SANITIZACIÓN CRÍTICA: Quitamos saltos de línea para que no rompa el onclick
-        const safeUserTxt = userTxt.replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ');
+        const safeUserTxt = userTxt.replace(/'/g, "\\'").replace(/"/g, '"').replace(/\n/g, ' ');
         
         if (showFeedback) {
             feedbackHTML = `<div class="feedback-area">
