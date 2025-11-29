@@ -71,12 +71,24 @@
         .word-definition { margin-bottom: 8px; border-left: 3px solid var(--accent); padding-left: 10px; background: rgba(255,255,255,0.03); border-radius: 0 8px 8px 0; padding: 8px 10px 8px 10px; }
         .word-source { font-size: 0.65rem; color: #777; margin-left: 5px; text-transform: uppercase; letter-spacing: 1px; }
         
-        /* SUGERENCIAS DE CONVERSACIÓN (Aparecerán inline) */
+        /* SUGERENCIAS DE CONVERSACIÓN */
         .suggestion-prompt { 
             margin-top: 15px; 
             font-weight: 500; 
             color: var(--accent); 
             display: block;
+            margin-bottom: 5px;
+        }
+        .suggestion-item {
+            display: block;
+            margin-top: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .suggestion-item:hover {
+            color: white;
+            text-decoration: underline;
         }
 
         /* INPUT AREA */
@@ -255,9 +267,15 @@
     const ADMIN_EMAIL = "eljacksonyt@gmail.com";
     let currentChatId = null;
     let chatState = { mode: 'normal', lastQuery: '', constructedAnswer: '', continuationText: '', continuationURL: '' }; 
-    let lastSuggestions = []; 
+    
+    // --- NUEVA VARIABLE PARA ALMACENAR LAS SUGERENCIAS ACTIVAS ---
+    let activeSuggestions = []; 
 
-    // --- 4. DICCIONARIO DE SINÓNIMOS Y JERGA ---
+    // --- 4. LISTAS ALEATORIAS PARA SUGERENCIAS DINÁMICAS ---
+    const randomTopics = ["Universo", "Inteligencia Artificial", "Historia de México", "Biología", "Arte Moderno", "Filosofía", "Tecnología", "Dinosaurios", "Psicología", "Música Clásica"];
+    const bookSubjects = ["love", "science", "history", "fantasy", "mystery", "art", "psychology", "mexico"];
+    const globalCities = ["Cancún", "Ciudad de México", "Madrid", "Tokio", "Nueva York", "Buenos Aires", "Londres", "París", "Monterrey", "Guadalajara", "Bogotá", "Lima", "Berlín", "Roma"];
+
     const slangMap = {
         "andas": "estas", "onda": "pasa", "hubo": "paso", "pex": "pasa",
         "pedo": "problema", "chido": "bueno", "padre": "bueno", "gwey": "amigo",
@@ -267,10 +285,8 @@
         "canton": "casa", "jale": "trabajo", "chamba": "trabajo"
     };
 
-    // Palabras a ignorar para análisis profundo
     const stopWords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'de', 'del', 'al', 'a', 'en', 'por', 'para', 'con', 'sin', 'que', 'como', 'cual', 'quien', 'es', 'son', 'fue', 'era', 'me', 'te', 'se', 'lo', 'mi', 'tu', 'su', 'nos', 'yo', 'tu', 'el', 'ella', 'dime', 'sobre', 'acerca', 'significa', 'busco']);
 
-    // --- 5. SINÓNIMOS CONTEXTUALES DE RESPUESTA ---
     const contextualReplies = {
         "que tal como estas": ["¿Qué gusto saludarte, yo muy bien, y tú?", "¿Cómo te ha ido últimamente?", "¡Estupendo! ¿Qué planes tienes para hoy?"],
         "hola": ["¡Hola! ¿Cómo andas?", "Saludos. ¿Qué me cuentas?", "Hola, ¿qué tal?"],
@@ -280,16 +296,6 @@
         "estoy bien y tu": ["Me alegra. Yo muy bien, gracias por preguntar.", "¡Qué gusto! Yo genial.", "¡Fantástico! Yo estoy lista para ayudar."],
     };
     
-    // --- 6. SUGERENCIAS GENÉRICAS (CON QUERIES REALES) ---
-    const genericSuggestionsData = [
-        { label: "Buscar un dato curioso", query: "que es la inteligencia artificial", source: "artículo de" },
-        { label: "Ver el clima", query: "clima", source: "clima en" },
-        { label: "Preguntar sobre un libro famoso", query: "quien escribio cien años de soledad", source: "libro de" },
-        { label: "Buscar una definición", query: "que es la fotosintesis", source: "artículo de" }
-    ];
-
-    const randomCities = ["Cancún", "Ciudad de México", "Guadalajara", "Monterrey", "Tijuana", "Puebla"];
-
     // 7. AUTH OBSERVER
     if(auth) {
         onAuthStateChanged(auth, async (user) => {
@@ -336,7 +342,7 @@
         return new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
     }
 
-    // 9. LÓGICA PRINCIPAL DEL CHAT (4 NIVELES + INTENTOS)
+    // --- 9. LÓGICA PRINCIPAL DEL CHAT ---
     window.sendMessage = async function() {
         const input = document.getElementById('chat-input');
         const originalText = input.value.trim();
@@ -344,18 +350,21 @@
         
         const normInput = normalize(originalText);
         
-        // --- 0. Manejo de Respuestas Rápidas (A/B/C) o Frase Clave ---
-        
-        // A. Manejo de Incisos A/B/C
-        const suggestionIndex = normInput.toUpperCase().match(/^[ABC]\)?$/);
+        // --- 0. Manejo de Opciones A, B, C ---
+        const optionMatch = normInput.toUpperCase().match(/^[ABC]\)?$/);
 
-        if (suggestionIndex) {
-            const idx = suggestionIndex[0].toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0);
-            if (lastSuggestions[idx]) {
-                const suggestedQuery = lastSuggestions[idx].query;
-                input.value = suggestedQuery;
-                chatState.mode = 'normal'; 
-                await sendMessage(); 
+        if (optionMatch) {
+            const idx = optionMatch[0].replace(')', '').charCodeAt(0) - 65; // A=0, B=1, C=2
+            if (activeSuggestions[idx]) {
+                const suggestion = activeSuggestions[idx];
+                input.value = ""; // Limpiar input
+                
+                // Mostrar en el chat la selección del usuario (Estética)
+                appendMsg('user', originalText.toUpperCase() + " (" + suggestion.label.replace(/\*\*/g, '') + ")");
+
+                // Procesar DIRECTAMENTE como Intención Específica (saltando el análisis normal)
+                // Esto fuerza a usar la API correcta con el título correcto
+                await processSpecificIntent(suggestion.query, suggestion.source);
                 return;
             }
         }
@@ -366,27 +375,8 @@
         const interpretedText = processSynonyms(originalText);
         const words = interpretedText.split(/\s+/).filter(w => !stopWords.has(w) && w.length > 2);
 
-        // B. Manejo de Estados (Continuation/Clima/Feedback/Correction)
         if (chatState.mode === 'waiting_continuation') {
-            if (normInput === 'si' || normInput === 'sí' || normInput === 'claro') {
-                const continuation = chatState.continuationText;
-                const sourceURL = chatState.continuationURL;
-                
-                const { finalResponse, continuationText } = checkTruncation(continuation, 500); 
-
-                chatState.continuationText = continuationText;
-                chatState.mode = continuationText ? 'waiting_continuation' : 'normal';
-
-                // Añadir el enlace al final de la respuesta final
-                const linkHTML = `<br><br><a href="${sourceURL}" target="_blank" style="color:var(--accent); text-decoration:underline;">Ver artículo completo</a>`;
-                const finalOutput = finalResponse + (chatState.mode === 'normal' ? linkHTML : '');
-
-                finishResponse(originalText, finalOutput, true); 
-            } else {
-                 finishResponse(originalText, "Entendido. Procesando tu respuesta como una nueva consulta.", true);
-                 chatState.mode = 'normal';
-                 chatState.continuationText = '';
-            }
+            handleContinuation(normInput, originalText);
             return;
         }
 
@@ -394,58 +384,28 @@
         if (chatState.mode === 'waiting_feedback') { handleFeedback(interpretedText, originalText); return; }
         if (chatState.mode === 'waiting_correction') { handleCorrection(originalText); return; }
         
-        // C. Detección por Frase Clave (Libro de, Clima en, Artículo de)
-        
+        // C. Detección por Frase Clave Manual (Libro de, Clima en, Artículo de)
         const specificIntent = checkSpecificIntent(originalText);
         
         if (specificIntent) {
-            appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> Consultando ${specificIntent.source}...`);
-            const searchData = await fetchExternalData(specificIntent.query, specificIntent.source);
-
-            if (searchData) {
-                const mainConcept = specificIntent.source.includes('Meteo') ? 'clima' : (specificIntent.source.includes('Biblioteca') ? 'libro' : 'artículo');
-                const secondarySearchData = await fetchExternalData(mainConcept, 'Wikipedia/WEB');
-                
-                let aiResponse = `<strong>Sobre "${originalText}":</strong><br>${searchData.def}<br><span style="font-size:0.7rem; color:#888;">Fuente: ${searchData.src}</span>`;
-                
-                if (secondarySearchData) {
-                    aiResponse += `<br><hr style="border-color:#333; margin:10px 0;">`;
-                    aiResponse += `*Definición General de ${mainConcept}:* ${secondarySearchData.def}`;
-                }
-
-                const { finalResponse, continuationText } = checkTruncation(aiResponse, 500);
-
-                if (continuationText) {
-                    chatState = { mode: 'waiting_continuation', lastQuery: originalText, continuationText: continuationText, continuationURL: searchData.url };
-                } else {
-                    chatState = { mode: 'normal', lastQuery: originalText };
-                }
-
-                const box = document.getElementById('chat-box');
-                if(box.lastChild.innerHTML.includes("fa-spin")) box.removeChild(box.lastChild);
-
-                finishResponse(originalText, finalResponse, true); 
-                return;
-            }
+            await processSpecificIntent(specificIntent.query, specificIntent.source);
+            return;
         }
         
-        // D. Lógica General (Intención y Fallback)
+        // D. Lógica General
         const intentResult = checkGeneralIntent(interpretedText, words);
-        
         if (intentResult) {
             if (intentResult.action === 'ask_city') {
                 const today = getTodayDate();
-                const aiResponse = `Para saber el pronóstico, ¿de qué ciudad te gustaría saber el clima para hoy ${today}?`;
+                finishResponse(originalText, `Para saber el pronóstico, ¿de qué ciudad te gustaría saber el clima para hoy ${today}?`, false);
                 chatState = { mode: 'waiting_city', lastQuery: originalText };
-                finishResponse(originalText, aiResponse, false);
                 return;
             } else if (intentResult.action === 'execute_search') {
-                // Si la intención se detectó aquí, es una búsqueda compuesta, caemos a NIVEL 3
-                // Ya tenemos el spinner, solo procedemos
+               // Pasa a buscar
             }
         }
 
-        // --- 3. NIVEL 1: BÚSQUEDA EXACTA EN MEMORIA ---
+        // --- NIVEL 1: BÚSQUEDA EXACTA EN MEMORIA ---
         let bestMatch = null;
         let maxScore = 0;
         brain.memory.forEach(mem => {
@@ -465,11 +425,12 @@
             if (contextualReplies[key]) {
                 finalResponse = contextualReplies[key][Math.floor(Math.random() * contextualReplies[key].length)];
             }
-            finishResponse(originalText, finalResponse, true);
+            // Sugerir solo si la respuesta es corta
+            await finishResponse(originalText, finalResponse, true);
             return;
         }
 
-        // --- 4. NIVEL 2 & 3: BÚSQUEDA WEB Y DESMENUZADO (FALLBACK GENERAL) ---
+        // --- NIVEL 2 & 3: BÚSQUEDA WEB Y DESMENUZADO ---
         appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> Analizando en la web...`);
         
         const synthesis = await runWordDecomposition(interpretedText, words);
@@ -498,27 +459,59 @@
                 chatState = { mode: 'waiting_feedback', lastQuery: originalText };
             }
 
-            finishResponse(originalText, finalResponse, true);
+            await finishResponse(originalText, finalResponse, true);
             return;
         }
 
-        // --- 5. NIVEL 4: RENDICIÓN (NO ENCONTRÓ NADA) ---
+        // --- NIVEL 4: RENDICIÓN ---
         const box = document.getElementById('chat-box');
-        if(box.lastChild && (box.lastChild.innerHTML.includes("fa-spin") || box.lastChild.innerHTML.includes("Desmenuzando"))) box.removeChild(box.lastChild);
+        if(box.lastChild && (box.lastChild.innerHTML.includes("fa-spin") || box.lastChild.innerHTML.includes("Analizando"))) box.removeChild(box.lastChild);
 
-        finishResponse(originalText, "No logré encontrar información completa ni desmenuzada. ¿Te gustaría enseñarme la respuesta correcta?", true);
+        await finishResponse(originalText, "No logré encontrar información completa ni desmenuzada. ¿Te gustaría enseñarme la respuesta correcta?", true);
         chatState = { mode: 'waiting_correction', lastQuery: originalText }; 
     }
-    
-    // --- 10. HELPER DE INTENCIÓN Y LÓGICA CONTEXTUAL ---
-    
+
+    // --- MANEJO DE INTENCIÓN ESPECÍFICA (A/B/C REDIRECCIÓN) ---
+    async function processSpecificIntent(query, source) {
+        appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> Consultando ${source.split('/')[0]}...`);
+        
+        // Extraer la parte real de la búsqueda (eliminar "libro de", "articulo de", etc. para la API)
+        let cleanQuery = query;
+        if (source.includes('Biblioteca')) cleanQuery = query.replace(/^libro de\s*/i, '');
+        else if (source.includes('Meteo')) cleanQuery = query.replace(/^clima en\s*/i, '');
+        else if (source.includes('Wikipedia')) cleanQuery = query.replace(/^articulo de\s*/i, '');
+
+        const searchData = await fetchExternalData(cleanQuery, source);
+
+        if (searchData) {
+            let aiResponse = `<strong>Sobre "${cleanQuery}":</strong><br>${searchData.def}<br><span style="font-size:0.7rem; color:#888;">Fuente: ${searchData.src}</span>`;
+            
+            const { finalResponse, continuationText } = checkTruncation(aiResponse, 500);
+
+            if (continuationText) {
+                chatState = { mode: 'waiting_continuation', lastQuery: query, continuationText: continuationText, continuationURL: searchData.url };
+            } else {
+                chatState = { mode: 'normal', lastQuery: query };
+            }
+
+            const box = document.getElementById('chat-box');
+            if(box.lastChild.innerHTML.includes("fa-spin")) box.removeChild(box.lastChild);
+
+            await finishResponse(query, finalResponse, true); 
+        } else {
+            const box = document.getElementById('chat-box');
+            if(box.lastChild.innerHTML.includes("fa-spin")) box.removeChild(box.lastChild);
+            await finishResponse(query, `Lo siento, hubo un error conectando con la base de datos de ${source}. Intenta de nuevo.`, true);
+        }
+    }
+
     function checkSpecificIntent(originalText) {
         const normText = normalize(originalText);
         let match = normText.match(/^(libro de|articulo de|clima en)\s*(.*)$/);
         
         if (match) {
-            const trigger = match[1].trim(); // 'libro de', 'articulo de', 'clima en'
-            const query = match[2].trim();   // El resto de la frase
+            const trigger = match[1].trim(); 
+            const query = match[2].trim(); 
             
             if (query.length > 0) {
                 let source;
@@ -531,6 +524,27 @@
         }
         return null;
     }
+    
+    // --- HELPER FUNCIONES ---
+    function handleContinuation(normInput, originalText) {
+        if (normInput === 'si' || normInput === 'sí' || normInput === 'claro') {
+            const continuation = chatState.continuationText;
+            const sourceURL = chatState.continuationURL;
+            const { finalResponse, continuationText } = checkTruncation(continuation, 500); 
+
+            chatState.continuationText = continuationText;
+            chatState.mode = continuationText ? 'waiting_continuation' : 'normal';
+
+            const linkHTML = `<br><br><a href="${sourceURL}" target="_blank" style="color:var(--accent); text-decoration:underline;">Ver artículo completo</a>`;
+            const finalOutput = finalResponse + (chatState.mode === 'normal' ? linkHTML : '');
+
+            finishResponse(originalText, finalOutput, true); 
+        } else {
+             finishResponse(originalText, "Entendido. Procesando tu respuesta como una nueva consulta.", true);
+             chatState.mode = 'normal';
+             chatState.continuationText = '';
+        }
+    }
 
     function checkGeneralIntent(interpretedText, words) {
         const isWeatherQuery = interpretedText.includes("clima") || interpretedText.includes("tiempo");
@@ -539,8 +553,7 @@
         if (isWeatherQuery) {
             const locationWords = words.filter(w => w !== 'clima' && w !== 'tiempo' && w.length > 1); 
             if (locationWords.length >= 1) {
-                const locationQuery = locationWords.join(' ');
-                return { action: 'execute_search', source: 'Meteo/WEB', query: locationQuery };
+                return { action: 'execute_search', source: 'Meteo/WEB', query: locationWords.join(' ') };
             } else {
                 return { action: 'ask_city' };
             }
@@ -552,7 +565,6 @@
                 return { action: 'execute_search', source: 'Biblioteca/WEB', query: bookQuery };
             }
         }
-
         return null;
     }
 
@@ -562,24 +574,20 @@
 
         if (weatherData && weatherData.src === "Meteo/WEB") {
             let aiResponse = `El pronóstico para **${cityName}** hoy ${today} es:<br>${weatherData.def}`;
-            
             const secondarySearchData = await fetchExternalData('clima', 'Wikipedia/WEB'); 
             if (secondarySearchData) {
                 aiResponse += `<br><hr style="border-color:#333; margin:10px 0;">`;
                 aiResponse += `*Definición General de Clima:* ${secondarySearchData.def}`;
             }
-
             const { finalResponse, continuationText } = checkTruncation(aiResponse, 500);
-
             if (continuationText) {
                 chatState = { mode: 'waiting_continuation', lastQuery: cityName, continuationText: continuationText, continuationURL: weatherData.url };
             } else {
                 chatState = { mode: 'normal', lastQuery: '' };
             }
-
-            finishResponse(cityName, finalResponse, true);
+            await finishResponse(cityName, finalResponse, true);
         } else {
-            finishResponse(cityName, `Disculpa, no pude encontrar el pronóstico para **${cityName}**. ¿Probamos con otra ciudad o tema?`, true);
+            await finishResponse(cityName, `Disculpa, no pude encontrar el pronóstico para **${cityName}**. ¿Probamos con otra ciudad?`, true);
             chatState = { mode: 'normal', lastQuery: '' };
         }
     }
@@ -589,19 +597,14 @@
         for (let word of words) {
             let definition = null;
             let source = "";
-
-            // A. Memoria Local
             try {
                 const dictSnap = await getDoc(doc(db, "dictionary", word));
                 if (dictSnap.exists()) { definition = dictSnap.data().def; source = "Memoria"; }
             } catch(e) {}
-
-            // B. Web Externa (Solo Wiki/Diccionario para desmenuzado general)
             if (!definition) {
                 const extData = await fetchExternalData(word, 'Wikipedia/WEB'); 
                 if (extData) { definition = extData.def; source = "WEB"; }
             }
-
             if (definition) {
                 synthesis.push({ word: word, def: definition, src: source });
             }
@@ -614,7 +617,6 @@
         const encoded = encodeURIComponent(term);
         let url = '';
 
-        // 1. Lógica de APIs Específicas (Meteo o Biblioteca)
         if (forceSource === 'Meteo/WEB') {
             try {
                 const geoResp = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encoded}&count=1&language=es&format=json`);
@@ -644,8 +646,6 @@
             } catch(e) {}
             return null;
         }
-        
-        // 2. Búsqueda General (Wiki/Diccionario)
         
         // Wikipedia
         try {
@@ -679,8 +679,6 @@
         return null;
     }
 
-    // --- 12. SISTEMA DE TRUNCAMIENTO Y FEEDBACK ---
-    
     function checkTruncation(text, maxLength) {
         if (text.length > maxLength) {
             let splitIndex = text.lastIndexOf('.', maxLength);
@@ -699,7 +697,7 @@
         return { finalResponse: text, continuationText: null };
     }
 
-    // FUNCIONES UI Y LOCAL STORAGE
+    // --- FUNCIONES UI Y LOCAL STORAGE ---
     function handleFeedback(normInput, originalInput) {
         const isAffirmative = normInput === 'si' || normInput === 'sí' || normInput === 'claro';
         const isNegative = normInput === 'no' || normInput === 'nop' || normInput === 'incorrecto';
@@ -730,79 +728,90 @@
                 reviewQueue: arrayUnion({ q: chatState.lastQuery, a: correction, user: userName, date: new Date().toISOString() }) 
             });
         }
-        finishResponse(correction, "¡Gracias! Tu corrección ha sido enviada a revisión.", true);
+        await finishResponse(correction, "¡Gracias! Tu corrección ha sido enviada a revisión.", true);
         chatState = { mode: 'normal' };
     }
 
-    function finishResponse(userTxt, aiTxt, shouldSuggest) {
+    // --- AQUÍ OCURRE LA MAGIA DE GENERAR HTML Y SUGERENCIAS ---
+    async function finishResponse(userTxt, aiTxt, shouldSuggest) {
         appendMsg('ai', aiTxt);
         saveLocalChat(userTxt, aiTxt);
-        
         saveUserQueryHistory(userTxt);
 
-        // Agrega sugerencias al final del texto si no es una respuesta de continuación
         if (shouldSuggest) {
-            const suggestionsHTML = generateSuggestionsHTML();
-            // Inyectamos las sugerencias directamente en el último mensaje de la IA
+            // AHORA ESPERAMOS A QUE SE GENEREN LAS SUGERENCIAS ANTES DE INSERTAR HTML
+            const suggestionsHTML = await generateSuggestionsHTML();
+            
             const msgBubbles = document.getElementById('chat-box').querySelectorAll('.msg-row.ai-row .msg-bubble');
             if (msgBubbles.length > 0) {
                  msgBubbles[msgBubbles.length - 1].innerHTML += suggestionsHTML;
+                 const box = document.getElementById('chat-box');
+                 box.scrollTop = box.scrollHeight; // Auto scroll al final
             }
         }
     }
     
-    // 🔥 GENERAR SUGERENCIAS DINÁMICAS (A/B/C)
-    async function generateSuggestions() {
-        const history = getUserQueryHistory();
-        lastSuggestions = [];
+    // --- 12. GENERADOR DE SUGERENCIAS REAL (A/B/C) ---
+    async function generateSuggestionsHTML() {
+        activeSuggestions = []; // Reiniciar las sugerencias activas
         
-        // 1. Sugerencia de Libro
+        // 1. Obtener Libro Aleatorio (A)
+        let bookItem = { label: "Libro de **El Quijote**", query: "libro de El Quijote", source: 'Biblioteca/WEB' };
         try {
-            const bookData = await fetchExternalData("famoso", 'Biblioteca/WEB'); // Búsqueda genérica
-            const bookTitle = bookData.def.match(/Libro: "(.*?)", Autor:/)[1];
-            lastSuggestions.push({ label: `Libro de **${bookTitle}**`, query: `libro de ${bookTitle}`, source: 'Biblioteca/WEB' });
-        } catch {}
-
-        // 2. Sugerencia de Artículo (Wikipedia)
-         try {
-            const wikiData = await fetchExternalData("cultura general", 'Wikipedia/WEB');
-            const wikiTitle = wikiData.def.substring(0, 30);
-            lastSuggestions.push({ label: `Artículo de **${wikiTitle}...**`, query: `articulo de ${wikiTitle}`, source: 'Wikipedia/WEB' });
-        } catch {}
-
-        // 3. Sugerencia de Clima (Ciudad Aleatoria o Histórica)
-        try {
-            const randomCity = randomCities[Math.floor(Math.random() * randomCities.length)];
-            lastSuggestions.push({ label: `Clima en **${randomCity}**`, query: `clima en ${randomCity}`, source: 'Meteo/WEB' });
-        } catch {}
-
-        // Si el historial tiene algo, reemplazamos una aleatoria por una histórica (si hay más de 3 sugerencias genéricas)
-        if (history.length > 3) {
-            const recentUnique = Array.from(new Set(history.map(normalize))).slice(-3);
-            const randomHistoryQuery = recentUnique[Math.floor(Math.random() * recentUnique.length)];
-            if (randomHistoryQuery) {
-                 lastSuggestions[Math.floor(Math.random() * 3)] = { label: `Buscar sobre: **${randomHistoryQuery}**`, query: randomHistoryQuery, source: 'Memoria/WEB' };
+            const randomSubject = bookSubjects[Math.floor(Math.random() * bookSubjects.length)];
+            const bookResp = await fetch(`https://openlibrary.org/search.json?q=${randomSubject}&limit=5&fields=title`);
+            const bookJson = await bookResp.json();
+            if (bookJson.docs && bookJson.docs.length > 0) {
+                const randomBook = bookJson.docs[Math.floor(Math.random() * bookJson.docs.length)];
+                bookItem = { 
+                    label: `Libro: **${randomBook.title}**`, 
+                    query: `libro de ${randomBook.title}`, 
+                    source: 'Biblioteca/WEB' 
+                };
             }
-        }
+        } catch(e) { console.log("Error sugiriendo libro:", e); }
+        activeSuggestions.push(bookItem);
 
-        return lastSuggestions;
-    }
-    
-    function generateSuggestionsHTML() {
-        let finalSuggestions = lastSuggestions.slice(0, 3); // Usar las 3 generadas
-        let html = `<br><br><span class="suggestion-prompt">Sugerencias: ¿Te interesa algún tema? Responde A, B o C:</span><br>`;
-        
-        finalSuggestions.forEach((s, index) => {
-            const letter = String.fromCharCode(65 + index);
-            const queryLabel = s.query.replace(/clima en |clima/i, 'Clima en '); // Limpieza para la etiqueta
-            html += `<span style="display:block; margin-top:5px; font-size:0.9rem;">
-                        <strong style="color:var(--accent);">${letter})</strong> ${queryLabel}
+        // 2. Obtener Artículo Wiki Aleatorio (B)
+        let wikiItem = { label: "Artículo de **Ciencia**", query: "articulo de ciencia", source: 'Wikipedia/WEB' };
+        try {
+             const randomTopic = randomTopics[Math.floor(Math.random() * randomTopics.length)];
+             // Buscamos algo relacionado al tema aleatorio
+             const wikiResp = await fetch(`https://es.wikipedia.org/w/api.php?action=query&list=search&srsearch=${randomTopic}&format=json&origin=*`);
+             const wikiJson = await wikiResp.json();
+             if(wikiJson.query && wikiJson.query.search.length > 0) {
+                 const randomRes = wikiJson.query.search[Math.floor(Math.random() * Math.min(5, wikiJson.query.search.length))];
+                 wikiItem = {
+                     label: `Artículo de **${randomRes.title}**`,
+                     query: `articulo de ${randomRes.title}`,
+                     source: 'Wikipedia/WEB'
+                 };
+             }
+        } catch(e) { console.log("Error sugiriendo wiki:", e); }
+        activeSuggestions.push(wikiItem);
+
+        // 3. Obtener Clima Aleatorio (C)
+        let weatherItem = { label: "Clima en **Cancún**", query: "clima en Cancún", source: 'Meteo/WEB' };
+        try {
+            const randomCity = globalCities[Math.floor(Math.random() * globalCities.length)];
+            weatherItem = { label: `Clima en **${randomCity}**`, query: `clima en ${randomCity}`, source: 'Meteo/WEB' };
+        } catch(e) {}
+        activeSuggestions.push(weatherItem);
+
+        // Generar HTML
+        let html = `<br><br><span class="suggestion-prompt">Sugerencias: ¿Te interesa algún tema? Responde A, B o C:</span>`;
+        activeSuggestions.forEach((s, index) => {
+            const letter = String.fromCharCode(65 + index); // A, B, C
+            // Onclick para que también funcione clicando
+            html += `<span class="suggestion-item" onclick="document.getElementById('chat-input').value='${letter}'; sendMessage();">
+                        <strong style="color:var(--accent);">${letter})</strong> ${s.label}
                     </span>`;
         });
+
         return html;
     }
 
-    // GESTIÓN DE ESTADO Y LOCALSTORAGE (MANTENER IGUAL)
+    // GESTIÓN DE ESTADO Y LOCALSTORAGE
     function getHistoryKey() { return `alexia_query_history_${currentUser ? currentUser.uid : 'guest'}`; }
     function saveUserQueryHistory(query) {
         const key = getHistoryKey();
@@ -812,7 +821,6 @@
         if (history.length > 100) history.shift(); 
         localStorage.setItem(key, JSON.stringify(history));
     }
-    function getUserQueryHistory() { const key = getHistoryKey(); return JSON.parse(localStorage.getItem(key)) || []; }
     function appendMsg(role, text) {
         const box = document.getElementById('chat-box');
         const row = document.createElement('div');
