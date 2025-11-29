@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V50 - Docencia Interactiva</title>
+    <title>AleXIA V51 - Sistema Robusto</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -92,13 +92,8 @@
         }
         .feedback-btn:hover { background: rgba(255,255,255,0.1); color: white; }
         
-        /* ESTILO PARA CUANDO EL BOTÓN ENSEÑAR ESTÁ ACTIVO */
         .feedback-btn.active-teach { 
-            background: var(--accent); 
-            color: #000; 
-            border-color: var(--accent);
-            font-weight: bold;
-            box-shadow: 0 0 10px var(--accent-glow);
+            background: var(--accent); color: #000; border-color: var(--accent); font-weight: bold; box-shadow: 0 0 10px var(--accent-glow);
         }
 
         .tts-btn {
@@ -336,30 +331,59 @@
         const originalText = input.value.trim();
         if(!originalText) return;
 
-        // --- MODO CORRECCIÓN (ENSEÑANZA) ---
+        // --- MODO CORRECCIÓN (ENSEÑANZA) CON PROTECCIÓN DE ERRORES ---
         if (chatState.mode === 'waiting_correction') {
             const correction = originalText;
             const userEmail = currentUser ? currentUser.email : "invitado";
             
-            if(db) {
-                // CORRECCIÓN CLAVE: Usamos setDoc con merge para asegurar que el documento exista
-                await setDoc(doc(db, "alexia_db", "main_brain"), {
-                    reviewQueue: arrayUnion({ q: chatState.lastQuery, a: correction, user: userEmail, date: new Date().toISOString() })
-                }, { merge: true });
-            }
-            
+            // 1. Mostrar feedback inmediato
             input.value = '';
             appendMsg('user', originalText);
-            appendMsg('ai', `¡Gracias! He guardado tu respuesta. Un administrador la revisará para que yo pueda aprender.`);
+            const sendingMsgId = 'sending-' + Date.now();
+            appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> Guardando tu enseñanza...`, false, sendingMsgId);
+
+            try {
+                if(db) {
+                    await setDoc(doc(db, "alexia_db", "main_brain"), {
+                        reviewQueue: arrayUnion({ q: chatState.lastQuery, a: correction, user: userEmail, date: new Date().toISOString() })
+                    }, { merge: true });
+                    
+                    // Si todo sale bien, actualizamos el mensaje
+                    const sendingEl = document.getElementById(sendingMsgId);
+                    if(sendingEl) {
+                        // Buscamos la burbuja contenedora para cambiar el texto
+                        const bubble = sendingEl.querySelector('.msg-bubble') || sendingEl;
+                        bubble.innerHTML = `¡Gracias! He guardado tu respuesta. Un administrador la revisará.`;
+                    }
+                } else {
+                    throw new Error("Base de datos no conectada.");
+                }
+            } catch (e) {
+                // SI FALLA, AVISAMOS AL USUARIO
+                const sendingEl = document.getElementById(sendingMsgId);
+                if(sendingEl) {
+                    const bubble = sendingEl.querySelector('.msg-bubble') || sendingEl;
+                    bubble.innerHTML = `❌ <b>Error:</b> No pude guardar la enseñanza. Posiblemente faltan permisos en Firebase. <br><small>${e.message}</small>`;
+                    bubble.style.color = "var(--danger)";
+                }
+            }
             
-            // Apagar botones activos visualmente
+            // Apagar botones
             document.querySelectorAll('.feedback-btn.active-teach').forEach(b => b.classList.remove('active-teach'));
-            
             chatState = { mode: 'normal' }; 
             return;
         }
         
         const normInput = normalize(originalText);
+        
+        // IDENTIDAD (Quién te creó)
+        if (normInput.match(/quien (te )?creo|quien es tu creador|quien te hizo/)) {
+            input.value = '';
+            appendMsg('user', originalText);
+            const creatorResponse = "Fui creada por <b>Alexis García</b>, un desarrollador apasionado por la tecnología.";
+            await finishResponse(originalText, creatorResponse, false, false);
+            return;
+        }
         
         const flexibleMatch = normInput.match(/\b([abc])\b/i);
         const isShortResponse = normInput.length < 30;
@@ -557,26 +581,19 @@
         return null;
     }
 
-    // --- LÓGICA DE INTERRUPTOR PARA EL BOTÓN ENSEÑAR ---
     window.rateAnswer = (type, query, btnElement) => {
         if (type === 'good') {
             alert("¡Me alegra haber ayudado! 😊");
         } else {
-            // SI YA ESTAMOS EN MODO ESPERA, CANCELAMOS (TOGGLE OFF)
             if (chatState.mode === 'waiting_correction') {
                 chatState = { mode: 'normal', lastQuery: '' };
                 btnElement.classList.remove('active-teach');
                 btnElement.innerHTML = `<i class="fas fa-graduation-cap"></i> Enseñar`;
                 appendMsg('ai', "Modo enseñanza cancelado. ¿En qué más puedo ayudarte?");
             } 
-            // SI NO, ACTIVAMOS (TOGGLE ON)
             else {
                 chatState = { mode: 'waiting_correction', lastQuery: query };
-                
-                // Apagar otros botones activos si los hubiera
                 document.querySelectorAll('.feedback-btn.active-teach').forEach(b => b.classList.remove('active-teach'));
-                
-                // Encender este
                 btnElement.classList.add('active-teach');
                 btnElement.innerHTML = `<i class="fas fa-times"></i> Cancelar`;
                 appendMsg('ai', "Entendido. 😔 ¿Qué respuesta debería haberte dado? Escríbela y aprenderé.");
@@ -588,8 +605,7 @@
         const msgId = 'ai-msg-' + Date.now();
         
         let feedbackHTML = "";
-        // Pasamos 'safeUserTxt' sin comillas para no romper el HTML del onclick
-        const safeUserTxt = userTxt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const safeUserTxt = userTxt.replace(/'/g, "\\'").replace(/"/g, '"');
         
         if (showFeedback) {
             feedbackHTML = `<div class="feedback-area">
