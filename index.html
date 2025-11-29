@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V39 - Lógica Conversacional Final</title>
+    <title>AleXIA V40 - Voz y Datos Profundos</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -62,41 +62,41 @@
         #chat-box { flex: 1; overflow-y: auto; padding: 80px 20px 140px 20px; display: flex; flex-direction: column; gap: 20px; max-width: 800px; margin: 0 auto; width: 100%; box-sizing: border-box; }
         .msg-row { display: flex; gap: 15px; animation: fadeIn 0.3s; }
         .msg-row.user-row { justify-content: flex-end; }
-        .msg-icon { width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #4285f4, #9b72cb); color: white; flex-shrink: 0; }
-        .msg-bubble { max-width: 75%; line-height: 1.6; font-size: 1rem; }
+        .msg-icon { width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #4285f4, #9b72cb); color: white; flex-shrink: 0; position: relative; }
+        
+        .msg-bubble { max-width: 85%; line-height: 1.6; font-size: 1rem; position: relative; }
         .user-row .msg-bubble { background: var(--user-msg); padding: 10px 18px; border-radius: 20px 20px 4px 20px; }
         .ai-row .msg-bubble { background: transparent; padding: 0 10px; }
         
-        /* ESTILOS PARA DEFINICIONES */
-        .word-definition { margin-bottom: 8px; border-left: 3px solid var(--accent); padding-left: 10px; background: rgba(255,255,255,0.03); border-radius: 0 8px 8px 0; padding: 8px 10px 8px 10px; }
-        .word-source { font-size: 0.65rem; color: #777; margin-left: 5px; text-transform: uppercase; letter-spacing: 1px; }
-        
-        /* SUGERENCIAS DE CONVERSACIÓN */
-        .suggestion-prompt { 
-            margin-top: 15px; 
-            font-weight: 500; 
-            color: var(--accent); 
-            display: block;
-            margin-bottom: 5px;
+        /* BOTÓN DE VOZ EN MENSAJE IA */
+        .tts-btn {
+            background: rgba(255,255,255,0.1); border: none; color: var(--accent);
+            width: 25px; height: 25px; border-radius: 50%; cursor: pointer;
+            display: inline-flex; justify-content: center; align-items: center;
+            margin-left: 10px; vertical-align: middle; transition: 0.2s;
         }
-        .suggestion-item {
-            display: block;
-            margin-top: 6px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-        .suggestion-item:hover {
-            color: white;
-            text-decoration: underline;
-        }
+        .tts-btn:hover { background: rgba(255,255,255,0.2); }
+        .tts-btn.speaking { color: var(--danger); animation: pulse 1s infinite; }
 
-        /* INPUT AREA */
+        /* SUGERENCIAS DE CONVERSACIÓN */
+        .suggestion-prompt { margin-top: 15px; font-weight: 500; color: var(--accent); display: block; margin-bottom: 5px; }
+        .suggestion-item { display: block; margin-top: 6px; font-size: 0.9rem; cursor: pointer; transition: color 0.2s; }
+        .suggestion-item:hover { color: white; text-decoration: underline; }
+
+        /* INPUT AREA & MICROPHONE */
         .input-container { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px 20px 10px 20px; background: var(--bg-body); display: flex; flex-direction: column; align-items: center; z-index: 20; border-top: 1px solid #222; }
-        .input-wrapper { background: var(--bg-input); width: 100%; max-width: 800px; border-radius: 30px; display: flex; align-items: center; padding: 8px 15px; border: 1px solid #444; }
+        .input-wrapper { background: var(--bg-input); width: 100%; max-width: 800px; border-radius: 30px; display: flex; align-items: center; padding: 5px 10px 5px 15px; border: 1px solid #444; }
         .chat-input { flex: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; font-size: 16px; }
-        .send-btn { background: var(--text-main); color: #000; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; }
-        .footer-info { font-size: 0.7rem; color: #555; text-align: center; margin-bottom: 5px; }
+        
+        .action-btn { background: transparent; color: #aaa; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.2s; margin-left: 5px; }
+        .action-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+        .send-btn { background: var(--text-main); color: #000; }
+        .send-btn:hover { background: white; }
+
+        /* ANIMACIÓN MICROFONO */
+        .mic-btn.listening { color: var(--danger); background: rgba(255, 68, 68, 0.1); animation: pulseRed 1.5s infinite; }
+
+        .footer-info { font-size: 0.7rem; color: #555; text-align: center; margin-bottom: 5px; margin-top: 5px; }
 
         /* MODALES */
         .modal { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.85); z-index: 200; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
@@ -110,6 +110,14 @@
         .btn-login { background: var(--accent); color: #000; border: none; padding: 6px 14px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: 0; } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(255, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); } }
+        
+        /* ESTILO PARA LA RESPUESTA RICA */
+        .rich-content p { margin-bottom: 15px; text-align: justify; }
+        .rich-source { margin-top: 20px; padding-top: 10px; border-top: 1px solid #333; font-size: 0.85rem; color: var(--accent); }
+        .rich-source a { color: var(--accent); text-decoration: none; display: flex; align-items: center; gap: 5px; }
+        .rich-source a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -121,36 +129,18 @@
         <span style="font-weight:bold; font-size:1.1rem; display:flex; align-items:center; gap:10px;"><i class="fas fa-brain" style="color:var(--accent)"></i> AleXIA</span>
         <button onclick="toggleSidebar()" style="background:none; border:none; color:white; cursor:pointer;" class="toggle-btn"><i class="fas fa-times"></i></button>
     </div>
-    
-    <button class="new-chat-btn" onclick="startNewChat()">
-        <i class="fas fa-plus"></i> Nuevo chat
-    </button>
-
+    <button class="new-chat-btn" onclick="startNewChat()"><i class="fas fa-plus"></i> Nuevo chat</button>
     <div id="admin-menu-container" style="display:none; padding: 15px 15px 5px 15px;">
-        <button onclick="openDash()" style="width:100%; background: #3c2f4d; color: #d4bbfb; border: 1px solid #8e6ec2; padding: 10px; border-radius: 12px; cursor: pointer; font-weight: bold; display:flex; align-items:center; gap:10px; font-size:0.9rem;">
-            <i class="fas fa-chalkboard-teacher"></i> Panel Docente
-        </button>
+        <button onclick="openDash()" style="width:100%; background: #3c2f4d; color: #d4bbfb; border: 1px solid #8e6ec2; padding: 10px; border-radius: 12px; cursor: pointer; font-weight: bold; display:flex; align-items:center; gap:10px; font-size:0.9rem;"><i class="fas fa-chalkboard-teacher"></i> Panel Docente</button>
     </div>
-
     <div class="history-list">
-        <div id="pinned-section" style="display:none; margin-bottom:15px;">
-            <small style="padding:0 15px; color:#666; font-size:0.7rem; text-transform:uppercase; font-weight:bold;">Fijados</small>
-            <div id="pinned-container"></div>
-            <div style="height:1px; background:#333; margin:10px 15px;"></div>
-        </div>
-
+        <div id="pinned-section" style="display:none; margin-bottom:15px;"><small style="padding:0 15px; color:#666; font-size:0.7rem; text-transform:uppercase; font-weight:bold;">Fijados</small><div id="pinned-container"></div><div style="height:1px; background:#333; margin:10px 15px;"></div></div>
         <small style="padding:0 15px; color:#666; font-size:0.7rem; text-transform:uppercase; font-weight:bold;">Recientes</small>
-        <div id="history-container">
-            <div style="text-align:center; padding:20px; color:#555; font-size:0.85rem;">Historial vacío</div>
-        </div>
+        <div id="history-container"><div style="text-align:center; padding:20px; color:#555; font-size:0.85rem;">Historial vacío</div></div>
     </div>
-
     <div class="user-panel" id="user-panel" onclick="checkLoginAction()">
         <div class="user-avatar" id="u-avatar"><i class="fas fa-user"></i></div>
-        <div style="flex:1; text-align:left;">
-            <div id="u-name" style="font-size:0.9rem;">Invitado</div>
-            <div id="u-role" style="font-size:0.75rem; color:#aaa;">Clic para entrar</div>
-        </div>
+        <div style="flex:1; text-align:left;"><div id="u-name" style="font-size:0.9rem;">Invitado</div><div id="u-role" style="font-size:0.75rem; color:#aaa;">Clic para entrar</div></div>
         <button id="btn-logout" onclick="logout(event)" style="background:none; border:none; color:var(--danger); display:none;"><i class="fas fa-sign-out-alt"></i></button>
     </div>
 </div>
@@ -172,70 +162,23 @@
 
     <div class="input-container">
         <div class="input-wrapper">
-            <input type="text" id="chat-input" class="chat-input" 
-                   placeholder="Pregunta algo..." autocomplete="off">
-            <button class="send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
+            <input type="text" id="chat-input" class="chat-input" placeholder="Pregunta o dicta..." autocomplete="off">
+            
+            <button class="action-btn mic-btn" id="mic-btn" onclick="toggleVoice()">
+                <i class="fas fa-microphone"></i>
+            </button>
+            
+            <button class="action-btn send-btn" onclick="sendMessage()">
+                <i class="fas fa-arrow-up"></i>
+            </button>
         </div>
-        <div class="footer-info">IA en proceso de entrenamiento e investigación.</div>
+        <div class="footer-info">AleXIA puede cometer errores. Verifica la información importante.</div>
     </div>
 </div>
 
-<div id="auth-modal" class="modal">
-    <div class="card">
-        <div style="text-align:center; margin-bottom:15px;">
-            <h2 style="margin:0;">Únete a AleXIA</h2>
-            <p style="color:#aaa; font-size:0.85rem; margin-top:5px;">El servicio es <b>100% gratuito</b>.</p>
-        </div>
-        <div style="display:flex; margin-bottom:20px; border-bottom:1px solid #333;">
-            <button class="tab-btn active" onclick="showAuth('login')" id="tab-login">Entrar</button>
-            <button class="tab-btn" onclick="showAuth('register')" id="tab-register">Registrarse</button>
-        </div>
-        <form id="section-login" onsubmit="emailLogin(); return false;">
-            <input type="email" id="l-email" class="field" placeholder="Correo electrónico" autocomplete="username" required>
-            <input type="password" id="l-pass" class="field" placeholder="Contraseña" autocomplete="current-password" required>
-            <button type="submit" class="btn-full btn-primary">Iniciar Sesión</button>
-        </form>
-        <form id="section-register" style="display:none;" onsubmit="emailRegister(); return false;">
-            <input type="email" id="r-email" class="field" placeholder="Tu Correo Real" autocomplete="username" required>
-            <input type="password" id="r-pass" class="field" placeholder="Crea una Contraseña" autocomplete="new-password" required>
-            <button type="submit" class="btn-full btn-primary">Crear Cuenta Gratis</button>
-            <p style="font-size:0.75rem; color:#aaa; margin-top:10px;">* Te enviaremos un link de verificación.</p>
-        </form>
-        <div style="margin:20px 0; border-top:1px solid #333; position:relative;">
-            <span style="background:#1e1f20; padding:0 10px; position:absolute; top:-10px; left:45%; color:#777; font-size:0.8rem;">O</span>
-        </div>
-        <button class="btn-full btn-google" onclick="googleLogin()">
-            <i class="fab fa-google"></i> Continuar con Google
-        </button>
-        <button onclick="closeModal()" style="background:none; border:none; color:#777; margin-top:15px; cursor:pointer;">Cerrar</button>
-    </div>
-</div>
-
-<div id="verify-modal" class="modal">
-    <div class="card">
-        <i class="fas fa-envelope" style="font-size:3rem; color:var(--accent); margin-bottom:15px;"></i>
-        <h3>Verifica tu Correo</h3>
-        <p style="color:#ccc; font-size:0.9rem;">Enlace enviado. Verifica tu email para acceder.</p>
-        <button class="btn-full btn-primary" onclick="closeVerify()">Entendido</button>
-    </div>
-</div>
-
-<div id="admin-dash" class="modal">
-    <div class="card" style="max-width:600px; width:95%; max-height:80vh; overflow:hidden; display:flex; flex-direction:column;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h3>Panel Admin</h3>
-            <button onclick="closeDash()" style="background:none; border:none; color:white; font-size:1.2rem;"><i class="fas fa-times"></i></button>
-        </div>
-        
-        <div style="background:#27272a; padding:10px; border-radius:8px; margin-bottom:15px; text-align:left;">
-            <h4 style="margin:0; color:var(--accent);">📚 Cargar Diccionario</h4>
-            <input type="file" id="json-upload" accept=".json" style="margin-top:5px; width:100%;">
-            <button onclick="uploadDictionary()" style="background:var(--accent); color:#000; border:none; padding:5px 10px; border-radius:5px; margin-top:5px; cursor:pointer; font-weight:bold;">Procesar (Lotes)</button>
-            <div id="upload-status" style="margin-top:5px; font-size:0.8rem; color:var(--success);"></div>
-        </div>
-        <div id="dash-content" style="flex:1; overflow-y:auto; text-align:left;"></div>
-    </div>
-</div>
+<div id="auth-modal" class="modal"><div class="card"><div style="text-align:center; margin-bottom:15px;"><h2 style="margin:0;">Únete a AleXIA</h2><p style="color:#aaa; font-size:0.85rem; margin-top:5px;">El servicio es <b>100% gratuito</b>.</p></div><div style="display:flex; margin-bottom:20px; border-bottom:1px solid #333;"><button class="tab-btn active" onclick="showAuth('login')" id="tab-login">Entrar</button><button class="tab-btn" onclick="showAuth('register')" id="tab-register">Registrarse</button></div><form id="section-login" onsubmit="emailLogin(); return false;"><input type="email" id="l-email" class="field" placeholder="Correo electrónico" autocomplete="username" required><input type="password" id="l-pass" class="field" placeholder="Contraseña" autocomplete="current-password" required><button type="submit" class="btn-full btn-primary">Iniciar Sesión</button></form><form id="section-register" style="display:none;" onsubmit="emailRegister(); return false;"><input type="email" id="r-email" class="field" placeholder="Tu Correo Real" autocomplete="username" required><input type="password" id="r-pass" class="field" placeholder="Crea una Contraseña" autocomplete="new-password" required><button type="submit" class="btn-full btn-primary">Crear Cuenta Gratis</button><p style="font-size:0.75rem; color:#aaa; margin-top:10px;">* Te enviaremos un link de verificación.</p></form><div style="margin:20px 0; border-top:1px solid #333; position:relative;"><span style="background:#1e1f20; padding:0 10px; position:absolute; top:-10px; left:45%; color:#777; font-size:0.8rem;">O</span></div><button class="btn-full btn-google" onclick="googleLogin()"><i class="fab fa-google"></i> Continuar con Google</button><button onclick="closeModal()" style="background:none; border:none; color:#777; margin-top:15px; cursor:pointer;">Cerrar</button></div></div>
+<div id="verify-modal" class="modal"><div class="card"><i class="fas fa-envelope" style="font-size:3rem; color:var(--accent); margin-bottom:15px;"></i><h3>Verifica tu Correo</h3><p style="color:#ccc; font-size:0.9rem;">Enlace enviado. Verifica tu email para acceder.</p><button class="btn-full btn-primary" onclick="closeVerify()">Entendido</button></div></div>
+<div id="admin-dash" class="modal"><div class="card" style="max-width:600px; width:95%; max-height:80vh; overflow:hidden; display:flex; flex-direction:column;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h3>Panel Admin</h3><button onclick="closeDash()" style="background:none; border:none; color:white; font-size:1.2rem;"><i class="fas fa-times"></i></button></div><div style="background:#27272a; padding:10px; border-radius:8px; margin-bottom:15px; text-align:left;"><h4 style="margin:0; color:var(--accent);">📚 Cargar Diccionario</h4><input type="file" id="json-upload" accept=".json" style="margin-top:5px; width:100%;"><button onclick="uploadDictionary()" style="background:var(--accent); color:#000; border:none; padding:5px 10px; border-radius:5px; margin-top:5px; cursor:pointer; font-weight:bold;">Procesar (Lotes)</button><div id="upload-status" style="margin-top:5px; font-size:0.8rem; color:var(--success);"></div></div><div id="dash-content" style="flex:1; overflow-y:auto; text-align:left;"></div></div></div>
 
 <script type="module">
     // 1. IMPORTACIONES FIREBASE
@@ -267,34 +210,23 @@
     const ADMIN_EMAIL = "eljacksonyt@gmail.com";
     let currentChatId = null;
     let chatState = { mode: 'normal', lastQuery: '', constructedAnswer: '', continuationText: '', continuationURL: '' }; 
-    
-    // --- NUEVA VARIABLE PARA ALMACENAR LAS SUGERENCIAS ACTIVAS ---
     let activeSuggestions = []; 
+    
+    // --- ESTADOS DE VOZ ---
+    let isVoiceActive = false;
+    let recognition;
+    let synth = window.speechSynthesis;
+    let currentUtterance = null;
+    let wasVoiceInput = false; // Bandera para saber si el usuario dictó
 
-    // --- 4. LISTAS ALEATORIAS PARA SUGERENCIAS DINÁMICAS ---
+    // 4. LISTAS ALEATORIAS
     const randomTopics = ["Universo", "Inteligencia Artificial", "Historia de México", "Biología", "Arte Moderno", "Filosofía", "Tecnología", "Dinosaurios", "Psicología", "Música Clásica"];
     const bookSubjects = ["love", "science", "history", "fantasy", "mystery", "art", "psychology", "mexico"];
     const globalCities = ["Cancún", "Ciudad de México", "Madrid", "Tokio", "Nueva York", "Buenos Aires", "Londres", "París", "Monterrey", "Guadalajara", "Bogotá", "Lima", "Berlín", "Roma"];
 
-    const slangMap = {
-        "andas": "estas", "onda": "pasa", "hubo": "paso", "pex": "pasa",
-        "pedo": "problema", "chido": "bueno", "padre": "bueno", "gwey": "amigo",
-        "wey": "amigo", "camara": "adios", "simon": "si", "nelson": "no",
-        "chale": "que mal", "neto": "verdad", "neta": "verdad", "jalo": "acepto",
-        "sobres": "esta bien", "morra": "mujer", "vato": "hombre", "troca": "camioneta",
-        "canton": "casa", "jale": "trabajo", "chamba": "trabajo"
-    };
-
+    const slangMap = { "andas": "estas", "onda": "pasa", "hubo": "paso", "pex": "pasa", "pedo": "problema", "chido": "bueno", "padre": "bueno", "gwey": "amigo", "wey": "amigo", "camara": "adios", "simon": "si", "nelson": "no", "chale": "que mal", "neto": "verdad", "neta": "verdad", "jalo": "acepto", "sobres": "esta bien" };
     const stopWords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'de', 'del', 'al', 'a', 'en', 'por', 'para', 'con', 'sin', 'que', 'como', 'cual', 'quien', 'es', 'son', 'fue', 'era', 'me', 'te', 'se', 'lo', 'mi', 'tu', 'su', 'nos', 'yo', 'tu', 'el', 'ella', 'dime', 'sobre', 'acerca', 'significa', 'busco']);
-
-    const contextualReplies = {
-        "que tal como estas": ["¿Qué gusto saludarte, yo muy bien, y tú?", "¿Cómo te ha ido últimamente?", "¡Estupendo! ¿Qué planes tienes para hoy?"],
-        "hola": ["¡Hola! ¿Cómo andas?", "Saludos. ¿Qué me cuentas?", "Hola, ¿qué tal?"],
-        "si": ["Perfecto. ¿Alguna otra duda?", "Excelente, me alegra.", "¡Qué bien!"],
-        "no": ["Entendido. ¿Pasamos a otro tema?", "Vale, lo corregimos.", "De acuerdo."],
-        "adios": ["¡Hasta luego!", "¡Cuídate mucho!", "Adiós, fue un placer hablar contigo."],
-        "estoy bien y tu": ["Me alegra. Yo muy bien, gracias por preguntar.", "¡Qué gusto! Yo genial.", "¡Fantástico! Yo estoy lista para ayudar."],
-    };
+    const contextualReplies = { "que tal como estas": ["¿Qué gusto saludarte, yo muy bien, y tú?", "¿Cómo te ha ido últimamente?"], "hola": ["¡Hola! ¿Cómo andas?", "Saludos. ¿Qué me cuentas?"], "si": ["Perfecto.", "Excelente."], "no": ["Entendido."], "adios": ["¡Hasta luego!", "¡Cuídate mucho!"], "estoy bien y tu": ["Me alegra. Yo muy bien."] };
     
     // 7. AUTH OBSERVER
     if(auth) {
@@ -311,60 +243,104 @@
                 updateUserUI(currentUser);
                 renderLocalHistory();
                 closeModal(); 
-            } else {
-                currentUser = null;
-                updateUserUI(null);
-                currentChatId = null;
-                renderLocalHistory();
+            } else { currentUser = null; updateUserUI(null); currentChatId = null; renderLocalHistory(); }
+        });
+    }
+
+    if(db) { onSnapshot(doc(db, "alexia_db", "main_brain"), (snap) => { if(snap.exists()) brain = snap.data(); }); }
+
+    // --- UTILS ---
+    function normalize(str) { return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[¿?¡!.,]/g, "").trim(); }
+    function processSynonyms(text) { return text.split(" ").map(w => { const cw = normalize(w); return slangMap[cw] || cw; }).join(" "); }
+    function getTodayDate() { return new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }); }
+
+    // --- CONFIGURACIÓN DE VOZ (RECOGNITION) ---
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.lang = 'es-MX';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onstart = () => { isVoiceActive = true; document.getElementById('mic-btn').classList.add('listening'); document.getElementById('chat-input').placeholder = "Escuchando..."; };
+        recognition.onend = () => { isVoiceActive = false; document.getElementById('mic-btn').classList.remove('listening'); document.getElementById('chat-input').placeholder = "Pregunta algo..."; };
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById('chat-input').value = transcript;
+            wasVoiceInput = true; // Marcar que esto vino de voz
+            sendMessage(); // Enviar automáticamente
+        };
+    } else { document.getElementById('mic-btn').style.display = 'none'; }
+
+    window.toggleVoice = () => {
+        if(isVoiceActive) recognition.stop();
+        else recognition.start();
+    }
+
+    // --- CONFIGURACIÓN DE VOZ (TTS) ---
+    window.speakText = (text, btnId) => {
+        if (synth.speaking) {
+            synth.cancel();
+            if (window.activeSpeakingBtnId === btnId) {
+                // Si pulsó el mismo botón que habla, solo paramos (toggle off)
+                resetSpeakerIcons();
+                window.activeSpeakingBtnId = null;
+                return;
             }
+        }
+        
+        // Limpieza de texto para lectura (quitar HTML)
+        const cleanText = text.replace(/<[^>]*>/g, '').replace(/http\S+/g, 'enlace').replace(/A\)|B\)|C\)/g, '');
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = 'es-MX';
+        utterance.rate = 1.0;
+        
+        // Eventos visuales
+        utterance.onstart = () => {
+            resetSpeakerIcons();
+            const btn = document.getElementById(btnId);
+            if(btn) { 
+                btn.classList.add('speaking'); 
+                btn.innerHTML = '<i class="fas fa-stop"></i>';
+                window.activeSpeakingBtnId = btnId;
+            }
+        };
+        utterance.onend = () => { resetSpeakerIcons(); window.activeSpeakingBtnId = null; };
+        
+        synth.speak(utterance);
+    };
+
+    function resetSpeakerIcons() {
+        document.querySelectorAll('.tts-btn').forEach(b => {
+            b.classList.remove('speaking');
+            b.innerHTML = '<i class="fas fa-volume-up"></i>';
         });
     }
 
-    if(db) {
-        onSnapshot(doc(db, "alexia_db", "main_brain"), (snap) => {
-            if(snap.exists()) brain = snap.data();
-        });
-    }
 
-    // 8. PROCESAMIENTO DE TEXTO
-    function normalize(str) {
-        return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[¿?¡!.,]/g, "").trim();
-    }
-    function processSynonyms(text) {
-        let words = text.split(" ");
-        let cleanWords = words.map(w => {
-            const cleanW = normalize(w);
-            return slangMap[cleanW] || cleanW;
-        });
-        return cleanWords.join(" ");
-    }
-    function getTodayDate() {
-        return new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
-    }
-
-    // --- 9. LÓGICA PRINCIPAL DEL CHAT ---
+    // --- 9. LÓGICA PRINCIPAL ---
     window.sendMessage = async function() {
         const input = document.getElementById('chat-input');
         const originalText = input.value.trim();
         if(!originalText) return;
         
+        // Si el usuario no usó el microfono para esta entrada, reiniciamos la bandera
+        // (La bandera wasVoiceInput se setea true en recognition.onresult)
+        // Pero si le dio Enter manual, hay que asegurarnos.
+        // Aquí asumimos que si llama a sendMessage manual, wasVoiceInput ya está seteado o no.
+        
         const normInput = normalize(originalText);
         
-        // --- 0. Manejo de Opciones A, B, C ---
+        // --- 0. Manejo de Opciones ---
         const optionMatch = normInput.toUpperCase().match(/^[ABC]\)?$/);
-
         if (optionMatch) {
-            const idx = optionMatch[0].replace(')', '').charCodeAt(0) - 65; // A=0, B=1, C=2
+            const idx = optionMatch[0].replace(')', '').charCodeAt(0) - 65;
             if (activeSuggestions[idx]) {
                 const suggestion = activeSuggestions[idx];
-                input.value = ""; // Limpiar input
-                
-                // Mostrar en el chat la selección del usuario (Estética)
+                input.value = "";
                 appendMsg('user', originalText.toUpperCase() + " (" + suggestion.label.replace(/\*\*/g, '') + ")");
-
-                // Procesar DIRECTAMENTE como Intención Específica (saltando el análisis normal)
-                // Esto fuerza a usar la API correcta con el título correcto
                 await processSpecificIntent(suggestion.query, suggestion.source);
+                wasVoiceInput = false; // Reset para siguiente
                 return;
             }
         }
@@ -372,390 +348,227 @@
         input.value = '';
         appendMsg('user', originalText); 
 
+        // --- EFECTO PENSANDO (DELAY) ---
+        // Generamos un ID temporal para el mensaje de "Pensando"
+        const loadingId = 'loading-' + Date.now();
+        appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> <span id="think-text">Pensando...</span>`, false, loadingId);
+        
+        // Animación de texto
+        const thinkPhrases = ["Analizando...", "Buscando en la red...", "Redactando...", "Pensando..."];
+        let phraseIdx = 0;
+        const thinkInterval = setInterval(() => {
+            const el = document.getElementById('think-text');
+            if(el) { el.innerText = thinkPhrases[phraseIdx++ % thinkPhrases.length]; }
+        }, 800);
+
+        // Retraso de 1.5 a 3 segundos
+        await new Promise(r => setTimeout(r, 1500 + Math.random() * 1500));
+        
+        clearInterval(thinkInterval);
+        const loadingMsg = document.getElementById(loadingId);
+        if(loadingMsg) loadingMsg.remove(); // Quitamos el spinner para poner la respuesta real
+
+        // --- LÓGICA DE RESPUESTA ---
         const interpretedText = processSynonyms(originalText);
         const words = interpretedText.split(/\s+/).filter(w => !stopWords.has(w) && w.length > 2);
 
-        if (chatState.mode === 'waiting_continuation') {
-            handleContinuation(normInput, originalText);
-            return;
-        }
-
-        if (chatState.mode === 'waiting_city') { await handleWeatherQuery(originalText); return; }
-        if (chatState.mode === 'waiting_feedback') { handleFeedback(interpretedText, originalText); return; }
-        if (chatState.mode === 'waiting_correction') { handleCorrection(originalText); return; }
-        
-        // C. Detección por Frase Clave Manual (Libro de, Clima en, Artículo de)
+        // Intentos manuales
         const specificIntent = checkSpecificIntent(originalText);
-        
         if (specificIntent) {
             await processSpecificIntent(specificIntent.query, specificIntent.source);
+            wasVoiceInput = false;
             return;
         }
-        
-        // D. Lógica General
-        const intentResult = checkGeneralIntent(interpretedText, words);
-        if (intentResult) {
-            if (intentResult.action === 'ask_city') {
-                const today = getTodayDate();
-                finishResponse(originalText, `Para saber el pronóstico, ¿de qué ciudad te gustaría saber el clima para hoy ${today}?`, false);
-                chatState = { mode: 'waiting_city', lastQuery: originalText };
-                return;
-            } else if (intentResult.action === 'execute_search') {
-               // Pasa a buscar
-            }
-        }
 
-        // --- NIVEL 1: BÚSQUEDA EXACTA EN MEMORIA ---
-        let bestMatch = null;
-        let maxScore = 0;
+        // Memoria
+        let bestMatch = null, maxScore = 0;
         brain.memory.forEach(mem => {
             mem.inputs.forEach(key => {
                 const memKey = processSynonyms(key); 
-                if (memKey === interpretedText) {
-                    maxScore = 1.0; bestMatch = mem;
-                } else if (memKey.includes(interpretedText) && interpretedText.length > 3) {
-                     if (0.8 > maxScore) { maxScore = 0.8; bestMatch = mem; }
-                }
+                if (memKey === interpretedText) { maxScore = 1.0; bestMatch = mem; } 
+                else if (memKey.includes(interpretedText) && interpretedText.length > 3) { if (0.8 > maxScore) { maxScore = 0.8; bestMatch = mem; } }
             });
         });
-
         if (maxScore >= 0.8) {
             const key = normalize(bestMatch.inputs[0]);
             let finalResponse = bestMatch.output;
-            if (contextualReplies[key]) {
-                finalResponse = contextualReplies[key][Math.floor(Math.random() * contextualReplies[key].length)];
-            }
-            // Sugerir solo si la respuesta es corta
+            if (contextualReplies[key]) finalResponse = contextualReplies[key][Math.floor(Math.random() * contextualReplies[key].length)];
             await finishResponse(originalText, finalResponse, true);
+            wasVoiceInput = false;
             return;
         }
 
-        // --- NIVEL 2 & 3: BÚSQUEDA WEB Y DESMENUZADO ---
-        appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> Analizando en la web...`);
-        
+        // Búsqueda Web (Fallback)
         const synthesis = await runWordDecomposition(interpretedText, words);
-
         if (synthesis.length > 0) {
-            const box = document.getElementById('chat-box');
-            if(box.lastChild.innerHTML.includes("fa-spin")) box.removeChild(box.lastChild);
-
             let aiResponse = synthesis.length === 1 && synthesis[0].src !== "Memoria" ? 
-                         `Encontré información sobre <strong>${synthesis[0].word}</strong>:<br>${synthesis[0].def}` :
-                         `<strong>Analizando tu frase palabra por palabra encontré esto:</strong><br><br>` +
-                         synthesis.map(item => `<div class="word-definition" style="margin-bottom:12px;">
-                            <i class="fas fa-arrow-right" style="color:var(--accent); font-size:0.8rem;"></i> 
-                            <strong>${item.word.toUpperCase()}:</strong> ${item.def}
-                            <span class="word-source">(${item.src})</span>
-                         </div>`).join('');
+                         `Encontré esto sobre <strong>${synthesis[0].word}</strong>:<br>${synthesis[0].def}` :
+                         `<strong>Analizando conceptos:</strong><br>` + synthesis.map(item => `- <b>${item.word}:</b> ${item.def}`).join('<br>');
             
-            aiResponse += `<br><em>Uniendo estos conceptos... ¿Responde esto a tu duda? (Si/No)</em>`;
-            
-            const { finalResponse, continuationText } = checkTruncation(aiResponse, 500);
-
-            if (continuationText) {
-                const genericURL = `https://www.google.com/search?q=${encodeURIComponent(originalText)}`;
-                chatState = { mode: 'waiting_continuation', lastQuery: originalText, continuationText: continuationText, continuationURL: genericURL };
-            } else {
-                chatState = { mode: 'waiting_feedback', lastQuery: originalText };
-            }
-
-            await finishResponse(originalText, finalResponse, true);
-            return;
+            await finishResponse(originalText, aiResponse + "<br><br>¿Te sirve esta información?", true);
+        } else {
+            await finishResponse(originalText, "No logré encontrar información detallada. ¿Te gustaría enseñarme?", true);
+            chatState = { mode: 'waiting_correction', lastQuery: originalText }; 
         }
+        wasVoiceInput = false;
+    };
 
-        // --- NIVEL 4: RENDICIÓN ---
-        const box = document.getElementById('chat-box');
-        if(box.lastChild && (box.lastChild.innerHTML.includes("fa-spin") || box.lastChild.innerHTML.includes("Analizando"))) box.removeChild(box.lastChild);
-
-        await finishResponse(originalText, "No logré encontrar información completa ni desmenuzada. ¿Te gustaría enseñarme la respuesta correcta?", true);
-        chatState = { mode: 'waiting_correction', lastQuery: originalText }; 
-    }
-
-    // --- MANEJO DE INTENCIÓN ESPECÍFICA (A/B/C REDIRECCIÓN) ---
+    // --- PROCESAMIENTO PROFUNDO (GEMINI-LIKE) ---
     async function processSpecificIntent(query, source) {
-        appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> Consultando ${source.split('/')[0]}...`);
-        
-        // Extraer la parte real de la búsqueda (eliminar "libro de", "articulo de", etc. para la API)
+        // Limpieza del query
         let cleanQuery = query;
         if (source.includes('Biblioteca')) cleanQuery = query.replace(/^libro de\s*/i, '');
         else if (source.includes('Meteo')) cleanQuery = query.replace(/^clima en\s*/i, '');
         else if (source.includes('Wikipedia')) cleanQuery = query.replace(/^articulo de\s*/i, '');
 
-        const searchData = await fetchExternalData(cleanQuery, source);
+        const searchData = await fetchExternalData(cleanQuery, source); // AHORA TRAE TEXTO LARGO
 
         if (searchData) {
-            let aiResponse = `<strong>Sobre "${cleanQuery}":</strong><br>${searchData.def}<br><span style="font-size:0.7rem; color:#888;">Fuente: ${searchData.src}</span>`;
+            // Formateo rico HTML
+            let aiResponse = `<div class="rich-content">
+                                <strong>Sobre "${cleanQuery}":</strong><br><br>
+                                ${searchData.def}
+                              </div>
+                              <div class="rich-source">
+                                <a href="${searchData.url}" target="_blank">
+                                    <i class="fas fa-external-link-alt"></i> Ver fuente original (${searchData.src.split('/')[0]})
+                                </a>
+                              </div>`;
             
-            const { finalResponse, continuationText } = checkTruncation(aiResponse, 500);
-
-            if (continuationText) {
-                chatState = { mode: 'waiting_continuation', lastQuery: query, continuationText: continuationText, continuationURL: searchData.url };
-            } else {
-                chatState = { mode: 'normal', lastQuery: query };
-            }
-
-            const box = document.getElementById('chat-box');
-            if(box.lastChild.innerHTML.includes("fa-spin")) box.removeChild(box.lastChild);
-
-            await finishResponse(query, finalResponse, true); 
+            await finishResponse(query, aiResponse, true); 
         } else {
-            const box = document.getElementById('chat-box');
-            if(box.lastChild.innerHTML.includes("fa-spin")) box.removeChild(box.lastChild);
-            await finishResponse(query, `Lo siento, hubo un error conectando con la base de datos de ${source}. Intenta de nuevo.`, true);
+            await finishResponse(query, `Lo siento, no pude conectar con la base de datos profunda de ${source}.`, true);
         }
     }
 
-    function checkSpecificIntent(originalText) {
-        const normText = normalize(originalText);
-        let match = normText.match(/^(libro de|articulo de|clima en)\s*(.*)$/);
-        
-        if (match) {
-            const trigger = match[1].trim(); 
-            const query = match[2].trim(); 
-            
-            if (query.length > 0) {
-                let source;
-                if (trigger.includes('libro')) source = 'Biblioteca/WEB';
-                else if (trigger.includes('articulo')) source = 'Wikipedia/WEB';
-                else if (trigger.includes('clima')) source = 'Meteo/WEB';
-                
-                return { action: 'execute_search', source: source, query: query };
-            }
-        }
-        return null;
-    }
-    
-    // --- HELPER FUNCIONES ---
-    function handleContinuation(normInput, originalText) {
-        if (normInput === 'si' || normInput === 'sí' || normInput === 'claro') {
-            const continuation = chatState.continuationText;
-            const sourceURL = chatState.continuationURL;
-            const { finalResponse, continuationText } = checkTruncation(continuation, 500); 
-
-            chatState.continuationText = continuationText;
-            chatState.mode = continuationText ? 'waiting_continuation' : 'normal';
-
-            const linkHTML = `<br><br><a href="${sourceURL}" target="_blank" style="color:var(--accent); text-decoration:underline;">Ver artículo completo</a>`;
-            const finalOutput = finalResponse + (chatState.mode === 'normal' ? linkHTML : '');
-
-            finishResponse(originalText, finalOutput, true); 
-        } else {
-             finishResponse(originalText, "Entendido. Procesando tu respuesta como una nueva consulta.", true);
-             chatState.mode = 'normal';
-             chatState.continuationText = '';
-        }
-    }
-
-    function checkGeneralIntent(interpretedText, words) {
-        const isWeatherQuery = interpretedText.includes("clima") || interpretedText.includes("tiempo");
-        const isBookQuery = interpretedText.includes("libro") || interpretedText.includes("autor") || interpretedText.includes("escribio");
-
-        if (isWeatherQuery) {
-            const locationWords = words.filter(w => w !== 'clima' && w !== 'tiempo' && w.length > 1); 
-            if (locationWords.length >= 1) {
-                return { action: 'execute_search', source: 'Meteo/WEB', query: locationWords.join(' ') };
-            } else {
-                return { action: 'ask_city' };
-            }
-        }
-        if (isBookQuery) {
-            const bookQueryWords = words.filter(w => w !== 'libro' && w !== 'autor' && w !== 'escribio');
-            const bookQuery = bookQueryWords.join(' ');
-            if (bookQuery.length >= 3) {
-                return { action: 'execute_search', source: 'Biblioteca/WEB', query: bookQuery };
-            }
-        }
-        return null;
-    }
-
-    async function handleWeatherQuery(cityName) {
-        const weatherData = await fetchExternalData(cityName, 'Meteo/WEB'); 
-        const today = getTodayDate();
-
-        if (weatherData && weatherData.src === "Meteo/WEB") {
-            let aiResponse = `El pronóstico para **${cityName}** hoy ${today} es:<br>${weatherData.def}`;
-            const secondarySearchData = await fetchExternalData('clima', 'Wikipedia/WEB'); 
-            if (secondarySearchData) {
-                aiResponse += `<br><hr style="border-color:#333; margin:10px 0;">`;
-                aiResponse += `*Definición General de Clima:* ${secondarySearchData.def}`;
-            }
-            const { finalResponse, continuationText } = checkTruncation(aiResponse, 500);
-            if (continuationText) {
-                chatState = { mode: 'waiting_continuation', lastQuery: cityName, continuationText: continuationText, continuationURL: weatherData.url };
-            } else {
-                chatState = { mode: 'normal', lastQuery: '' };
-            }
-            await finishResponse(cityName, finalResponse, true);
-        } else {
-            await finishResponse(cityName, `Disculpa, no pude encontrar el pronóstico para **${cityName}**. ¿Probamos con otra ciudad?`, true);
-            chatState = { mode: 'normal', lastQuery: '' };
-        }
-    }
-
-    async function runWordDecomposition(interpretedText, words) {
-        let synthesis = [];
-        for (let word of words) {
-            let definition = null;
-            let source = "";
-            try {
-                const dictSnap = await getDoc(doc(db, "dictionary", word));
-                if (dictSnap.exists()) { definition = dictSnap.data().def; source = "Memoria"; }
-            } catch(e) {}
-            if (!definition) {
-                const extData = await fetchExternalData(word, 'Wikipedia/WEB'); 
-                if (extData) { definition = extData.def; source = "WEB"; }
-            }
-            if (definition) {
-                synthesis.push({ word: word, def: definition, src: source });
-            }
-        }
-        return synthesis;
-    }
-
-    // --- 11. MEGA-BUSCADOR DE APIS EXTERNAS ---
+    // --- 11. MEGA-BUSCADOR ACTUALIZADO (TEXTO LARGO) ---
     async function fetchExternalData(term, forceSource = 'Wikipedia/WEB') {
         const encoded = encodeURIComponent(term);
         let url = '';
 
+        // METEO (Igual, pero formateado)
         if (forceSource === 'Meteo/WEB') {
             try {
                 const geoResp = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encoded}&count=1&language=es&format=json`);
                 const geoData = await geoResp.json();
                 if (geoData.results && geoData.results.length > 0) {
                     const place = geoData.results[0];
-                    url = `https://www.google.com/maps/search/?api=1&query=${place.latitude},${place.longitude}`; 
                     const weatherResp = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&current_weather=true`);
                     const weatherData = await weatherResp.json();
                     if (weatherData.current_weather) {
-                        return { def: `Clima en ${place.name}: ${weatherData.current_weather.temperature}°C, Viento: ${weatherData.current_weather.windspeed} km/h`, src: "Meteo/WEB", url: url };
+                        return { 
+                            def: `<p>Actualmente en <b>${place.name}, ${place.country}</b>, la temperatura es de <b>${weatherData.current_weather.temperature}°C</b>.</p>
+                                  <p>La velocidad del viento es de ${weatherData.current_weather.windspeed} km/h. Es un buen momento para verificar si necesitas paraguas o abrigo.</p>`, 
+                            src: "Meteo/WEB", 
+                            url: `https://www.google.com/maps/search/?api=1&query=${place.latitude},${place.longitude}` 
+                        };
                     }
                 }
             } catch(e) {}
             return null;
         }
+
+        // BIBLIOTECA (Ahora busca descripción larga)
         if (forceSource === 'Biblioteca/WEB') {
              try {
-                const bookResp = await fetch(`https://openlibrary.org/search.json?q=${encoded}&limit=1&fields=title,author_name,first_publish_year`);
-                const bookData = await bookResp.json();
-                if (bookData.docs && bookData.docs.length > 0) {
-                    const book = bookData.docs[0];
-                    const author = book.author_name ? book.author_name[0] : "Autor desconocido";
-                    url = `https://openlibrary.org/search?q=${encoded}`;
-                    return { def: `Libro: "${book.title}", Autor: ${author} (${book.first_publish_year})`, src: "Biblioteca/WEB", url: url };
+                // 1. Buscar el Work ID
+                const searchResp = await fetch(`https://openlibrary.org/search.json?q=${encoded}&limit=1`);
+                const searchData = await searchResp.json();
+                
+                if (searchData.docs && searchData.docs.length > 0) {
+                    const book = searchData.docs[0];
+                    const workKey = book.key; // /works/OL12345W
+                    
+                    // 2. Buscar detalles del Work (descripción)
+                    const workResp = await fetch(`https://openlibrary.org${workKey}.json`);
+                    const workDetails = await workResp.json();
+                    
+                    let description = "No hay descripción disponible.";
+                    if (typeof workDetails.description === 'string') description = workDetails.description;
+                    else if (workDetails.description && workDetails.description.value) description = workDetails.description.value;
+                    
+                    // Si la descripción es muy corta o no existe, intentamos Wikipedia Fallback
+                    if (description.length < 50 || description.includes("No hay")) {
+                        return fetchExternalData(term, 'Wikipedia/WEB');
+                    }
+
+                    // Formatear párrafos
+                    const formattedDesc = description.split('\n').map(p => `<p>${p}</p>`).join('').substring(0, 1500); // Límite razonable
+
+                    return { 
+                        def: `<p><b>Título:</b> ${book.title}</p><p><b>Autor:</b> ${book.author_name ? book.author_name[0] : 'Desconocido'}</p><hr>${formattedDesc}...`, 
+                        src: "Biblioteca/WEB", 
+                        url: `https://openlibrary.org${workKey}` 
+                    };
                 }
             } catch(e) {}
             return null;
         }
         
-        // Wikipedia
+        // WIKIPEDIA (Modo Extracto Largo)
         try {
-            const wikiResp = await fetch(`https://es.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encoded}&format=json&origin=*`);
-            const wikiData = await wikiResp.json();
-            if (wikiData.query && wikiData.query.search && wikiData.query.search.length > 0) {
-                let snippet = wikiData.query.search[0].snippet.replace(/<[^>]+>/g, "");
-                if (!snippet.includes("puede referirse a") && !snippet.includes("Wikipedia no tiene")) {
-                    const parts = snippet.split(". "); 
-                    const def = (parts.length > 0 && parts[0].length > 15) ? parts[0] + "." : snippet;
-                    url = `https://es.wikipedia.org/?curid=${wikiData.query.search[0].pageid}`;
-                    return { def: def, src: "Wikipedia/WEB", url: url };
+            // Usamos opensearch para conseguir el título exacto primero
+            const searchResp = await fetch(`https://es.wikipedia.org/w/api.php?action=opensearch&search=${encoded}&limit=1&namespace=0&format=json&origin=*`);
+            const searchData = await searchResp.json();
+            
+            if (searchData[1] && searchData[1].length > 0) {
+                const title = searchData[1][0];
+                const cleanTitle = encodeURIComponent(title);
+                
+                // Pedimos el extracto con exintro (intro) y explaintext (texto plano) o HTML
+                // Para "Tipo Gemini", pedimos extracto largo.
+                const contentResp = await fetch(`https://es.wikipedia.org/w/api.php?action=query&prop=extracts&titles=${cleanTitle}&explaintext=0&exintro=1&format=json&origin=*`);
+                const contentData = await contentResp.json();
+                const pages = contentData.query.pages;
+                const pageId = Object.keys(pages)[0];
+                
+                if (pageId !== "-1") {
+                    let htmlContent = pages[pageId].extract;
+                    // Limpieza básica si viene muy sucio, aunque 'extract' suele estar bien
+                    return { 
+                        def: htmlContent, 
+                        src: "Wikipedia/WEB", 
+                        url: `https://es.wikipedia.org/?curid=${pageId}` 
+                    };
                 }
             }
         } catch(e) {}
 
-        // Diccionario
-        if (!term.includes(" ")) { 
-            try {
-                const dictResp = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/es/${encoded}`);
-                if (dictResp.ok) {
-                    const data = await dictResp.json();
-                    if (data.length > 0 && data[0].meanings.length > 0) {
-                        url = `https://www.google.com/search?q=definicion+${encoded}`;
-                        return { def: data[0].meanings[0].definitions[0].definition, src: "Diccionario/WEB", url: url };
-                    }
-                }
-            } catch (e) {}
-        }
-        
         return null;
     }
 
-    function checkTruncation(text, maxLength) {
-        if (text.length > maxLength) {
-            let splitIndex = text.lastIndexOf('.', maxLength);
-            if (splitIndex === -1 || splitIndex < maxLength * 0.9) {
-                 splitIndex = maxLength; 
-            }
-            
-            const truncated = text.substring(0, splitIndex + 1);
-            const continuation = text.substring(splitIndex + 1).trim();
-
-            return { 
-                finalResponse: truncated + '... <br><br><span style="color:var(--accent);">¿Quieres que siga mostrando la información? (Si/No)</span>',
-                continuationText: continuation
-            };
-        }
-        return { finalResponse: text, continuationText: null };
-    }
-
-    // --- FUNCIONES UI Y LOCAL STORAGE ---
-    function handleFeedback(normInput, originalInput) {
-        const isAffirmative = normInput === 'si' || normInput === 'sí' || normInput === 'claro';
-        const isNegative = normInput === 'no' || normInput === 'nop' || normInput === 'incorrecto';
-
-        if (isAffirmative) {
-            const synonyms = contextualReplies["si"];
-            const response = synonyms[Math.floor(Math.random() * synonyms.length)];
-            finishResponse(originalInput, response, true);
-            chatState = { mode: 'normal' };
-        } 
-        else if (isNegative) {
-            const synonyms = contextualReplies["no"];
-            const response = synonyms[Math.floor(Math.random() * synonyms.length)];
-            finishResponse(originalInput, response, false);
-            chatState = { mode: 'waiting_correction', lastQuery: chatState.lastQuery };
-        }
-        else {
-            finishResponse(originalInput, "Entendido. Procesando tu respuesta como una nueva consulta.", true);
-            chatState = { mode: 'normal' };
-            document.getElementById('chat-input').value = originalInput;
-            sendMessage();
-        }
-    }
-    async function handleCorrection(correction) {
-        const userName = currentUser ? currentUser.name : "Invitado";
-        if(db) {
-            await updateDoc(doc(db, "alexia_db", "main_brain"), { 
-                reviewQueue: arrayUnion({ q: chatState.lastQuery, a: correction, user: userName, date: new Date().toISOString() }) 
-            });
-        }
-        await finishResponse(correction, "¡Gracias! Tu corrección ha sido enviada a revisión.", true);
-        chatState = { mode: 'normal' };
-    }
-
-    // --- AQUÍ OCURRE LA MAGIA DE GENERAR HTML Y SUGERENCIAS ---
+    // --- MANEJO DE FINALIZACIÓN Y AUDIO ---
     async function finishResponse(userTxt, aiTxt, shouldSuggest) {
-        appendMsg('ai', aiTxt);
+        // Si fue por voz, leemos automáticamente
+        // Renderizamos el mensaje con el botón de audio
+        const msgId = 'ai-msg-' + Date.now();
+        appendMsg('ai', aiTxt, true, msgId); // true = tiene controles
+        
         saveLocalChat(userTxt, aiTxt);
         saveUserQueryHistory(userTxt);
 
+        if (wasVoiceInput) {
+            // Pequeño delay para que se renderice antes de hablar
+            setTimeout(() => {
+                const btnId = `btn-${msgId}`;
+                window.speakText(aiTxt, btnId);
+            }, 500);
+        }
+
         if (shouldSuggest) {
-            // AHORA ESPERAMOS A QUE SE GENEREN LAS SUGERENCIAS ANTES DE INSERTAR HTML
             const suggestionsHTML = await generateSuggestionsHTML();
-            
             const msgBubbles = document.getElementById('chat-box').querySelectorAll('.msg-row.ai-row .msg-bubble');
             if (msgBubbles.length > 0) {
                  msgBubbles[msgBubbles.length - 1].innerHTML += suggestionsHTML;
                  const box = document.getElementById('chat-box');
-                 box.scrollTop = box.scrollHeight; // Auto scroll al final
+                 box.scrollTop = box.scrollHeight;
             }
         }
     }
     
-    // --- 12. GENERADOR DE SUGERENCIAS REAL (A/B/C) ---
+    // --- GENERADOR DE SUGERENCIAS (Igual) ---
     async function generateSuggestionsHTML() {
-        activeSuggestions = []; // Reiniciar las sugerencias activas
-        
-        // 1. Obtener Libro Aleatorio (A)
+        activeSuggestions = [];
         let bookItem = { label: "Libro de **El Quijote**", query: "libro de El Quijote", source: 'Biblioteca/WEB' };
         try {
             const randomSubject = bookSubjects[Math.floor(Math.random() * bookSubjects.length)];
@@ -763,34 +576,23 @@
             const bookJson = await bookResp.json();
             if (bookJson.docs && bookJson.docs.length > 0) {
                 const randomBook = bookJson.docs[Math.floor(Math.random() * bookJson.docs.length)];
-                bookItem = { 
-                    label: `Libro: **${randomBook.title}**`, 
-                    query: `libro de ${randomBook.title}`, 
-                    source: 'Biblioteca/WEB' 
-                };
+                bookItem = { label: `Libro: **${randomBook.title}**`, query: `libro de ${randomBook.title}`, source: 'Biblioteca/WEB' };
             }
-        } catch(e) { console.log("Error sugiriendo libro:", e); }
+        } catch(e) {}
         activeSuggestions.push(bookItem);
 
-        // 2. Obtener Artículo Wiki Aleatorio (B)
         let wikiItem = { label: "Artículo de **Ciencia**", query: "articulo de ciencia", source: 'Wikipedia/WEB' };
         try {
              const randomTopic = randomTopics[Math.floor(Math.random() * randomTopics.length)];
-             // Buscamos algo relacionado al tema aleatorio
              const wikiResp = await fetch(`https://es.wikipedia.org/w/api.php?action=query&list=search&srsearch=${randomTopic}&format=json&origin=*`);
              const wikiJson = await wikiResp.json();
              if(wikiJson.query && wikiJson.query.search.length > 0) {
                  const randomRes = wikiJson.query.search[Math.floor(Math.random() * Math.min(5, wikiJson.query.search.length))];
-                 wikiItem = {
-                     label: `Artículo de **${randomRes.title}**`,
-                     query: `articulo de ${randomRes.title}`,
-                     source: 'Wikipedia/WEB'
-                 };
+                 wikiItem = { label: `Artículo de **${randomRes.title}**`, query: `articulo de ${randomRes.title}`, source: 'Wikipedia/WEB' };
              }
-        } catch(e) { console.log("Error sugiriendo wiki:", e); }
+        } catch(e) {}
         activeSuggestions.push(wikiItem);
 
-        // 3. Obtener Clima Aleatorio (C)
         let weatherItem = { label: "Clima en **Cancún**", query: "clima en Cancún", source: 'Meteo/WEB' };
         try {
             const randomCity = globalCities[Math.floor(Math.random() * globalCities.length)];
@@ -798,38 +600,74 @@
         } catch(e) {}
         activeSuggestions.push(weatherItem);
 
-        // Generar HTML
         let html = `<br><br><span class="suggestion-prompt">Sugerencias: ¿Te interesa algún tema? Responde A, B o C:</span>`;
         activeSuggestions.forEach((s, index) => {
-            const letter = String.fromCharCode(65 + index); // A, B, C
-            // Onclick para que también funcione clicando
+            const letter = String.fromCharCode(65 + index);
             html += `<span class="suggestion-item" onclick="document.getElementById('chat-input').value='${letter}'; sendMessage();">
                         <strong style="color:var(--accent);">${letter})</strong> ${s.label}
                     </span>`;
         });
-
         return html;
     }
 
-    // GESTIÓN DE ESTADO Y LOCALSTORAGE
+    // --- UI HELPERS ---
+    function appendMsg(role, text, hasControls = false, customId = null) {
+        const box = document.getElementById('chat-box');
+        const row = document.createElement('div');
+        row.className = `msg-row ${role}-row`;
+        if (customId) row.id = customId;
+        
+        let controlsHTML = '';
+        if (role === 'ai' && hasControls) {
+            // Escapamos comillas simples para el onclick
+            const safeText = text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const btnId = `btn-${customId}`;
+            controlsHTML = `<button id="${btnId}" class="tts-btn" onclick="window.speakText('${safeText}', '${btnId}')"><i class="fas fa-volume-up"></i></button>`;
+        }
+
+        const icon = role === 'ai' ? `<div class="msg-icon"><i class="fas fa-robot"></i></div>` : '';
+        row.innerHTML = `${icon}<div class="msg-bubble">${text}${controlsHTML}</div>`;
+        if(box.querySelector('h2')) box.innerHTML = '';
+        box.appendChild(row);
+        setTimeout(() => box.scrollTop = box.scrollHeight, 100);
+    }
+
+    // (Resto de funciones: LocalStorage, Login, Admin, checkSpecificIntent, etc. se mantienen igual)
+    function checkSpecificIntent(originalText) {
+        const normText = normalize(originalText);
+        let match = normText.match(/^(libro de|articulo de|clima en)\s*(.*)$/);
+        if (match) {
+            const trigger = match[1].trim(); 
+            const query = match[2].trim(); 
+            if (query.length > 0) {
+                let source;
+                if (trigger.includes('libro')) source = 'Biblioteca/WEB';
+                else if (trigger.includes('articulo')) source = 'Wikipedia/WEB';
+                else if (trigger.includes('clima')) source = 'Meteo/WEB';
+                return { action: 'execute_search', source: source, query: query };
+            }
+        }
+        return null;
+    }
+    
+    async function runWordDecomposition(interpretedText, words) {
+        let synthesis = [];
+        for (let word of words) {
+            let definition = null; let source = "";
+            try { const dictSnap = await getDoc(doc(db, "dictionary", word)); if (dictSnap.exists()) { definition = dictSnap.data().def; source = "Memoria"; } } catch(e) {}
+            if (!definition) { const extData = await fetchExternalData(word, 'Wikipedia/WEB'); if (extData) { definition = extData.def; source = "WEB"; } }
+            if (definition) synthesis.push({ word: word, def: definition, src: source });
+        }
+        return synthesis;
+    }
+
     function getHistoryKey() { return `alexia_query_history_${currentUser ? currentUser.uid : 'guest'}`; }
     function saveUserQueryHistory(query) {
         const key = getHistoryKey();
         let history = JSON.parse(localStorage.getItem(key)) || [];
         if (query.length < 5 || normalize(query).match(/s(i|í)|no|gracias|estoy bien y tu|hola/i)) return; 
-        history.push(query);
-        if (history.length > 100) history.shift(); 
+        history.push(query); if (history.length > 100) history.shift(); 
         localStorage.setItem(key, JSON.stringify(history));
-    }
-    function appendMsg(role, text) {
-        const box = document.getElementById('chat-box');
-        const row = document.createElement('div');
-        row.className = `msg-row ${role}-row`;
-        const icon = role === 'ai' ? `<div class="msg-icon"><i class="fas fa-robot"></i></div>` : '';
-        row.innerHTML = `${icon}<div class="msg-bubble">${text}</div>`;
-        if(box.querySelector('h2')) box.innerHTML = '';
-        box.appendChild(row);
-        setTimeout(() => box.scrollTop = box.scrollHeight, 100);
     }
     function getLocalKey() { return `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`; }
     function saveLocalChat(uMsg, aiMsg) {
@@ -850,63 +688,32 @@
         renderLocalHistory();
     }
     function renderLocalHistory() {
-        const key = getLocalKey();
-        const chats = JSON.parse(localStorage.getItem(key)) || [];
-        const pc = document.getElementById('pinned-container');
-        const hc = document.getElementById('history-container');
-        pc.innerHTML = ""; hc.innerHTML = "";
-        let hasPinned = false;
+        const key = getLocalKey(); const chats = JSON.parse(localStorage.getItem(key)) || [];
+        const pc = document.getElementById('pinned-container'); const hc = document.getElementById('history-container');
+        pc.innerHTML = ""; hc.innerHTML = ""; let hasPinned = false;
         chats.forEach(chat => {
-            const active = (chat.id === currentChatId) ? 'active' : '';
-            const pinClass = chat.isPinned ? 'pinned' : '';
+            const active = (chat.id === currentChatId) ? 'active' : ''; const pinClass = chat.isPinned ? 'pinned' : '';
             const html = `<div class="chat-item ${active}" onclick="loadLocalChat('${chat.id}')"><div class="chat-title"><i class="far fa-comment-alt" style="opacity:0.7; margin-right:8px;"></i>${chat.title}</div><button class="pin-btn ${pinClass}" onclick="togglePinLocal(event, '${chat.id}')"><i class="fas fa-thumbtack"></i></button></div>`;
             if (chat.isPinned) { pc.innerHTML += html; hasPinned = true; } else hc.innerHTML += html;
         });
         document.getElementById('pinned-section').style.display = hasPinned ? 'block' : 'none';
     }
     window.loadLocalChat = (id) => {
-        const key = getLocalKey();
-        const chats = JSON.parse(localStorage.getItem(key)) || [];
+        const key = getLocalKey(); const chats = JSON.parse(localStorage.getItem(key)) || [];
         const chat = chats.find(c => c.id === id);
-        if (chat) {
-            currentChatId = id;
-            const box = document.getElementById('chat-box');
-            box.innerHTML = "";
-            chat.messages.forEach(m => appendMsg(m.r, m.t));
-            renderLocalHistory();
-            if(window.innerWidth < 800) toggleSidebar();
-        }
+        if (chat) { currentChatId = id; const box = document.getElementById('chat-box'); box.innerHTML = ""; chat.messages.forEach(m => appendMsg(m.r, m.t, m.r === 'ai')); renderLocalHistory(); if(window.innerWidth < 800) toggleSidebar(); }
     }
-    window.togglePinLocal = (e, id) => {
-        e.stopPropagation();
-        const key = getLocalKey();
-        let chats = JSON.parse(localStorage.getItem(key)) || [];
-        const idx = chats.findIndex(c => c.id === id);
-        if (idx > -1) { chats[idx].isPinned = !chats[idx].isPinned; localStorage.setItem(key, JSON.stringify(chats)); renderLocalHistory(); }
-    }
-    window.startNewChat = () => {
-        currentChatId = null;
-        chatState = { mode: 'normal' };
-        document.getElementById('chat-box').innerHTML = `<div style="text-align:center; margin-top:80px; opacity:0.7; animation:fadeIn 1s;"><div style="width:80px; height:80px; background:linear-gradient(135deg, var(--accent), #ec4899); border-radius:50%; margin:0 auto 25px auto; display:flex; align-items:center; justify-content:center; box-shadow:0 0 40px var(--accent-glow);"><i class="fas fa-robot" style="font-size:40px; color:white;"></i></div><h2 style="font-weight:500;">¿En qué puedo ayudarte?</h2></div>`;
-        renderLocalHistory();
-        if(window.innerWidth < 800) toggleSidebar();
-    }
+    window.togglePinLocal = (e, id) => { e.stopPropagation(); const key = getLocalKey(); let chats = JSON.parse(localStorage.getItem(key)) || []; const idx = chats.findIndex(c => c.id === id); if (idx > -1) { chats[idx].isPinned = !chats[idx].isPinned; localStorage.setItem(key, JSON.stringify(chats)); renderLocalHistory(); } }
+    window.startNewChat = () => { currentChatId = null; chatState = { mode: 'normal' }; document.getElementById('chat-box').innerHTML = `<div style="text-align:center; margin-top:80px; opacity:0.7; animation:fadeIn 1s;"><div style="width:80px; height:80px; background:linear-gradient(135deg, var(--accent), #ec4899); border-radius:50%; margin:0 auto 25px auto; display:flex; align-items:center; justify-content:center; box-shadow:0 0 40px var(--accent-glow);"><i class="fas fa-robot" style="font-size:40px; color:white;"></i></div><h2 style="font-weight:500;">¿En qué puedo ayudarte?</h2></div>`; renderLocalHistory(); if(window.innerWidth < 800) toggleSidebar(); }
     function updateUserUI(u) {
         const adminBtn = document.getElementById('admin-menu-container');
         if(u) {
-            document.getElementById('u-name').innerText = u.name;
-            document.getElementById('u-role').innerText = u.role === 'admin' ? 'Admin' : 'Usuario';
-            document.getElementById('u-avatar').innerHTML = u.name[0].toUpperCase();
-            document.getElementById('btn-logout').style.display = 'block';
-            document.getElementById('top-login-btn').style.display = 'none';
+            document.getElementById('u-name').innerText = u.name; document.getElementById('u-role').innerText = u.role === 'admin' ? 'Admin' : 'Usuario';
+            document.getElementById('u-avatar').innerHTML = u.name[0].toUpperCase(); document.getElementById('btn-logout').style.display = 'block'; document.getElementById('top-login-btn').style.display = 'none';
             if(u.role === 'admin') adminBtn.style.display = 'block'; else adminBtn.style.display = 'none';
         } else {
-            document.getElementById('u-name').innerText = "Invitado";
-            document.getElementById('u-role').innerText = "Clic para entrar";
-            document.getElementById('u-avatar').innerHTML = `<i class="fas fa-user"></i>`;
-            document.getElementById('btn-logout').style.display = 'none';
-            document.getElementById('top-login-btn').style.display = 'block';
-            adminBtn.style.display = 'none';
+            document.getElementById('u-name').innerText = "Invitado"; document.getElementById('u-role').innerText = "Clic para entrar"; document.getElementById('u-avatar').innerHTML = `<i class="fas fa-user"></i>`;
+            document.getElementById('btn-logout').style.display = 'none'; document.getElementById('top-login-btn').style.display = 'block'; adminBtn.style.display = 'none';
         }
     }
     window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('active'); }
@@ -915,50 +722,28 @@
     window.closeModal = () => document.getElementById('auth-modal').style.display = 'none';
     window.closeVerify = () => document.getElementById('verify-modal').style.display = 'none';
     window.showAuth = (type) => { 
-        if(type === 'login') {
-            document.getElementById('section-login').style.display = 'block'; document.getElementById('section-register').style.display = 'none';
-            document.getElementById('tab-login').classList.add('active'); document.getElementById('tab-register').classList.remove('active');
-        } else {
-            document.getElementById('section-login').style.display = 'none'; document.getElementById('section-register').style.display = 'block';
-            document.getElementById('tab-login').classList.remove('active'); document.getElementById('tab-register').classList.add('active');
-        }
+        if(type === 'login') { document.getElementById('section-login').style.display = 'block'; document.getElementById('section-register').style.display = 'none'; document.getElementById('tab-login').classList.add('active'); document.getElementById('tab-register').classList.remove('active'); } 
+        else { document.getElementById('section-login').style.display = 'none'; document.getElementById('section-register').style.display = 'block'; document.getElementById('tab-login').classList.remove('active'); document.getElementById('tab-register').classList.add('active'); }
     }
     window.openDash = () => { document.getElementById('admin-dash').style.display = 'flex'; renderAdminQueue(); }
     window.closeDash = () => document.getElementById('admin-dash').style.display = 'none';
     function renderAdminQueue() {
-        const content = document.getElementById('dash-content');
-        content.innerHTML = "<h4>Pendientes de Revisión</h4>";
+        const content = document.getElementById('dash-content'); content.innerHTML = "<h4>Pendientes de Revisión</h4>";
         if(brain.reviewQueue.length === 0) content.innerHTML += "<p style='color:#777'>No hay tareas pendientes.</p>";
-        brain.reviewQueue.forEach((item, idx) => {
-            content.innerHTML += `<div style="background:#27272a; padding:10px; margin-bottom:5px; border-radius:5px;"><b>P: ${item.q}</b><br><span style="color:#aaa">R: ${item.a}</span><br><small style="color:#555">Por: ${item.user}</small><div style="margin-top:5px;"><button onclick="window.dashAct('app', ${idx})" style="background:var(--accent); border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-right:5px;">Aprobar</button><button onclick="window.dashAct('rej', ${idx})" style="background:var(--danger); border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">Rechazar</button></div></div>`;
-        });
+        brain.reviewQueue.forEach((item, idx) => { content.innerHTML += `<div style="background:#27272a; padding:10px; margin-bottom:5px; border-radius:5px;"><b>P: ${item.q}</b><br><span style="color:#aaa">R: ${item.a}</span><br><small style="color:#555">Por: ${item.user}</small><div style="margin-top:5px;"><button onclick="window.dashAct('app', ${idx})" style="background:var(--accent); border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-right:5px;">Aprobar</button><button onclick="window.dashAct('rej', ${idx})" style="background:var(--danger); border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">Rechazar</button></div></div>`; });
     }
-    window.dashAct = async (act, idx) => {
-        const item = brain.reviewQueue[idx];
-        if(act === 'app') await updateDoc(doc(db, "alexia_db", "main_brain"), { memory: arrayUnion({ inputs: [processSynonyms(item.q)], output: item.a }), reviewQueue: arrayRemove(item) });
-        else await updateDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayRemove(item) });
-        setTimeout(renderAdminQueue, 500); 
-    };
+    window.dashAct = async (act, idx) => { const item = brain.reviewQueue[idx]; if(act === 'app') await updateDoc(doc(db, "alexia_db", "main_brain"), { memory: arrayUnion({ inputs: [processSynonyms(item.q)], output: item.a }), reviewQueue: arrayRemove(item) }); else await updateDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayRemove(item) }); setTimeout(renderAdminQueue, 500); };
     window.uploadDictionary = async () => {
-        const fileInput = document.getElementById('json-upload');
-        const statusDiv = document.getElementById('upload-status');
+        const fileInput = document.getElementById('json-upload'); const statusDiv = document.getElementById('upload-status');
         if(fileInput.files.length === 0) return alert("Selecciona archivo");
-        statusDiv.innerHTML = "Analizando...";
-        const reader = new FileReader();
+        statusDiv.innerHTML = "Analizando..."; const reader = new FileReader();
         reader.onload = async (e) => {
             try {
-                const words = JSON.parse(e.target.result);
-                let added = 0; const chunkSize = 400; 
-                for (let i = 0; i < words.length; i += chunkSize) {
-                    const chunk = words.slice(i, i + chunkSize);
-                    const batch = writeBatch(db);
-                    chunk.forEach(word => { const ref = doc(db, "dictionary", normalize(word.id)); batch.set(ref, word); added++; });
-                    await batch.commit(); statusDiv.innerHTML = `Subiendo... (${added})`;
-                }
+                const words = JSON.parse(e.target.result); let added = 0; const chunkSize = 400; 
+                for (let i = 0; i < words.length; i += chunkSize) { const chunk = words.slice(i, i + chunkSize); const batch = writeBatch(db); chunk.forEach(word => { const ref = doc(db, "dictionary", normalize(word.id)); batch.set(ref, word); added++; }); await batch.commit(); statusDiv.innerHTML = `Subiendo... (${added})`; }
                 statusDiv.innerHTML = `✅ <b>¡Terminado!</b><br>Total palabras: ${added}`;
             } catch (err) { statusDiv.innerHTML = "❌ Error JSON: " + err.message; }
-        };
-        reader.readAsText(fileInput.files[0]);
+        }; reader.readAsText(fileInput.files[0]);
     };
     window.emailLogin = () => { const e=document.getElementById('l-email').value, p=document.getElementById('l-pass').value; signInWithEmailAndPassword(auth, e, p).then((c)=>{if(!c.user.emailVerified){document.getElementById('verify-modal').style.display='flex';signOut(auth);}else closeModal();}).catch(e=>alert(e.message)); };
     window.emailRegister = () => { const e=document.getElementById('r-email').value, p=document.getElementById('r-pass').value; createUserWithEmailAndPassword(auth, e, p).then(async(c)=>{await sendEmailVerification(c.user);document.getElementById('auth-modal').style.display='none';document.getElementById('verify-modal').style.display='flex';}).catch(e=>alert(e.message)); };
