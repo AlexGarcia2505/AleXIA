@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V36 - Lógica Integrativa Final</title>
+    <title>AleXIA V37 - Lógica Conversacional</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -70,6 +70,16 @@
         /* ESTILOS PARA DEFINICIONES */
         .word-definition { margin-bottom: 8px; border-left: 3px solid var(--accent); padding-left: 10px; background: rgba(255,255,255,0.03); border-radius: 0 8px 8px 0; padding: 8px 10px 8px 10px; }
         .word-source { font-size: 0.65rem; color: #777; margin-left: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        /* SUGERENCIAS DE CONVERSACIÓN */
+        .suggestion-box {
+            background: rgba(168, 199, 250, 0.1); 
+            border-radius: 8px; 
+            padding: 10px; 
+            margin-top: 10px;
+            border: 1px solid rgba(168, 199, 250, 0.2);
+            font-size: 0.9rem;
+        }
 
         /* INPUT AREA */
         .input-container { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px 20px 10px 20px; background: var(--bg-body); display: flex; flex-direction: column; align-items: center; z-index: 20; border-top: 1px solid #222; }
@@ -252,7 +262,7 @@
     const ADMIN_EMAIL = "eljacksonyt@gmail.com";
     let currentChatId = null;
     let chatState = { mode: 'normal', lastQuery: '', constructedAnswer: '' };
-
+    
     // --- 4. DICCIONARIO DE SINÓNIMOS Y JERGA (LOGICA MEJORADA) ---
     const slangMap = {
         "andas": "estas",
@@ -283,7 +293,27 @@
     // Palabras a ignorar para análisis profundo
     const stopWords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'de', 'del', 'al', 'a', 'en', 'por', 'para', 'con', 'sin', 'que', 'como', 'cual', 'quien', 'es', 'son', 'fue', 'era', 'me', 'te', 'se', 'lo', 'mi', 'tu', 'su', 'nos', 'yo', 'tu', 'el', 'ella', 'dime', 'sobre', 'acerca', 'significa']);
 
-    // 5. AUTH OBSERVER
+    // --- 5. SINÓNIMOS CONTEXTUALES DE RESPUESTA ---
+    const contextualReplies = {
+        "que tal como estas": ["¿Qué gusto saludarte, yo muy bien, y tú?", "¿Cómo te ha ido últimamente?", "¡Estupendo! ¿Qué planes tienes para hoy?"],
+        "hola": ["¡Hola! ¿Cómo andas?", "Saludos. ¿Qué me cuentas?", "Hola, ¿qué tal?"],
+        "si": ["Perfecto. ¿Alguna otra duda?", "Excelente, me alegra.", "¡Qué bien!"],
+        "no": ["Entendido. ¿Pasamos a otro tema?", "Vale, lo corregimos.", "De acuerdo."],
+        "adios": ["¡Hasta luego!", "¡Cuídate mucho!", "Adiós, fue un placer hablar contigo."],
+        "estoy bien y tu": ["Me alegra. Yo muy bien, gracias por preguntar.", "¡Qué gusto! Yo genial.", "¡Fantástico! Yo estoy lista para ayudar."],
+    };
+    
+    // --- 6. SUGERENCIAS GENÉRICAS ---
+    const genericSuggestions = [
+        "¿Quieres que busquemos algún tema de cultura general?",
+        "Podemos investigar el clima de alguna ciudad.",
+        "¿Hay algún libro interesante que te gustaría buscar?",
+        "Pregúntame sobre un término científico.",
+        "Dime alguna frase que deba aprender."
+    ];
+
+
+    // 7. AUTH OBSERVER
     if(auth) {
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -313,12 +343,11 @@
         });
     }
 
-    // 6. PROCESAMIENTO DE TEXTO
+    // 8. PROCESAMIENTO DE TEXTO
     function normalize(str) {
         return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[¿?¡!.,]/g, "").trim();
     }
 
-    // Convierte Slang a Neutro
     function processSynonyms(text) {
         let words = text.split(" ");
         let cleanWords = words.map(w => {
@@ -328,7 +357,7 @@
         return cleanWords.join(" ");
     }
 
-    // 7. LÓGICA PRINCIPAL DEL CHAT (4 NIVELES)
+    // 9. LÓGICA PRINCIPAL DEL CHAT (4 NIVELES)
     window.sendMessage = async function() {
         const input = document.getElementById('chat-input');
         const originalText = input.value.trim();
@@ -360,14 +389,22 @@
         });
 
         if (maxScore >= 0.8) {
-            finishResponse(originalText, bestMatch.output);
+            // 🔥 Lógica de respuesta contextual:
+            const key = normalize(bestMatch.inputs[0]);
+            let finalResponse = bestMatch.output;
+            
+            // Usamos la clave de la memoria para buscar sinónimo y variar la respuesta
+            if (contextualReplies[key]) {
+                finalResponse = contextualReplies[key][Math.floor(Math.random() * contextualReplies[key].length)];
+            }
+            
+            finishResponse(originalText, finalResponse, true); // true para sugerencias
             return;
         }
 
         // --- NIVEL 2: BÚSQUEDA DE FRASE COMPLETA EN WEB (WIKIPEDIA) ---
         appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> Analizando contexto global...`);
         
-        // El API más seguro para frases completas es Wikipedia (el primer intento en fetchExternalData)
         const phraseSearch = await fetchExternalData(interpretedText);
         
         if (phraseSearch) {
@@ -376,7 +413,7 @@
             
             aiResponse = `<strong>Sobre "${originalText}":</strong><br>${phraseSearch.def}<br><span style="font-size:0.7rem; color:#888;">Fuente: ${phraseSearch.src}</span><br><br><em>¿Era esto lo que buscabas? (Si/No)</em>`;
             chatState = { mode: 'waiting_feedback', lastQuery: originalText };
-            finishResponse(originalText, aiResponse);
+            finishResponse(originalText, aiResponse, true); // true para sugerencias
             return;
         }
 
@@ -418,10 +455,8 @@
                 if(box.lastChild.innerHTML.includes("Desmenuzando")) box.removeChild(box.lastChild);
 
                 if (synthesis.length === 1 && synthesis[0].src !== "Memoria") {
-                    // Si solo encontró una palabra y no es de memoria, la muestra simple
                     aiResponse = `Encontré información sobre <strong>${synthesis[0].word}</strong>:<br>${synthesis[0].def}`;
                 } else {
-                    // Encontró varias o es de memoria -> Respuesta Lógica Unida
                     aiResponse = `<strong>Analizando tu frase palabra por palabra encontré esto:</strong><br><br>`;
                     synthesis.forEach(item => {
                         aiResponse += `<div class="word-definition" style="margin-bottom:12px;">
@@ -434,7 +469,7 @@
                 }
                 
                 chatState = { mode: 'waiting_feedback', lastQuery: originalText };
-                finishResponse(originalText, aiResponse);
+                finishResponse(originalText, aiResponse, true);
                 return;
             }
         }
@@ -443,7 +478,7 @@
         const box = document.getElementById('chat-box');
         if(box.lastChild && (box.lastChild.innerHTML.includes("fa-spin") || box.lastChild.innerHTML.includes("Desmenuzando"))) box.removeChild(box.lastChild);
 
-        finishResponse(originalText, "No logré encontrar información completa ni desmenuzada. ¿Te gustaría enseñarme la respuesta correcta?");
+        finishResponse(originalText, "No logré encontrar información completa ni desmenuzada. ¿Te gustaría enseñarme la respuesta correcta?", true);
         chatState = { mode: 'waiting_correction', lastQuery: originalText }; 
     }
 
@@ -506,13 +541,17 @@
         return null;
     }
 
-    // FUNCIONES UI Y AUXILIARES
+    // --- 9. FUNCIONES UI Y CONTEXTO ---
     function handleFeedback(normInput, originalInput) {
         if (normInput === 'si' || normInput === 'claro' || normInput === 'simon') {
-            finishResponse(originalInput, "¡Excelente! He aprendido esa conexión.");
+            const synonyms = contextualReplies["si"];
+            const response = synonyms[Math.floor(Math.random() * synonyms.length)];
+            finishResponse(originalInput, response, true);
             chatState = { mode: 'normal' };
         } else {
-            finishResponse(originalInput, "Entiendo. ¿Cuál sería la respuesta correcta completa?");
+            const synonyms = contextualReplies["no"];
+            const response = synonyms[Math.floor(Math.random() * synonyms.length)];
+            finishResponse(originalInput, response, false);
             chatState = { mode: 'waiting_correction', lastQuery: chatState.lastQuery };
         }
     }
@@ -523,13 +562,76 @@
                 reviewQueue: arrayUnion({ q: chatState.lastQuery, a: correction, user: userName, date: new Date().toISOString() }) 
             });
         }
-        finishResponse(correction, "¡Gracias! Tu corrección ha sido enviada a revisión.");
+        finishResponse(correction, "¡Gracias! Tu corrección ha sido enviada a revisión.", true);
         chatState = { mode: 'normal' };
     }
-    function finishResponse(userTxt, aiTxt) {
+
+    // 🔥 MODIFICACIÓN CLAVE: Agrega lógica de sugerencias
+    function finishResponse(userTxt, aiTxt, shouldSuggest) {
         appendMsg('ai', aiTxt);
         saveLocalChat(userTxt, aiTxt);
+        
+        saveUserQueryHistory(userTxt);
+
+        if (shouldSuggest) {
+            const suggestionsHTML = generateSuggestions();
+            appendMsg('ai', suggestionsHTML);
+        }
     }
+    
+    // 🔥 GENERAR SUGERENCIAS DINÁMICAS (PERSONALIZADAS + ALEATORIAS)
+    function generateSuggestions() {
+        const history = getUserQueryHistory();
+        let suggestions = [];
+        let html = '<div class="suggestion-box"><p style="font-weight:500; margin-top:0;">🤔 **Ideas para continuar:**</p><ul style="list-style:none; padding:0; margin:0;">';
+
+        // PRIORIDAD 1: Sugerencia Personalizada (Basada en historial)
+        if (history.length > 0) {
+            // Toma las últimas 3 preguntas únicas
+            const recentUnique = Array.from(new Set(history.map(normalize))).slice(-3);
+            recentUnique.forEach(q => {
+                if (suggestions.length < 2 && q.length > 5) {
+                    suggestions.push(`Buscar sobre: **${q}**`);
+                }
+            });
+        }
+
+        // PRIORIDAD 2: Sugerencia Aleatoria para completar a 3
+        if (suggestions.length < 3) {
+            const generic = genericSuggestions[Math.floor(Math.random() * genericSuggestions.length)];
+            suggestions.push(generic);
+        }
+        
+        // Formato final
+        suggestions.slice(0, 3).forEach(s => {
+            html += `<li style="margin-bottom:5px; font-size:0.9rem; color:var(--text-main);"><i class="fas fa-lightbulb" style="color:#f8d775; margin-right:5px;"></i>${s}</li>`;
+        });
+        html += '</ul></div>';
+        return html;
+    }
+    
+    // 🔥 HISTORIAL PERSONALIZADO (Local Storage)
+    function getHistoryKey() {
+        return `alexia_query_history_${currentUser ? currentUser.uid : 'guest'}`;
+    }
+
+    function saveUserQueryHistory(query) {
+        const key = getHistoryKey();
+        let history = JSON.parse(localStorage.getItem(key)) || [];
+        // No guardar si es una respuesta de Si/No o muy corta
+        if (query.length < 5 || normalize(query).match(/s(i|í)|no|gracias|estoy bien y tu|hola/i)) return; 
+        
+        history.push(query);
+        if (history.length > 100) history.shift(); 
+        localStorage.setItem(key, JSON.stringify(history));
+    }
+    
+    function getUserQueryHistory() {
+        const key = getHistoryKey();
+        return JSON.parse(localStorage.getItem(key)) || [];
+    }
+
+    // GESTIÓN DE ESTADO Y LOCALSTORAGE (MANTENER IGUAL)
     function appendMsg(role, text) {
         const box = document.getElementById('chat-box');
         const row = document.createElement('div');
@@ -540,7 +642,6 @@
         box.appendChild(row);
         setTimeout(() => box.scrollTop = box.scrollHeight, 100);
     }
-    // GESTIÓN DE ESTADO Y LOCALSTORAGE (MANTENER IGUAL)
     function getLocalKey() { return `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`; }
     function saveLocalChat(uMsg, aiMsg) {
         const key = getLocalKey();
