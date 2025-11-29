@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V53 - v4Final Ultimate</title>
+    <title>AleXIA V54 - Datos Blindados</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -225,7 +225,7 @@
 
     const slangMap = { "andas": "estas", "onda": "pasa", "hubo": "paso", "pex": "pasa", "pedo": "problema", "chido": "bueno", "padre": "bueno", "gwey": "amigo", "wey": "amigo", "camara": "adios", "simon": "si", "nelson": "no", "chale": "que mal", "neto": "verdad", "neta": "verdad", "jalo": "acepto", "sobres": "esta bien" };
     
-    // --- CORRECCIÓN STOP WORDS PARA EVITAR QUE DEFINA "ERES" ---
+    // STOP WORDS
     const stopWords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'de', 'del', 'al', 'a', 'en', 'por', 'para', 'con', 'sin', 'que', 'como', 'cual', 'quien', 'es', 'son', 'fue', 'era', 'me', 'te', 'se', 'lo', 'mi', 'tu', 'su', 'nos', 'yo', 'tu', 'el', 'ella', 'dime', 'sobre', 'acerca', 'significa', 'busco', 'esta', 'está', 'cómo', 'hay', 'eres', 'soy', 'somos']);
     
     const contextualReplies = { "que tal como estas": ["¿Qué gusto saludarte, yo muy bien, y tú?", "¿Cómo te ha ido últimamente?"], "hola": ["¡Hola! ¿Cómo andas?", "Saludos. ¿Qué me cuentas?"], "si": ["Perfecto.", "Excelente."], "no": ["Entendido."], "adios": ["¡Hasta luego!", "¡Cuídate mucho!"], "estoy bien y tu": ["Me alegra. Yo muy bien."] };
@@ -240,7 +240,7 @@
                 if(user.email === ADMIN_EMAIL) role = "admin";
                 else if (userSnap.exists()) role = userSnap.data().role || "user";
                 if (!userSnap.exists()) await setDoc(userRef, { email: user.email, role: role, createdAt: new Date().toISOString() });
-                currentUser = { uid: user.uid, name: user.displayName || user.email.split('@')[0], role: role };
+                currentUser = { uid: user.uid, name: user.displayName || user.email.split('@')[0], role: role, email: user.email };
                 updateUserUI(currentUser);
                 renderLocalHistory();
                 closeModal(); 
@@ -334,10 +334,9 @@
         const originalText = input.value.trim();
         if(!originalText) return;
 
-        // --- MODO CORRECCIÓN BLINDADO (V53) ---
+        // --- MODO CORRECCIÓN BLINDADO (V54) ---
         if (chatState.mode === 'waiting_correction') {
             const correction = originalText;
-            const userEmail = currentUser ? currentUser.email : "invitado";
             
             input.value = '';
             appendMsg('user', originalText);
@@ -346,17 +345,22 @@
 
             try {
                 if(db) {
-                    // --- PARCHE DE SEGURIDAD: EVITAR UNDEFINED A TODA COSTA ---
-                    const qData = (chatState.lastQuery && chatState.lastQuery.trim() !== "") ? chatState.lastQuery : "Pregunta recuperada";
-                    const aData = (correction && correction.trim() !== "") ? correction : "Respuesta recuperada";
-                    
+                    // --- SANITIZACIÓN FORZADA (V54) ---
+                    // Convertimos todo a String explícitamente. Si es null/undefined, ponemos un texto por defecto.
+                    const finalQ = String(chatState.lastQuery || "Pregunta no detectada");
+                    const finalA = String(correction || "Respuesta vacía");
+                    const finalUser = String(currentUser ? currentUser.email : "Anónimo");
+                    const finalDate = new Date().toISOString();
+
+                    const payload = { 
+                        q: finalQ, 
+                        a: finalA, 
+                        user: finalUser, 
+                        date: finalDate 
+                    };
+
                     await setDoc(doc(db, "alexia_db", "main_brain"), {
-                        reviewQueue: arrayUnion({ 
-                            q: qData, 
-                            a: aData, 
-                            user: userEmail, 
-                            date: new Date().toISOString() 
-                        })
+                        reviewQueue: arrayUnion(payload)
                     }, { merge: true });
                     
                     const sendingEl = document.getElementById(sendingMsgId);
@@ -383,7 +387,6 @@
         
         const normInput = normalize(originalText);
         
-        // --- IDENTIDAD MEJORADA (V53) ---
         if (normInput.match(/quien (te )?(creo|hizo)|quien eres|que eres|como te llamas|quien es tu creador/i)) {
             input.value = '';
             appendMsg('user', originalText);
