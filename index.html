@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA - Modo Invitado</title>
+    <title>AleXIA - Aprendiz</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
     
     <style>
-        /* --- ESTILOS VISUALES --- */
+        /* --- ESTILOS GEMINI DARK --- */
         :root {
             --bg-body: #131314;
             --bg-sidebar: #1e1f20;
@@ -74,9 +74,6 @@
         .btn-primary { background: var(--accent); color: #001d35; }
         .btn-google { background: white; color: #1f1f1f; display: flex; align-items: center; justify-content: center; gap: 10px; }
 
-        /* CONTADOR INVITADO */
-        .guest-badge { position: absolute; top: 10px; right: 10px; background: #333; color: #aaa; padding: 4px 8px; border-radius: 12px; font-size: 0.7rem; pointer-events: none; }
-
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: 0; } }
     </style>
 </head>
@@ -94,7 +91,6 @@
     </button>
 
     <div class="history-list" id="history-container" style="margin-top:20px; text-align:center; color:#555; font-size:0.9rem;">
-        <!-- Historial o mensaje -->
         Inicia sesión para guardar tu historial.
     </div>
 
@@ -113,13 +109,12 @@
     <div class="top-bar">
         <button class="menu-btn toggle-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
         <span style="font-weight:500;">AleXIA</span>
-        <div id="guest-counter" class="guest-badge" style="display:none;">5 restantes</div>
     </div>
 
     <div id="chat-box">
         <div style="text-align:center; margin-top:60px; opacity:0.6;">
             <i class="fas fa-sparkles" style="font-size:3rem; margin-bottom:20px; background:linear-gradient(45deg, #4285f4, #d96570); -webkit-background-clip:text; color:transparent;"></i>
-            <h2>¿Qué tienes en mente?</h2>
+            <h2>¡Hola! Estoy aprendiendo.</h2>
         </div>
     </div>
 
@@ -134,6 +129,11 @@
 <!-- MODAL LOGIN/REGISTRO -->
 <div id="auth-modal" class="modal">
     <div class="card">
+        <div style="text-align:center; margin-bottom:15px;">
+            <h2 style="margin:0;">Únete a AleXIA</h2>
+            <p style="color:#aaa; font-size:0.85rem; margin-top:5px;">El servicio es gratuito. Regístrate para enseñarme y guardar tus datos.</p>
+        </div>
+
         <div style="display:flex; margin-bottom:20px;">
             <button class="tab-btn active" onclick="showAuth('login')" id="tab-login">Entrar</button>
             <button class="tab-btn" onclick="showAuth('register')" id="tab-register">Registrarse</button>
@@ -148,10 +148,10 @@
 
         <!-- REGISTRO -->
         <div id="section-register" style="display:none;">
-            <p style="font-size:0.85rem; color:#aaa; margin-bottom:15px;">Te enviaremos un correo para verificar tu cuenta.</p>
             <input type="email" id="r-email" class="field" placeholder="Tu Correo Real">
             <input type="password" id="r-pass" class="field" placeholder="Crea una Contraseña">
             <button class="btn-full btn-primary" onclick="emailRegister()">Crear Cuenta</button>
+            <p style="font-size:0.75rem; color:#aaa; margin-top:10px;">* Te enviaremos un link de verificación.</p>
         </div>
 
         <div style="margin:20px 0; border-top:1px solid #333; position:relative;">
@@ -170,15 +170,24 @@
 <div id="verify-modal" class="modal">
     <div class="card">
         <i class="fas fa-envelope" style="font-size:3rem; color:var(--accent); margin-bottom:15px;"></i>
-        <h3>Revisa tu Correo</h3>
-        <p style="color:#ccc; font-size:0.9rem;">Hemos enviado un enlace de confirmación. <br>Por seguridad, no puedes iniciar sesión hasta verificarlo.</p>
+        <h3>Verifica tu Correo</h3>
+        <p style="color:#ccc; font-size:0.9rem;">Enlace enviado. Verifica tu email para acceder.</p>
         <button class="btn-full btn-primary" onclick="closeVerify()">Entendido</button>
+    </div>
+</div>
+
+<!-- DASHBOARD ADMIN (Oculto) -->
+<div id="admin-dash" class="modal">
+    <div class="card" style="max-width:600px; width:95%; max-height:80vh; overflow:hidden; display:flex; flex-direction:column;">
+        <h3>Panel Admin</h3>
+        <div id="dash-content" style="flex:1; overflow-y:auto; text-align:left;"></div>
+        <button onclick="closeDash()" class="btn-full" style="background:var(--danger); color:white; margin-top:10px;">Cerrar</button>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-    import { getFirestore, doc, onSnapshot, setDoc, updateDoc, arrayUnion, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot, setDoc, updateDoc, arrayUnion, arrayRemove, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
     // --- TUS LLAVES ---
@@ -201,20 +210,15 @@
     let brain = { memory: [], reviewQueue: [], missingLog: [], userDebts: {} };
     let learningState = { active: false, question: "", isDebt: false };
     
-    // CONTROL DE INVITADOS (5 Preguntas)
-    let guestCount = parseInt(localStorage.getItem('alexia_guest_count') || "0");
-    const MAX_GUEST_CHATS = 5;
+    // CONTROL DE "IGNORANCIA" (2 Preguntas no respondidas)
+    // Usamos localStorage para persistir entre recargas
+    let guestMisses = parseInt(localStorage.getItem('alexia_guest_misses') || "0");
+    const MAX_GUEST_MISSES = 2;
 
     // --- SESIÓN ---
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            // Verificar si el email está validado
-            if (!user.emailVerified) {
-                // Si se acaba de registrar y no ha verificado, mostramos alerta y cerramos
-                // Pero permitimos que el modal se cierre para que vaya a su correo
-                return; 
-            }
-
+            if (!user.emailVerified) { return; }
             const userRef = doc(db, "users", user.uid);
             const userSnap = await getDoc(userRef);
             let role = "user";
@@ -227,7 +231,7 @@
 
             currentUser = { uid: user.uid, name: user.displayName || user.email.split('@')[0], role: role };
             updateUserUI(currentUser);
-            closeModal(); // Cerrar modal si estaba abierto
+            closeModal(); 
         } else {
             currentUser = null;
             updateUserUI(null);
@@ -246,49 +250,57 @@
         const text = input.value.trim();
         if(!text) return;
         
-        // 1. RESTRICCIÓN DE INVITADO
-        if (!currentUser) {
-            if (guestCount >= MAX_GUEST_CHATS) {
-                appendMsg('ai', "🔒 <strong>Límite gratuito alcanzado.</strong><br>Para seguir chateando y aprendiendo, por favor regístrate.");
-                setTimeout(() => openLogin(), 1500); // Abrir login auto
-                input.value = '';
-                return;
-            }
-            // Incrementar contador
-            guestCount++;
-            localStorage.setItem('alexia_guest_count', guestCount);
-            updateGuestCounter();
-        }
-
         input.value = '';
         appendMsg('user', text);
 
+        // 1. COMANDO ADMIN
+        if (currentUser && currentUser.role === 'admin' && text.toLowerCase().includes("tarea")) {
+            openDash();
+            learningState = { active: false, question: "", isDebt: false };
+            appendMsg('ai', "Abriendo panel...");
+            return;
+        }
+
+        // 2. MODO APRENDIZAJE / DEUDA
         if (learningState.active) { handleTeaching(text); return; }
 
-        // Buscar en memoria
+        // 3. BUSCAR EN MEMORIA
         const mem = brain.memory.find(m => m.inputs.some(i => text.toLowerCase().includes(i)));
         if (mem) { 
             setTimeout(() => appendMsg('ai', mem.output), 500); 
             return; 
         }
 
-        // Si no sabe y es invitado -> Respuesta genérica (no puede enseñar)
+        // 4. SI NO SABE (LÓGICA INVITADO VS USUARIO)
+        
         if (!currentUser) {
-            setTimeout(() => appendMsg('ai', "No sé la respuesta. (Regístrate para enseñarme y desbloquear mi potencial)."), 500);
+            // Incrementar contador de "fallos"
+            guestMisses++;
+            localStorage.setItem('alexia_guest_misses', guestMisses);
+
+            if (guestMisses >= MAX_GUEST_MISSES) {
+                setTimeout(() => {
+                    appendMsg('ai', "🔒 <strong>Soy nueva y necesito aprender.</strong><br>Para enseñarme la respuesta y guardarla, por favor regístrate (Es gratis).");
+                    setTimeout(() => openLogin(), 1500); // Abrir login auto
+                }, 500);
+            } else {
+                setTimeout(() => appendMsg('ai', "No sé la respuesta. (Inicia sesión para enseñarme)."), 500);
+            }
             return;
         }
 
-        // Si es usuario -> Verificar Deuda
+        // 5. SI ES USUARIO REGISTRADO -> VERIFICAR DEUDA
         const debts = brain.userDebts[currentUser.email] || [];
         if (debts.length >= 2 && currentUser.role !== 'admin') {
             const debtQ = debts[0];
             setTimeout(() => {
-                appendMsg('ai', `⛔ <strong>Preguntas pendientes:</strong><br>¿${debtQ}?`);
+                appendMsg('ai', `⛔ <strong>Ayúdame a aprender:</strong><br>¿Qué respuesta doy para: "${debtQ}"?`);
                 learningState = { active: true, question: debtQ, isDebt: true };
             }, 600);
             return;
         }
 
+        // Si usuario no tiene deuda, preguntar normal
         setTimeout(() => {
             appendMsg('ai', "No sé la respuesta. ¿Tú la sabes? (Responde o escribe 'no se').");
             learningState = { active: true, question: text, isDebt: false };
@@ -299,19 +311,24 @@
         if (ans.match(/no s(e|é)|saltar/i)) {
             if(learningState.isDebt) { appendMsg('ai', "Necesito una respuesta."); return; }
             await updateDoc(doc(db, "alexia_db", "main_brain"), { missingLog: arrayUnion({ q: learningState.question, date: new Date().toISOString() }) });
-            
             let debts = brain.userDebts;
             if(!debts[currentUser.email]) debts[currentUser.email] = [];
             if(!debts[currentUser.email].includes(learningState.question)){
                 debts[currentUser.email].push(learningState.question);
                 await updateDoc(doc(db, "alexia_db", "main_brain"), { userDebts: debts });
             }
-            appendMsg('ai', "Guardado en pendientes.");
+            appendMsg('ai', "Guardado.");
         } else {
             await updateDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayUnion({ q: learningState.question, a: ans, user: currentUser.name }) });
             appendMsg('ai', "Gracias, enviado a revisión.");
             if (learningState.isDebt) {
-                // Lógica simple de pago
+                let debts = brain.userDebts;
+                const arr = debts[currentUser.email];
+                const idx = arr.indexOf(learningState.question);
+                if(idx > -1) {
+                    arr.splice(idx, 1);
+                    await updateDoc(doc(db, "alexia_db", "main_brain"), { userDebts: debts });
+                }
                 appendMsg('ai', "Deuda saldada.");
             }
         }
@@ -322,35 +339,53 @@
     window.emailLogin = () => {
         const e = document.getElementById('l-email').value;
         const p = document.getElementById('l-pass').value;
-        signInWithEmailAndPassword(auth, e, p)
-            .then((cred) => {
-                if(!cred.user.emailVerified) {
-                    document.getElementById('verify-modal').style.display = 'flex';
-                    signOut(auth); // Salir para forzar verificación
-                } else {
-                    closeModal();
-                }
-            })
-            .catch(e => alert("Error: " + e.message));
+        signInWithEmailAndPassword(auth, e, p).then((cred)=>{
+            if(!cred.user.emailVerified){ 
+                document.getElementById('verify-modal').style.display='flex'; signOut(auth);
+            } else closeModal();
+        }).catch(e => alert(e.message));
     };
-
     window.emailRegister = () => {
         const e = document.getElementById('r-email').value;
         const p = document.getElementById('r-pass').value;
-        createUserWithEmailAndPassword(auth, e, p).then(async (cred) => {
+        createUserWithEmailAndPassword(auth, e, p).then(async(cred)=>{
             await sendEmailVerification(cred.user);
-            document.getElementById('auth-modal').style.display = 'none'; // Ocultar login
-            document.getElementById('verify-modal').style.display = 'flex'; // Mostrar alerta
+            document.getElementById('auth-modal').style.display='none';
+            document.getElementById('verify-modal').style.display='flex';
         }).catch(e => alert(e.message));
     };
+    window.googleLogin = () => signInWithPopup(auth, provider).then(()=>closeModal()).catch(e=>alert(e.message));
+    window.logout = (e) => { e.stopPropagation(); signOut(auth); }
 
-    window.googleLogin = () => {
-        signInWithPopup(auth, provider).then(() => closeModal()).catch(e => alert(e.message));
-    };
-
-    window.logout = (e) => {
-        e.stopPropagation();
-        signOut(auth);
+    // --- DASHBOARD ---
+    window.openDash = () => {
+        document.getElementById('admin-dash').style.display = 'flex';
+        const content = document.getElementById('dash-content');
+        content.innerHTML = "<h4>Tareas Pendientes</h4>";
+        brain.reviewQueue.forEach((item, idx) => {
+            content.innerHTML += `<div style="background:#000; padding:10px; margin-bottom:5px; border-radius:5px;">
+                <b style="color:white">¿${item.q}?</b><br>
+                <span style="color:#aaa">${item.a}</span>
+                <div style="margin-top:5px;">
+                    <button onclick="window.dashAct('app', ${idx})" style="background:var(--accent); border:none; padding:5px 10px; border-radius:3px; cursor:pointer;">OK</button>
+                    <button onclick="window.dashAct('rej', ${idx})" style="background:var(--danger); border:none; padding:5px 10px; border-radius:3px; cursor:pointer;">NO</button>
+                </div>
+            </div>`;
+        });
+    }
+    window.closeDash = () => document.getElementById('admin-dash').style.display = 'none';
+    
+    window.dashAct = async (act, idx) => {
+        const item = brain.reviewQueue[idx];
+        if(act === 'app') {
+            await updateDoc(doc(db, "alexia_db", "main_brain"), {
+                memory: arrayUnion({ inputs: [item.q.toLowerCase()], output: item.a }),
+                reviewQueue: arrayRemove(item)
+            });
+        } else {
+            await updateDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayRemove(item) });
+        }
+        window.openDash(); 
     }
 
     // --- UI ---
@@ -358,45 +393,45 @@
         const box = document.getElementById('chat-box');
         const row = document.createElement('div');
         row.className = `msg-row ${role}-row`;
-        
-        let iconHtml = '';
-        if(role === 'ai') iconHtml = `<div class="msg-icon icon-ai"><i class="fas fa-sparkles"></i></div>`;
-        
-        row.innerHTML = `
-            ${role === 'ai' ? iconHtml : ''}
-            <div class="msg-bubble">${text}</div>
-        `;
-        
-        if(box.querySelector('h2')) box.innerHTML = ''; // Limpiar bienvenida
+        let iconHtml = role === 'ai' ? `<div class="msg-icon icon-ai"><i class="fas fa-sparkles"></i></div>` : '';
+        row.innerHTML = `${role === 'ai' ? iconHtml : ''}<div class="msg-bubble">${text}</div>`;
+        if(box.querySelector('h2')) box.innerHTML = '';
         box.appendChild(row);
         box.scrollTop = box.scrollHeight;
     }
 
     function updateUserUI(u) {
-        const counter = document.getElementById('guest-counter');
         const histContainer = document.getElementById('history-container');
-        
         if(u) {
             document.getElementById('u-name').innerText = u.name;
             document.getElementById('u-role').innerText = u.role === 'admin' ? 'Admin' : 'Usuario';
             document.getElementById('u-avatar').innerHTML = u.name[0].toUpperCase();
             document.getElementById('btn-logout').style.display = 'block';
-            counter.style.display = 'none';
-            histContainer.innerHTML = `<div style="padding:10px; font-size:0.8rem;">Historial activado.</div>`;
+            histContainer.innerHTML = `<div style="padding:10px;">Historial activo.</div>`;
         } else {
             document.getElementById('u-name').innerText = "Invitado";
             document.getElementById('u-role').innerText = "Clic para entrar";
             document.getElementById('u-avatar').innerHTML = `<i class="fas fa-user"></i>`;
             document.getElementById('btn-logout').style.display = 'none';
-            updateGuestCounter(); // Mostrar contador
-            histContainer.innerHTML = `<div style="padding:20px; text-align:center; font-size:0.8rem; color:#666;">Inicia sesión para ver tu historial.</div>`;
+            histContainer.innerHTML = `<div style="padding:20px; text-align:center; color:#666;">Inicia sesión.</div>`;
         }
     }
 
-    function updateGuestCounter() {
-        const counter = document.getElementById('guest-counter');
-        if (!currentUser) {
-            const remaining = MAX_GUEST_CHATS - guestCount;
-            counter.style.display = 'block';
-            counter.innerText = remaining > 0 ? `${remaining} gratuitos` : "Límite alcanzado";
-            counter.style.color = remaining >
+    window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
+    window.clearChat = () => document.getElementById('chat-box').innerHTML = `<div style="text-align:center; margin-top:60px; opacity:0.6;"><i class="fas fa-sparkles" style="font-size:3rem; margin-bottom:20px; background:linear-gradient(45deg, #4285f4, #d96570); -webkit-background-clip:text; color:transparent;"></i><h2>Nueva conversación</h2></div>`;
+    window.openLogin = () => { if(!currentUser) document.getElementById('auth-modal').style.display = 'flex'; }
+    window.closeModal = () => document.getElementById('auth-modal').style.display = 'none';
+    window.closeVerify = () => document.getElementById('verify-modal').style.display = 'none';
+    window.showAuth = (type) => {
+        document.getElementById('section-login').style.display = type==='login'?'block':'none';
+        document.getElementById('section-register').style.display = type==='register'?'block':'none';
+        document.getElementById('tab-login').className = type==='login'?'tab-btn active':'tab-btn';
+        document.getElementById('tab-register').className = type==='register'?'tab-btn active':'tab-btn';
+    }
+    
+    document.getElementById('chat-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
+</script>
+</body>
+</html>
+
+
