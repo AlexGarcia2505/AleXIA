@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V34</title>
+    <title>AleXIA V35 - Lógica Avanzada</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
     
     <style>
-        /* --- ESTILOS VISUALES --- */
+        /* --- ESTILOS VISUALES (Mismos estilos originales) --- */
         :root {
             --bg-body: #131314; --bg-sidebar: #1e1f20; --bg-input: #282a2c;
             --text-main: #e3e3e3; --text-muted: #c4c7c5;
@@ -38,7 +38,6 @@
         .new-chat-btn { background: #282a2c; color: var(--text-muted); border: none; padding: 10px; width: 90%; margin: 0 auto; display:flex; align-items:center; gap:10px; border-radius: 20px; cursor: pointer; transition: 0.2s; }
         .new-chat-btn:hover { background: #333; color: white; }
 
-        /* HISTORIAL ESTILOS */
         .history-list { flex: 1; overflow-y: auto; padding: 10px; margin-top: 10px; }
         .chat-item {
             padding: 10px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
@@ -65,7 +64,12 @@
         .msg-icon { width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #4285f4, #9b72cb); color: white; flex-shrink: 0; }
         .msg-bubble { max-width: 75%; line-height: 1.6; font-size: 1rem; }
         .user-row .msg-bubble { background: var(--user-msg); padding: 10px 18px; border-radius: 20px 20px 4px 20px; }
+        .ai-row .msg-bubble { background: transparent; padding: 0 10px; }
         .dict-type { font-size: 0.75rem; color: #94a3b8; font-style: italic; display:block; margin-top:5px; }
+        
+        /* Fuente especial para secciones de palabras */
+        .word-definition { margin-bottom: 8px; border-left: 3px solid var(--accent); padding-left: 10px; }
+        .word-source { font-size: 0.7rem; color: #777; margin-left: 5px; text-transform: uppercase; }
 
         /* INPUT AREA */
         .input-container { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px 20px 10px 20px; background: var(--bg-body); display: flex; flex-direction: column; align-items: center; z-index: 20; border-top: 1px solid #222; }
@@ -149,8 +153,7 @@
     <div class="input-container">
         <div class="input-wrapper">
             <input type="text" id="chat-input" class="chat-input" 
-                   placeholder="Pregunta algo..." autocomplete="off" 
-                   name="search_query_alexia_v34" role="search">
+                   placeholder="Pregunta algo..." autocomplete="off">
             <button class="send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
         </div>
         <div class="footer-info">IA en proceso de entrenamiento e investigación.</div>
@@ -215,13 +218,13 @@
 </div>
 
 <script type="module">
-    // 1. IMPORTACIONES
+    // --- 1. IMPORTACIONES FIREBASE ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
     import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app-check.js";
     import { getFirestore, doc, onSnapshot, setDoc, updateDoc, arrayUnion, arrayRemove, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
-    // 2. CONFIGURACIÓN FIREBASE
+    // --- 2. CONFIGURACIÓN ---
     const firebaseConfig = {
         apiKey: "AIzaSyAeNVoB1ZasZSauIf6G7GbIa4bbJJ3_5cw",
         authDomain: "alexia-1c4f2.firebaseapp.com",
@@ -243,226 +246,297 @@
         provider = new GoogleAuthProvider();
     } catch(e) { console.error("Error init:", e); }
 
-    // VARIABLES
+    // --- 3. VARIABLES DE ESTADO Y CEREBRO ---
     let currentUser = null;
-    let brain = { memory: [], reviewQueue: [], missingLog: [], userDebts: {} };
-    let learningState = { active: false, question: "", isDebt: false };
+    let brain = { memory: [], reviewQueue: [], missingLog: [] };
     const ADMIN_EMAIL = "eljacksonyt@gmail.com";
-    
-    // VARIABLES LOCALES (HISTORIAL EN NAVEGADOR)
-    let currentChatId = null; // ID único del chat actual
+    let currentChatId = null;
 
-    // --- AUTH OBSERVER ---
+    // ESTADO DE LA CONVERSACIÓN (Máquina de estados)
+    // Modes: 'normal', 'waiting_feedback' (si/no), 'waiting_correction' (usuario corrige)
+    let chatState = { mode: 'normal', lastQuery: '', constructedAnswer: '' };
+
+    // PALABRAS A IGNORAR (Stop words) para el análisis
+    const stopWords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'de', 'del', 'al', 'a', 'en', 'por', 'para', 'con', 'sin', 'que', 'como', 'cual', 'quien', 'es', 'son', 'fue', 'era', 'me', 'te', 'se', 'lo', 'mi', 'tu', 'su', 'nos']);
+
+    // --- 4. AUTH OBSERVER ---
     if(auth) {
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                if (!user.emailVerified) { return; }
+                if (!user.emailVerified) return;
                 const userRef = doc(db, "users", user.uid);
                 const userSnap = await getDoc(userRef);
                 let role = "user";
-                
                 if(user.email === ADMIN_EMAIL) role = "admin";
                 else if (userSnap.exists()) role = userSnap.data().role || "user";
-                
                 if (!userSnap.exists()) await setDoc(userRef, { email: user.email, role: role, createdAt: new Date().toISOString() });
-                
                 currentUser = { uid: user.uid, name: user.displayName || user.email.split('@')[0], role: role };
                 updateUserUI(currentUser);
-                renderLocalHistory(); // Cargar historial del LocalStorage
+                renderLocalHistory();
                 closeModal(); 
             } else {
                 currentUser = null;
                 updateUserUI(null);
                 currentChatId = null;
-                renderLocalHistory(); // Limpiar visualmente
+                renderLocalHistory();
             }
         });
     }
 
-    // --- CEREBRO & CHAT LOGIC ---
+    // --- 5. SINCRONIZACIÓN CEREBRO ---
     if(db) {
         onSnapshot(doc(db, "alexia_db", "main_brain"), (snap) => {
             if(snap.exists()) brain = snap.data();
         });
     }
 
+    // --- 6. UTILIDADES DE TEXTO ---
+    function normalize(str) {
+        return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    }
+
+    // --- 7. LÓGICA PRINCIPAL DEL CHAT ---
     window.sendMessage = async function() {
         const input = document.getElementById('chat-input');
         const text = input.value.trim();
         if(!text) return;
+        
         input.value = '';
+        appendMsg('user', text); // Mostrar lo que el usuario escribió
         
-        // 1. Mostrar user msg
-        appendMsg('user', text);
+        const normText = normalize(text);
 
+        // A) MANEJO DE ESTADOS (FEEDBACK)
+        if (chatState.mode === 'waiting_feedback') {
+            handleFeedback(normText, text);
+            return;
+        }
+        if (chatState.mode === 'waiting_correction') {
+            handleCorrection(text);
+            return;
+        }
+
+        // B) MODO NORMAL - BÚSQUEDA
         let aiResponse = "";
+        let isConstructed = false; // Bandera para saber si pedimos feedback al final
 
-        if (learningState.active) { handleTeaching(text); return; }
-
-        const mem = brain.memory.find(m => m.inputs.some(i => text.toLowerCase().includes(i)));
+        // 1. Búsqueda Exacta o Muy Similar en Memoria Global
+        const exactMatch = brain.memory.find(m => m.inputs.some(i => normalize(i) === normText));
         
-        if (mem) {
-            aiResponse = mem.output;
-        } 
-        else if(text.split(" ").length < 3) {
-            try {
-                const dictSnap = await getDoc(doc(db, "dictionary", text.toLowerCase()));
-                if (dictSnap.exists()) {
-                    const d = dictSnap.data();
-                    aiResponse = `📖 <strong>${d.id}:</strong><br>${d.def}<br><span class="dict-type">${d.type}</span>`;
+        if (exactMatch) {
+            aiResponse = exactMatch.output;
+            finishResponse(text, aiResponse);
+            return;
+        }
+
+        // 2. Si no es exacto: ANÁLISIS PALABRA POR PALABRA (Tu petición)
+        // Separa la frase en palabras y filtra las inútiles
+        const words = normText.split(/\s+/).filter(w => !stopWords.has(w) && w.length > 2);
+        
+        if (words.length > 0) {
+            appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> Analizando términos: ${words.join(", ")}...`);
+            
+            let synthesis = [];
+            
+            // Procesar cada palabra secuencialmente
+            for (let word of words) {
+                let definition = null;
+                let source = "Desconocido";
+
+                // a) Buscar en Memoria/Diccionario Interno
+                try {
+                    const dictSnap = await getDoc(doc(db, "dictionary", word));
+                    if (dictSnap.exists()) {
+                        definition = dictSnap.data().def;
+                        source = "Memoria";
+                    }
+                } catch(e) {}
+
+                // b) Si no está en memoria -> Wikipedia
+                if (!definition) {
+                    const wikiDef = await fetchWikipediaDef(word);
+                    if (wikiDef) {
+                        definition = wikiDef;
+                        source = "Wikipedia";
+                    }
                 }
-            } catch(e) {}
+
+                if (definition) {
+                    synthesis.push({ word: word, def: definition, src: source });
+                }
+            }
+
+            // Construir respuesta final
+            if (synthesis.length > 0) {
+                aiResponse = "<strong>Esto es lo que encontré analizando tu pregunta:</strong><br><br>";
+                synthesis.forEach(item => {
+                    aiResponse += `<div class="word-definition">
+                        <strong>${item.word.toUpperCase()}:</strong> ${item.def}.
+                        <span class="word-source">(${item.src})</span>
+                    </div>`;
+                });
+                aiResponse += `<br><em>¿Esta información responde correctamente a tu duda? (Responde <strong>Si</strong> o <strong>No</strong>)</em>`;
+                
+                // CAMBIAR ESTADO A ESPERANDO FEEDBACK
+                chatState = { mode: 'waiting_feedback', lastQuery: text, constructedAnswer: aiResponse };
+                isConstructed = true;
+            }
         }
 
+        // 3. Fallback Total (Si no encontró nada de nada)
         if (!aiResponse) {
-             if(db) updateDoc(doc(db, "alexia_db", "main_brain"), { missingLog: arrayUnion({ q: text, date: new Date().toISOString(), user: currentUser ? currentUser.name : "Guest" }) });
-            aiResponse = "No tengo esa información. ¿Tú la sabes? (Escríbela para enseñarme o pon 'no se').";
-            learningState = { active: true, question: text, isDebt: false };
+            aiResponse = "No tengo información suficiente en mi memoria ni en internet sobre esos términos. ¿Podrías enseñarme la respuesta? (O escribe 'cancelar').";
+            chatState = { mode: 'waiting_correction', lastQuery: text };
         }
 
-        // 2. Respuesta AI y GUARDADO LOCAL
-        setTimeout(() => {
-            appendMsg('ai', aiResponse);
-            // GUARDAR EN LOCALSTORAGE
-            saveLocalChat(text, aiResponse);
-        }, 600);
+        // Enviar respuesta final al chat (borrando el icono de carga si hubo)
+        const chatBox = document.getElementById('chat-box');
+        if(chatBox.lastChild.innerHTML.includes("fa-spin")) chatBox.removeChild(chatBox.lastChild);
+        
+        finishResponse(text, aiResponse);
     }
 
-    async function handleTeaching(ans) {
-        if (ans.match(/no s(e|é)|saltar/i)) {
-            appendMsg('ai', "Entendido, saltado.");
-            saveLocalChat(ans, "Entendido, saltado.");
+    // --- 8. FUNCIONES AUXILIARES DE LÓGICA ---
+
+    // Fetch Wikipedia (Corta antes de punto o coma)
+    async function fetchWikipediaDef(term) {
+        try {
+            const url = `https://es.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(term)}&format=json&origin=*`;
+            const resp = await fetch(url);
+            const data = await resp.json();
+            
+            if (data.query && data.query.search && data.query.search.length > 0) {
+                // Tomar el primer resultado
+                let snippet = data.query.search[0].snippet.replace(/<[^>]+>/g, ""); // Quitar HTML
+                // CORTAR: Antes del primer punto o coma, como pediste
+                const parts = snippet.split(/[.,]/); 
+                if (parts.length > 0 && parts[0].length > 10) {
+                    return parts[0]; 
+                }
+                return snippet; // Si es muy corto, devolvemos todo el snippet
+            }
+        } catch(e) { console.error(e); }
+        return null;
+    }
+
+    // Manejo de SI/NO
+    function handleFeedback(normInput, originalInput) {
+        if (normInput === 'si' || normInput === 'sí' || normInput === 'correcto') {
+            finishResponse(originalInput, "¡Genial! Me alegra haber ayudado.");
+            chatState = { mode: 'normal', lastQuery: '', constructedAnswer: '' };
+        } 
+        else if (normInput === 'no' || normInput === 'incorrecto') {
+            finishResponse(originalInput, "Entiendo. Por favor, escribe la respuesta correcta para que pueda aprenderla (y será enviada a revisión).");
+            chatState = { mode: 'waiting_correction', lastQuery: chatState.lastQuery }; // Mantenemos la query original
         } else {
-            const userName = currentUser ? currentUser.name : "Invitado";
-            await updateDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayUnion({ q: learningState.question, a: ans, user: userName }) });
-            appendMsg('ai', "Gracias, enviado a revisión.");
-            saveLocalChat(ans, "Gracias, enviado a revisión.");
+            finishResponse(originalInput, "Por favor responde 'Si' o 'No'.");
         }
-        learningState = { active: false, question: "", isDebt: false };
     }
 
-    // --- 💾 SISTEMA DE HISTORIAL LOCAL (LOCALSTORAGE) ---
-    function getLocalKey() {
-        // Clave única por usuario (o 'guest' si no hay usuario)
-        return `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`;
+    // Manejo de Corrección del Usuario
+    async function handleCorrection(correction) {
+        if (correction.toLowerCase().includes('cancelar')) {
+            finishResponse(correction, "Operación cancelada.");
+            chatState = { mode: 'normal', lastQuery: '' };
+            return;
+        }
+
+        const userName = currentUser ? currentUser.name : "Invitado";
+        // Guardar en cola de revisión
+        if(db) {
+            await updateDoc(doc(db, "alexia_db", "main_brain"), { 
+                reviewQueue: arrayUnion({ 
+                    q: chatState.lastQuery, 
+                    a: correction, 
+                    user: userName,
+                    date: new Date().toISOString()
+                }) 
+            });
+        }
+
+        finishResponse(correction, "¡Gracias! Tu corrección ha sido enviada al administrador para su revisión.");
+        chatState = { mode: 'normal', lastQuery: '' };
     }
 
+    // Finalizar y Guardar en Historial
+    function finishResponse(userTxt, aiTxt) {
+        appendMsg('ai', aiTxt);
+        saveLocalChat(userTxt, aiTxt);
+    }
+
+    // --- 9. HISTORIAL LOCAL & UI (Mismo código de antes) ---
+    function getLocalKey() { return `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`; }
     function saveLocalChat(uMsg, aiMsg) {
         const key = getLocalKey();
         let chats = JSON.parse(localStorage.getItem(key)) || [];
-        
         if (!currentChatId) {
-            // Nuevo Chat
             currentChatId = Date.now().toString();
-            const newChat = {
-                id: currentChatId,
-                title: uMsg.substring(0, 25) + "...",
-                timestamp: Date.now(),
-                isPinned: false,
-                messages: [{r:'user', t:uMsg}, {r:'ai', t:aiMsg}]
-            };
-            chats.unshift(newChat); // Agregar al principio
+            chats.unshift({ id: currentChatId, title: uMsg.substring(0, 25) + "...", timestamp: Date.now(), isPinned: false, messages: [{r:'user', t:uMsg}, {r:'ai', t:aiMsg}] });
         } else {
-            // Chat Existente
-            const chatIndex = chats.findIndex(c => c.id === currentChatId);
-            if (chatIndex > -1) {
-                chats[chatIndex].messages.push({r:'user', t:uMsg}, {r:'ai', t:aiMsg});
-                chats[chatIndex].timestamp = Date.now();
-                // Mover al principio si no está fijado
-                if(!chats[chatIndex].isPinned) {
-                    const updatedChat = chats.splice(chatIndex, 1)[0];
-                    chats.unshift(updatedChat);
-                }
+            const idx = chats.findIndex(c => c.id === currentChatId);
+            if (idx > -1) {
+                chats[idx].messages.push({r:'user', t:uMsg}, {r:'ai', t:aiMsg});
+                chats[idx].timestamp = Date.now();
+                if(!chats[idx].isPinned) { const c = chats.splice(idx, 1)[0]; chats.unshift(c); }
             }
         }
         localStorage.setItem(key, JSON.stringify(chats));
         renderLocalHistory();
     }
-
     function renderLocalHistory() {
         const key = getLocalKey();
         const chats = JSON.parse(localStorage.getItem(key)) || [];
-        
-        const pinContainer = document.getElementById('pinned-container');
-        const histContainer = document.getElementById('history-container');
-        const pinSection = document.getElementById('pinned-section');
-        
-        pinContainer.innerHTML = "";
-        histContainer.innerHTML = "";
-        
+        const pc = document.getElementById('pinned-container');
+        const hc = document.getElementById('history-container');
+        pc.innerHTML = ""; hc.innerHTML = "";
         let hasPinned = false;
-
         chats.forEach(chat => {
-            const activeClass = (chat.id === currentChatId) ? 'active' : '';
+            const active = (chat.id === currentChatId) ? 'active' : '';
             const pinClass = chat.isPinned ? 'pinned' : '';
-            
-            const html = `
-                <div class="chat-item ${activeClass}" onclick="loadLocalChat('${chat.id}')">
-                    <div class="chat-title"><i class="far fa-comment-alt" style="margin-right:8px; opacity:0.7;"></i>${chat.title}</div>
-                    <button class="pin-btn ${pinClass}" onclick="togglePinLocal(event, '${chat.id}')">
-                        <i class="fas fa-thumbtack"></i>
-                    </button>
-                </div>
-            `;
-
-            if (chat.isPinned) {
-                pinContainer.innerHTML += html;
-                hasPinned = true;
-            } else {
-                histContainer.innerHTML += html;
-            }
+            const html = `<div class="chat-item ${active}" onclick="loadLocalChat('${chat.id}')"><div class="chat-title"><i class="far fa-comment-alt" style="opacity:0.7; margin-right:8px;"></i>${chat.title}</div><button class="pin-btn ${pinClass}" onclick="togglePinLocal(event, '${chat.id}')"><i class="fas fa-thumbtack"></i></button></div>`;
+            if (chat.isPinned) { pc.innerHTML += html; hasPinned = true; } else hc.innerHTML += html;
         });
-
-        pinSection.style.display = hasPinned ? 'block' : 'none';
+        document.getElementById('pinned-section').style.display = hasPinned ? 'block' : 'none';
     }
-
     window.loadLocalChat = (id) => {
         const key = getLocalKey();
         const chats = JSON.parse(localStorage.getItem(key)) || [];
         const chat = chats.find(c => c.id === id);
-        
         if (chat) {
             currentChatId = id;
             const box = document.getElementById('chat-box');
             box.innerHTML = "";
             chat.messages.forEach(m => appendMsg(m.r, m.t));
-            renderLocalHistory(); // Para actualizar clase 'active'
+            renderLocalHistory();
             if(window.innerWidth < 800) toggleSidebar();
         }
     }
-
     window.togglePinLocal = (e, id) => {
         e.stopPropagation();
         const key = getLocalKey();
         let chats = JSON.parse(localStorage.getItem(key)) || [];
         const idx = chats.findIndex(c => c.id === id);
-        
-        if (idx > -1) {
-            chats[idx].isPinned = !chats[idx].isPinned;
-            localStorage.setItem(key, JSON.stringify(chats));
-            renderLocalHistory();
-        }
+        if (idx > -1) { chats[idx].isPinned = !chats[idx].isPinned; localStorage.setItem(key, JSON.stringify(chats)); renderLocalHistory(); }
     }
-
     window.startNewChat = () => {
         currentChatId = null;
-        document.getElementById('chat-box').innerHTML = `<div style="text-align:center; margin-top:80px; opacity:0.7; animation:fadeIn 1s;"><div style="width:80px; height:80px; background:linear-gradient(135deg, var(--accent), #ec4899); border-radius:50%; margin:0 auto 25px auto; display:flex; align-items:center; justify-content:center; box-shadow:0 0 40px var(--accent-glow);"><i class="fas fa-robot" style="font-size:40px; color:white;"></i></div><h2 style="font-weight:500; letter-spacing:-0.5px;">¿En qué puedo ayudarte?</h2></div>`;
-        renderLocalHistory(); // Quitar selección activa
+        chatState = { mode: 'normal' };
+        document.getElementById('chat-box').innerHTML = `<div style="text-align:center; margin-top:80px; opacity:0.7; animation:fadeIn 1s;"><div style="width:80px; height:80px; background:linear-gradient(135deg, var(--accent), #ec4899); border-radius:50%; margin:0 auto 25px auto; display:flex; align-items:center; justify-content:center; box-shadow:0 0 40px var(--accent-glow);"><i class="fas fa-robot" style="font-size:40px; color:white;"></i></div><h2 style="font-weight:500;">¿En qué puedo ayudarte?</h2></div>`;
+        renderLocalHistory();
         if(window.innerWidth < 800) toggleSidebar();
     }
 
-    // --- UI HELPERS ---
+    // --- 10. UI & ADMIN & AUTH ---
     function appendMsg(role, text) {
         const box = document.getElementById('chat-box');
         const row = document.createElement('div');
         row.className = `msg-row ${role}-row`;
-        let iconHtml = role === 'ai' ? `<div class="msg-icon icon-ai"><i class="fas fa-robot"></i></div>` : '';
-        row.innerHTML = `${role === 'ai' ? iconHtml : ''}<div class="msg-bubble">${text}</div>`;
+        const icon = role === 'ai' ? `<div class="msg-icon"><i class="fas fa-robot"></i></div>` : '';
+        row.innerHTML = `${icon}<div class="msg-bubble">${text}</div>`;
         if(box.querySelector('h2')) box.innerHTML = '';
         box.appendChild(row);
         setTimeout(() => box.scrollTop = box.scrollHeight, 100);
     }
-
     function updateUserUI(u) {
         const adminBtn = document.getElementById('admin-menu-container');
         if(u) {
@@ -471,9 +545,7 @@
             document.getElementById('u-avatar').innerHTML = u.name[0].toUpperCase();
             document.getElementById('btn-logout').style.display = 'block';
             document.getElementById('top-login-btn').style.display = 'none';
-            // Mostrar Botón Admin si corresponde
-            if(u.role === 'admin') adminBtn.style.display = 'block';
-            else adminBtn.style.display = 'none';
+            if(u.role === 'admin') adminBtn.style.display = 'block'; else adminBtn.style.display = 'none';
         } else {
             document.getElementById('u-name').innerText = "Invitado";
             document.getElementById('u-role').innerText = "Clic para entrar";
@@ -483,11 +555,10 @@
             adminBtn.style.display = 'none';
         }
     }
-
-    // --- FUNCIONES SISTEMA (SIN CAMBIOS) ---
+    
+    // FUNCIONES SISTEMA
     window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('active'); }
     window.checkLoginAction = () => { if(currentUser) { if(confirm("¿Cerrar sesión?")) signOut(auth); } else { openLogin(); } }
-    window.clearChat = () => window.startNewChat();
     window.openLogin = () => { if(!currentUser) document.getElementById('auth-modal').style.display = 'flex'; }
     window.closeModal = () => document.getElementById('auth-modal').style.display = 'none';
     window.closeVerify = () => document.getElementById('verify-modal').style.display = 'none';
@@ -500,38 +571,36 @@
             document.getElementById('tab-login').classList.remove('active'); document.getElementById('tab-register').classList.add('active');
         }
     }
-
-    // --- PANEL ADMIN ---
+    
+    // ADMIN DASHBOARD
     window.openDash = () => { document.getElementById('admin-dash').style.display = 'flex'; renderAdminQueue(); }
     window.closeDash = () => document.getElementById('admin-dash').style.display = 'none';
-
     function renderAdminQueue() {
         const content = document.getElementById('dash-content');
         content.innerHTML = "<h4>Pendientes de Revisión</h4>";
         if(brain.reviewQueue.length === 0) content.innerHTML += "<p style='color:#777'>No hay tareas pendientes.</p>";
         brain.reviewQueue.forEach((item, idx) => {
             content.innerHTML += `<div style="background:#27272a; padding:10px; margin-bottom:5px; border-radius:5px;">
-                <b>¿${item.q}?</b><br><span style="color:#aaa">${item.a}</span><br>
-                <small style="color:#555">Usuario: ${item.user}</small>
+                <b>Pregunta: ${item.q}</b><br>
+                <span style="color:#aaa">Respuesta Usuario: ${item.a}</span><br>
+                <small style="color:#555">Por: ${item.user} (${item.date || 'N/A'})</small>
                 <div style="margin-top:5px;">
                     <button onclick="window.dashAct('app', ${idx})" style="background:var(--accent); border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-right:5px;">Aprobar</button>
                     <button onclick="window.dashAct('rej', ${idx})" style="background:var(--danger); border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">Rechazar</button>
-                </div>
-            </div>`;
+                </div></div>`;
         });
     }
-
     window.dashAct = async (act, idx) => {
         const item = brain.reviewQueue[idx];
         if(act === 'app') {
-            await updateDoc(doc(db, "alexia_db", "main_brain"), { memory: arrayUnion({ inputs: [item.q.toLowerCase()], output: item.a }), reviewQueue: arrayRemove(item) });
+            // Guardar en memoria general
+            await updateDoc(doc(db, "alexia_db", "main_brain"), { memory: arrayUnion({ inputs: [normalize(item.q)], output: item.a }), reviewQueue: arrayRemove(item) });
         } else {
             await updateDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayRemove(item) });
         }
         setTimeout(renderAdminQueue, 500); 
     };
 
-    // --- UPLOAD DICTIONARY (TU FUNCIÓN ORIGINAL) ---
     window.uploadDictionary = async () => {
         const fileInput = document.getElementById('json-upload');
         const statusDiv = document.getElementById('upload-status');
@@ -547,7 +616,7 @@
                     const chunk = words.slice(i, i + chunkSize);
                     const batch = writeBatch(db);
                     chunk.forEach(word => {
-                        const ref = doc(db, "dictionary", word.id.toLowerCase());
+                        const ref = doc(db, "dictionary", normalize(word.id)); // Usar ID normalizado
                         batch.set(ref, word); 
                         added++;
                     });
@@ -560,20 +629,8 @@
         reader.readAsText(fileInput.files[0]);
     };
 
-    window.emailLogin = () => {
-        const e = document.getElementById('l-email').value; const p = document.getElementById('l-pass').value;
-        if(!e || !p) return alert("Completa los campos");
-        signInWithEmailAndPassword(auth, e, p).then((cred)=>{
-            if(!cred.user.emailVerified){ document.getElementById('verify-modal').style.display='flex'; signOut(auth); } else closeModal();
-        }).catch(e => alert(e.message));
-    };
-    window.emailRegister = () => {
-        const e = document.getElementById('r-email').value; const p = document.getElementById('r-pass').value;
-        if(!e || !p) return alert("Completa los campos");
-        createUserWithEmailAndPassword(auth, e, p).then(async(cred)=>{
-            await sendEmailVerification(cred.user); document.getElementById('auth-modal').style.display='none'; document.getElementById('verify-modal').style.display='flex';
-        }).catch(e => alert(e.message));
-    };
+    window.emailLogin = () => { const e=document.getElementById('l-email').value, p=document.getElementById('l-pass').value; signInWithEmailAndPassword(auth, e, p).then((c)=>{if(!c.user.emailVerified){document.getElementById('verify-modal').style.display='flex';signOut(auth);}else closeModal();}).catch(e=>alert(e.message)); };
+    window.emailRegister = () => { const e=document.getElementById('r-email').value, p=document.getElementById('r-pass').value; createUserWithEmailAndPassword(auth, e, p).then(async(c)=>{await sendEmailVerification(c.user);document.getElementById('auth-modal').style.display='none';document.getElementById('verify-modal').style.display='flex';}).catch(e=>alert(e.message)); };
     window.googleLogin = () => signInWithPopup(auth, provider).then(()=>closeModal()).catch(e=>alert(e.message));
     window.logout = (e) => { if(e) e.stopPropagation(); signOut(auth); }
 
