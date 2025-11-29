@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
     
     <style>
-        /* --- ESTILOS VISUALES (Mismos estilos originales) --- */
+        /* --- ESTILOS VISUALES --- */
         :root {
             --bg-body: #131314; --bg-sidebar: #1e1f20; --bg-input: #282a2c;
             --text-main: #e3e3e3; --text-muted: #c4c7c5;
@@ -38,6 +38,7 @@
         .new-chat-btn { background: #282a2c; color: var(--text-muted); border: none; padding: 10px; width: 90%; margin: 0 auto; display:flex; align-items:center; gap:10px; border-radius: 20px; cursor: pointer; transition: 0.2s; }
         .new-chat-btn:hover { background: #333; color: white; }
 
+        /* HISTORIAL */
         .history-list { flex: 1; overflow-y: auto; padding: 10px; margin-top: 10px; }
         .chat-item {
             padding: 10px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
@@ -65,11 +66,10 @@
         .msg-bubble { max-width: 75%; line-height: 1.6; font-size: 1rem; }
         .user-row .msg-bubble { background: var(--user-msg); padding: 10px 18px; border-radius: 20px 20px 4px 20px; }
         .ai-row .msg-bubble { background: transparent; padding: 0 10px; }
-        .dict-type { font-size: 0.75rem; color: #94a3b8; font-style: italic; display:block; margin-top:5px; }
         
-        /* Fuente especial para secciones de palabras */
-        .word-definition { margin-bottom: 8px; border-left: 3px solid var(--accent); padding-left: 10px; }
-        .word-source { font-size: 0.7rem; color: #777; margin-left: 5px; text-transform: uppercase; }
+        /* ESTILOS NUEVOS PARA DEFINICIONES */
+        .word-definition { margin-bottom: 8px; border-left: 3px solid var(--accent); padding-left: 10px; background: rgba(255,255,255,0.03); border-radius: 0 8px 8px 0; padding: 8px 10px 8px 10px; }
+        .word-source { font-size: 0.65rem; color: #777; margin-left: 5px; text-transform: uppercase; letter-spacing: 1px; }
 
         /* INPUT AREA */
         .input-container { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px 20px 10px 20px; background: var(--bg-body); display: flex; flex-direction: column; align-items: center; z-index: 20; border-top: 1px solid #222; }
@@ -218,13 +218,13 @@
 </div>
 
 <script type="module">
-    // --- 1. IMPORTACIONES FIREBASE ---
+    // 1. IMPORTACIONES FIREBASE
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
     import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app-check.js";
     import { getFirestore, doc, onSnapshot, setDoc, updateDoc, arrayUnion, arrayRemove, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
-    // --- 2. CONFIGURACIÓN ---
+    // 2. CONFIGURACIÓN FIREBASE
     const firebaseConfig = {
         apiKey: "AIzaSyAeNVoB1ZasZSauIf6G7GbIa4bbJJ3_5cw",
         authDomain: "alexia-1c4f2.firebaseapp.com",
@@ -246,20 +246,45 @@
         provider = new GoogleAuthProvider();
     } catch(e) { console.error("Error init:", e); }
 
-    // --- 3. VARIABLES DE ESTADO Y CEREBRO ---
+    // 3. VARIABLES Y ESTADOS
     let currentUser = null;
     let brain = { memory: [], reviewQueue: [], missingLog: [] };
     const ADMIN_EMAIL = "eljacksonyt@gmail.com";
     let currentChatId = null;
-
-    // ESTADO DE LA CONVERSACIÓN (Máquina de estados)
-    // Modes: 'normal', 'waiting_feedback' (si/no), 'waiting_correction' (usuario corrige)
     let chatState = { mode: 'normal', lastQuery: '', constructedAnswer: '' };
 
-    // PALABRAS A IGNORAR (Stop words) para el análisis
-    const stopWords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'de', 'del', 'al', 'a', 'en', 'por', 'para', 'con', 'sin', 'que', 'como', 'cual', 'quien', 'es', 'son', 'fue', 'era', 'me', 'te', 'se', 'lo', 'mi', 'tu', 'su', 'nos']);
+    // --- 4. DICCIONARIO DE SINÓNIMOS Y JERGA (LOGICA MEJORADA) ---
+    // Traduce Slang/Jerga a Español Neutro antes de buscar
+    const slangMap = {
+        "andas": "estas",
+        "onda": "pasa",
+        "hubo": "paso",
+        "pex": "pasa",
+        "pedo": "problema",
+        "chido": "bueno",
+        "padre": "bueno",
+        "gwey": "amigo",
+        "wey": "amigo",
+        "camara": "adios",
+        "simon": "si",
+        "nelson": "no",
+        "chale": "que mal",
+        "neto": "verdad",
+        "neta": "verdad",
+        "jalo": "acepto",
+        "sobres": "esta bien",
+        "morra": "mujer",
+        "vato": "hombre",
+        "troca": "camioneta",
+        "canton": "casa",
+        "jale": "trabajo",
+        "chamba": "trabajo"
+    };
 
-    // --- 4. AUTH OBSERVER ---
+    // Palabras a ignorar (Stop words) para análisis profundo
+    const stopWords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'de', 'del', 'al', 'a', 'en', 'por', 'para', 'con', 'sin', 'que', 'como', 'cual', 'quien', 'es', 'son', 'fue', 'era', 'me', 'te', 'se', 'lo', 'mi', 'tu', 'su', 'nos', 'yo', 'tu', 'el', 'ella']);
+
+    // 5. AUTH OBSERVER
     if(auth) {
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -283,82 +308,89 @@
         });
     }
 
-    // --- 5. SINCRONIZACIÓN CEREBRO ---
     if(db) {
         onSnapshot(doc(db, "alexia_db", "main_brain"), (snap) => {
             if(snap.exists()) brain = snap.data();
         });
     }
 
-    // --- 6. UTILIDADES DE TEXTO ---
+    // 6. PROCESAMIENTO DE TEXTO
     function normalize(str) {
-        return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+        return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[¿?¡!.,]/g, "").trim();
     }
 
-    // --- 7. LÓGICA PRINCIPAL DEL CHAT ---
+    // Convierte Slang a Neutro
+    function processSynonyms(text) {
+        let words = text.split(" ");
+        let cleanWords = words.map(w => {
+            const cleanW = normalize(w);
+            return slangMap[cleanW] || cleanW;
+        });
+        return cleanWords.join(" ");
+    }
+
+    // 7. LOGICA PRINCIPAL (CHAT)
     window.sendMessage = async function() {
         const input = document.getElementById('chat-input');
-        const text = input.value.trim();
-        if(!text) return;
+        const originalText = input.value.trim();
+        if(!originalText) return;
         
         input.value = '';
-        appendMsg('user', text); // Mostrar lo que el usuario escribió
-        
-        const normText = normalize(text);
+        appendMsg('user', originalText); 
 
-        // A) MANEJO DE ESTADOS (FEEDBACK)
-        if (chatState.mode === 'waiting_feedback') {
-            handleFeedback(normText, text);
-            return;
-        }
-        if (chatState.mode === 'waiting_correction') {
-            handleCorrection(text);
-            return;
-        }
+        // TRADUCCIÓN INTERNA ("Como andas" -> "Como estas")
+        const interpretedText = processSynonyms(originalText);
 
-        // B) MODO NORMAL - BÚSQUEDA
+        // ESTADOS DE FEEDBACK (Si estamos esperando corrección)
+        if (chatState.mode === 'waiting_feedback') { handleFeedback(interpretedText, originalText); return; }
+        if (chatState.mode === 'waiting_correction') { handleCorrection(originalText); return; }
+
         let aiResponse = "";
-        let isConstructed = false; // Bandera para saber si pedimos feedback al final
 
-        // 1. Búsqueda Exacta o Muy Similar en Memoria Global
-        const exactMatch = brain.memory.find(m => m.inputs.some(i => normalize(i) === normText));
-        
-        if (exactMatch) {
-            aiResponse = exactMatch.output;
-            finishResponse(text, aiResponse);
+        // A) BÚSQUEDA EN MEMORIA (Usando el texto traducido)
+        let bestMatch = null;
+        let maxScore = 0;
+
+        brain.memory.forEach(mem => {
+            mem.inputs.forEach(key => {
+                const memKey = processSynonyms(key); 
+                // Coincidencia exacta o parcial fuerte en texto traducido
+                if (memKey === interpretedText) {
+                    maxScore = 1.0; bestMatch = mem;
+                } else if (memKey.includes(interpretedText) && interpretedText.length > 3) {
+                     if (0.8 > maxScore) { maxScore = 0.8; bestMatch = mem; }
+                }
+            });
+        });
+
+        // Si encontramos algo seguro en memoria
+        if (maxScore >= 0.8) {
+            aiResponse = bestMatch.output;
+            finishResponse(originalText, aiResponse);
             return;
         }
 
-        // 2. Si no es exacto: ANÁLISIS PALABRA POR PALABRA (Tu petición)
-        // Separa la frase en palabras y filtra las inútiles
-        const words = normText.split(/\s+/).filter(w => !stopWords.has(w) && w.length > 2);
+        // B) ANÁLISIS POR PALABRAS + WIKIPEDIA (FALLBACK)
+        const words = interpretedText.split(/\s+/).filter(w => !stopWords.has(w) && w.length > 2);
         
         if (words.length > 0) {
-            appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> Analizando términos: ${words.join(", ")}...`);
-            
+            appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> Analizando: ${words.join(", ")}...`);
             let synthesis = [];
             
-            // Procesar cada palabra secuencialmente
             for (let word of words) {
                 let definition = null;
                 let source = "Desconocido";
 
-                // a) Buscar en Memoria/Diccionario Interno
+                // Buscar en Diccionario Interno
                 try {
                     const dictSnap = await getDoc(doc(db, "dictionary", word));
-                    if (dictSnap.exists()) {
-                        definition = dictSnap.data().def;
-                        source = "Memoria";
-                    }
+                    if (dictSnap.exists()) { definition = dictSnap.data().def; source = "Memoria"; }
                 } catch(e) {}
 
-                // b) Si no está en memoria -> Wikipedia
+                // Buscar en Wikipedia (si falla diccionario)
                 if (!definition) {
                     const wikiDef = await fetchWikipediaDef(word);
-                    if (wikiDef) {
-                        definition = wikiDef;
-                        source = "Wikipedia";
-                    }
+                    if (wikiDef) { definition = wikiDef; source = "Wikipedia"; }
                 }
 
                 if (definition) {
@@ -366,105 +398,76 @@
                 }
             }
 
-            // Construir respuesta final
             if (synthesis.length > 0) {
-                aiResponse = "<strong>Esto es lo que encontré analizando tu pregunta:</strong><br><br>";
+                aiResponse = "<strong>Información encontrada:</strong><br><br>";
                 synthesis.forEach(item => {
-                    aiResponse += `<div class="word-definition">
-                        <strong>${item.word.toUpperCase()}:</strong> ${item.def}.
-                        <span class="word-source">(${item.src})</span>
-                    </div>`;
+                    aiResponse += `<div class="word-definition"><strong>${item.word.toUpperCase()}:</strong> ${item.def} <span class="word-source">(${item.src})</span></div>`;
                 });
-                aiResponse += `<br><em>¿Esta información responde correctamente a tu duda? (Responde <strong>Si</strong> o <strong>No</strong>)</em>`;
+                aiResponse += `<br><em>¿Es correcta esta respuesta? (Si/No)</em>`;
+                chatState = { mode: 'waiting_feedback', lastQuery: originalText };
                 
-                // CAMBIAR ESTADO A ESPERANDO FEEDBACK
-                chatState = { mode: 'waiting_feedback', lastQuery: text, constructedAnswer: aiResponse };
-                isConstructed = true;
+                // Borrar loader
+                const box = document.getElementById('chat-box');
+                if(box.lastChild.innerHTML.includes("fa-spin")) box.removeChild(box.lastChild);
+                
+                finishResponse(originalText, aiResponse);
+                return;
             }
         }
 
-        // 3. Fallback Total (Si no encontró nada de nada)
-        if (!aiResponse) {
-            aiResponse = "No tengo información suficiente en mi memoria ni en internet sobre esos términos. ¿Podrías enseñarme la respuesta? (O escribe 'cancelar').";
-            chatState = { mode: 'waiting_correction', lastQuery: text };
-        }
+        // C) SI NO ENTIENDE NADA
+        const box = document.getElementById('chat-box');
+        if(box.lastChild && box.lastChild.innerHTML.includes("fa-spin")) box.removeChild(box.lastChild);
 
-        // Enviar respuesta final al chat (borrando el icono de carga si hubo)
-        const chatBox = document.getElementById('chat-box');
-        if(chatBox.lastChild.innerHTML.includes("fa-spin")) chatBox.removeChild(chatBox.lastChild);
-        
-        finishResponse(text, aiResponse);
+        aiResponse = "No entendí tu expresión ni encontré datos. ¿Qué debo responder a eso?";
+        chatState = { mode: 'waiting_correction', lastQuery: originalText }; // Aprenderá la frase ORIGINAL
+        finishResponse(originalText, aiResponse);
     }
 
-    // --- 8. FUNCIONES AUXILIARES DE LÓGICA ---
-
-    // Fetch Wikipedia (Corta antes de punto o coma)
+    // 8. FUNCIONES AUXILIARES
     async function fetchWikipediaDef(term) {
         try {
             const url = `https://es.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(term)}&format=json&origin=*`;
             const resp = await fetch(url);
             const data = await resp.json();
-            
             if (data.query && data.query.search && data.query.search.length > 0) {
-                // Tomar el primer resultado
-                let snippet = data.query.search[0].snippet.replace(/<[^>]+>/g, ""); // Quitar HTML
-                // CORTAR: Antes del primer punto o coma, como pediste
-                const parts = snippet.split(/[.,]/); 
-                if (parts.length > 0 && parts[0].length > 10) {
-                    return parts[0]; 
-                }
-                return snippet; // Si es muy corto, devolvemos todo el snippet
+                let snippet = data.query.search[0].snippet.replace(/<[^>]+>/g, "");
+                // CORTAR en punto o coma
+                const parts = snippet.split(/[.,]/);
+                if (parts.length > 0 && parts[0].length > 15) return parts[0]; 
+                return snippet;
             }
         } catch(e) { console.error(e); }
         return null;
     }
 
-    // Manejo de SI/NO
     function handleFeedback(normInput, originalInput) {
-        if (normInput === 'si' || normInput === 'sí' || normInput === 'correcto') {
-            finishResponse(originalInput, "¡Genial! Me alegra haber ayudado.");
-            chatState = { mode: 'normal', lastQuery: '', constructedAnswer: '' };
-        } 
-        else if (normInput === 'no' || normInput === 'incorrecto') {
-            finishResponse(originalInput, "Entiendo. Por favor, escribe la respuesta correcta para que pueda aprenderla (y será enviada a revisión).");
-            chatState = { mode: 'waiting_correction', lastQuery: chatState.lastQuery }; // Mantenemos la query original
+        if (normInput === 'si' || normInput === 'claro' || normInput === 'simon') {
+            finishResponse(originalInput, "¡Excelente!");
+            chatState = { mode: 'normal' };
         } else {
-            finishResponse(originalInput, "Por favor responde 'Si' o 'No'.");
+            finishResponse(originalInput, "Entiendo. ¿Cuál debería ser la respuesta correcta?");
+            chatState = { mode: 'waiting_correction', lastQuery: chatState.lastQuery };
         }
     }
 
-    // Manejo de Corrección del Usuario
     async function handleCorrection(correction) {
-        if (correction.toLowerCase().includes('cancelar')) {
-            finishResponse(correction, "Operación cancelada.");
-            chatState = { mode: 'normal', lastQuery: '' };
-            return;
-        }
-
         const userName = currentUser ? currentUser.name : "Invitado";
-        // Guardar en cola de revisión
         if(db) {
             await updateDoc(doc(db, "alexia_db", "main_brain"), { 
-                reviewQueue: arrayUnion({ 
-                    q: chatState.lastQuery, 
-                    a: correction, 
-                    user: userName,
-                    date: new Date().toISOString()
-                }) 
+                reviewQueue: arrayUnion({ q: chatState.lastQuery, a: correction, user: userName, date: new Date().toISOString() }) 
             });
         }
-
-        finishResponse(correction, "¡Gracias! Tu corrección ha sido enviada al administrador para su revisión.");
-        chatState = { mode: 'normal', lastQuery: '' };
+        finishResponse(correction, "¡Gracias! He guardado tu enseñanza para revisarla.");
+        chatState = { mode: 'normal' };
     }
 
-    // Finalizar y Guardar en Historial
     function finishResponse(userTxt, aiTxt) {
         appendMsg('ai', aiTxt);
         saveLocalChat(userTxt, aiTxt);
     }
 
-    // --- 9. HISTORIAL LOCAL & UI (Mismo código de antes) ---
+    // UI & LOCAL STORAGE
     function getLocalKey() { return `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`; }
     function saveLocalChat(uMsg, aiMsg) {
         const key = getLocalKey();
@@ -525,8 +528,6 @@
         renderLocalHistory();
         if(window.innerWidth < 800) toggleSidebar();
     }
-
-    // --- 10. UI & ADMIN & AUTH ---
     function appendMsg(role, text) {
         const box = document.getElementById('chat-box');
         const row = document.createElement('div');
@@ -555,8 +556,6 @@
             adminBtn.style.display = 'none';
         }
     }
-    
-    // FUNCIONES SISTEMA
     window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('active'); }
     window.checkLoginAction = () => { if(currentUser) { if(confirm("¿Cerrar sesión?")) signOut(auth); } else { openLogin(); } }
     window.openLogin = () => { if(!currentUser) document.getElementById('auth-modal').style.display = 'flex'; }
@@ -571,8 +570,6 @@
             document.getElementById('tab-login').classList.remove('active'); document.getElementById('tab-register').classList.add('active');
         }
     }
-    
-    // ADMIN DASHBOARD
     window.openDash = () => { document.getElementById('admin-dash').style.display = 'flex'; renderAdminQueue(); }
     window.closeDash = () => document.getElementById('admin-dash').style.display = 'none';
     function renderAdminQueue() {
@@ -580,27 +577,15 @@
         content.innerHTML = "<h4>Pendientes de Revisión</h4>";
         if(brain.reviewQueue.length === 0) content.innerHTML += "<p style='color:#777'>No hay tareas pendientes.</p>";
         brain.reviewQueue.forEach((item, idx) => {
-            content.innerHTML += `<div style="background:#27272a; padding:10px; margin-bottom:5px; border-radius:5px;">
-                <b>Pregunta: ${item.q}</b><br>
-                <span style="color:#aaa">Respuesta Usuario: ${item.a}</span><br>
-                <small style="color:#555">Por: ${item.user} (${item.date || 'N/A'})</small>
-                <div style="margin-top:5px;">
-                    <button onclick="window.dashAct('app', ${idx})" style="background:var(--accent); border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-right:5px;">Aprobar</button>
-                    <button onclick="window.dashAct('rej', ${idx})" style="background:var(--danger); border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">Rechazar</button>
-                </div></div>`;
+            content.innerHTML += `<div style="background:#27272a; padding:10px; margin-bottom:5px; border-radius:5px;"><b>P: ${item.q}</b><br><span style="color:#aaa">R: ${item.a}</span><br><small style="color:#555">Por: ${item.user}</small><div style="margin-top:5px;"><button onclick="window.dashAct('app', ${idx})" style="background:var(--accent); border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-right:5px;">Aprobar</button><button onclick="window.dashAct('rej', ${idx})" style="background:var(--danger); border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">Rechazar</button></div></div>`;
         });
     }
     window.dashAct = async (act, idx) => {
         const item = brain.reviewQueue[idx];
-        if(act === 'app') {
-            // Guardar en memoria general
-            await updateDoc(doc(db, "alexia_db", "main_brain"), { memory: arrayUnion({ inputs: [normalize(item.q)], output: item.a }), reviewQueue: arrayRemove(item) });
-        } else {
-            await updateDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayRemove(item) });
-        }
+        if(act === 'app') await updateDoc(doc(db, "alexia_db", "main_brain"), { memory: arrayUnion({ inputs: [processSynonyms(item.q)], output: item.a }), reviewQueue: arrayRemove(item) });
+        else await updateDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayRemove(item) });
         setTimeout(renderAdminQueue, 500); 
     };
-
     window.uploadDictionary = async () => {
         const fileInput = document.getElementById('json-upload');
         const statusDiv = document.getElementById('upload-status');
@@ -610,25 +595,18 @@
         reader.onload = async (e) => {
             try {
                 const words = JSON.parse(e.target.result);
-                let added = 0;
-                const chunkSize = 400; 
+                let added = 0; const chunkSize = 400; 
                 for (let i = 0; i < words.length; i += chunkSize) {
                     const chunk = words.slice(i, i + chunkSize);
                     const batch = writeBatch(db);
-                    chunk.forEach(word => {
-                        const ref = doc(db, "dictionary", normalize(word.id)); // Usar ID normalizado
-                        batch.set(ref, word); 
-                        added++;
-                    });
-                    await batch.commit();
-                    statusDiv.innerHTML = `Subiendo... (${added})`;
+                    chunk.forEach(word => { const ref = doc(db, "dictionary", normalize(word.id)); batch.set(ref, word); added++; });
+                    await batch.commit(); statusDiv.innerHTML = `Subiendo... (${added})`;
                 }
                 statusDiv.innerHTML = `✅ <b>¡Terminado!</b><br>Total palabras: ${added}`;
             } catch (err) { statusDiv.innerHTML = "❌ Error JSON: " + err.message; }
         };
         reader.readAsText(fileInput.files[0]);
     };
-
     window.emailLogin = () => { const e=document.getElementById('l-email').value, p=document.getElementById('l-pass').value; signInWithEmailAndPassword(auth, e, p).then((c)=>{if(!c.user.emailVerified){document.getElementById('verify-modal').style.display='flex';signOut(auth);}else closeModal();}).catch(e=>alert(e.message)); };
     window.emailRegister = () => { const e=document.getElementById('r-email').value, p=document.getElementById('r-pass').value; createUserWithEmailAndPassword(auth, e, p).then(async(c)=>{await sendEmailVerification(c.user);document.getElementById('auth-modal').style.display='none';document.getElementById('verify-modal').style.display='flex';}).catch(e=>alert(e.message)); };
     window.googleLogin = () => signInWithPopup(auth, provider).then(()=>closeModal()).catch(e=>alert(e.message));
