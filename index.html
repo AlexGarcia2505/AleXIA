@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V44 - Diseño Limpio</title>
+    <title>AleXIA V45 - Diseño Blindado</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -77,13 +77,14 @@
         }
         .user-row .msg-bubble { background: var(--user-msg); padding: 10px 18px; border-radius: 20px 20px 4px 20px; }
         
-        /* CONTENEDOR IA MEJORADO */
+        /* CONTENEDOR IA BLINDADO */
         .ai-row .msg-bubble { 
             background: transparent; 
             padding: 0 45px 0 10px; 
             position: relative; 
             display: flex;
-            flex-direction: column; /* Apilar contenido verticalmente */
+            flex-direction: column; 
+            min-width: 0; /* Evita desbordes flex */
         }
         
         /* CONTENIDO RICO - PROTEGIDO DE DESBORDAMIENTO */
@@ -91,25 +92,34 @@
             max-height: 24rem; 
             overflow-y: auto; 
             padding-right: 5px; 
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             width: 100%;
-            overflow-x: hidden; /* Evitar scroll horizontal */
+            /* Forzar ruptura de palabras largas */
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            word-break: break-word;
         }
         .rich-content::-webkit-scrollbar { width: 6px; }
         .rich-content::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
         .rich-content::-webkit-scrollbar-track { background: transparent; }
         .rich-content p { margin-bottom: 15px; text-align: justify; }
+
+        /* REGLA NUCLEAR: Ocultar cualquier tabla o imagen que se escape */
+        .rich-content table, .rich-content img, .rich-content .infobox, .rich-content .sidebar { 
+            display: none !important; 
+        }
         
         /* ENLACE DE FUENTE - ASEGURADO */
         .rich-source { 
             display: block; 
             width: 100%;
-            margin-top: 15px; 
+            margin-top: 10px; 
             padding-top: 15px; 
             border-top: 1px solid #333; 
             font-size: 0.9rem; 
             color: var(--accent);
-            clear: both; /* Limpiar cualquier flotante */
+            clear: both; /* Limpiar flotantes */
+            position: relative; /* Posicionamiento seguro */
         }
         .rich-source a { 
             color: var(--accent); 
@@ -542,17 +552,28 @@
                 const title = searchData[1][0];
                 const cleanTitle = encodeURIComponent(title);
                 
-                // --- CORRECCIÓN CRÍTICA: 'explaintext=1' ---
-                // Esto fuerza a Wikipedia a darnos texto plano en lugar de HTML roto
                 const contentResp = await fetch(`https://es.wikipedia.org/w/api.php?action=query&prop=extracts&titles=${cleanTitle}&explaintext=1&exintro=1&format=json&origin=*`);
                 
                 const contentData = await contentResp.json();
                 const pages = contentData.query.pages;
                 const pageId = Object.keys(pages)[0];
                 if (pageId !== "-1") {
+                    
+                    // --- FILTRADO NUCLEAR DE HTML ---
+                    // Esto asegura que NO pase ningún link azul ni tabla rara
+                    let cleanText = pages[pageId].extract;
+                    
+                    // Borrar cualquier tag HTML que haya sobrevivido
+                    cleanText = cleanText.replace(/<[^>]+>/g, ''); 
+                    
+                    // Arreglar espacios dobles
+                    cleanText = cleanText.replace(/\s+/g, ' ').trim();
+                    
+                    // Poner saltos de línea bonitos
+                    cleanText = cleanText.replace(/\. /g, '.<br><br>');
+
                     return { 
-                        // Convertimos saltos de línea a <br> para que se vea bien
-                        def: pages[pageId].extract.replace(/\n/g, '<br>'), 
+                        def: cleanText, 
                         src: "Wikipedia/WEB", 
                         url: `https://es.wikipedia.org/?curid=${pageId}` 
                     };
