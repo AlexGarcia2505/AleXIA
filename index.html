@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V56 - Auto-Reparación</title>
+    <title>AleXIA V57 - Clean Start</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -36,7 +36,6 @@
 
         .sidebar-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
         
-        /* INDICADOR DE ESTADO */
         .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #555; display: inline-block; margin-left: 10px; transition: 0.3s; }
         .status-dot.online { background: var(--success); box-shadow: 0 0 8px var(--success); }
         .status-dot.offline { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
@@ -228,7 +227,6 @@
         db = getFirestore(app);
         auth = getAuth(app);
         provider = new GoogleAuthProvider();
-        console.log("Firebase Init OK");
         document.getElementById('connection-dot').classList.add('online');
         document.getElementById('connection-dot').classList.remove('offline');
     } catch(e) { 
@@ -266,8 +264,6 @@
                 else if (userSnap.exists()) role = userSnap.data().role || "user";
                 if (!userSnap.exists()) await setDoc(userRef, { email: user.email, role: role, createdAt: new Date().toISOString() });
                 currentUser = { uid: user.uid, name: user.displayName || user.email.split('@')[0], role: role, email: user.email };
-                
-                // Forzar actualización de UI para evitar el "Invitado" fantasma
                 updateUserUI(currentUser);
                 renderLocalHistory();
                 closeModal(); 
@@ -285,7 +281,7 @@
 
     if(db) { onSnapshot(doc(db, "alexia_db", "main_brain"), (snap) => { if(snap.exists()) brain = snap.data(); }); }
 
-    // --- FUNCIONES GLOBALES (ACCESIBLES DESDE HTML) ---
+    // EXPOSE FUNCTIONS TO WINDOW
     window.toggleVoice = () => { if(isVoiceActive) recognition.stop(); else recognition.start(); }
     window.speakText = (text, btnId) => {
         if (synth.speaking) { synth.cancel(); if (window.activeSpeakingBtnId === btnId) { resetSpeakerIcons(); window.activeSpeakingBtnId = null; return; } }
@@ -537,16 +533,18 @@
     window.emailLogin = () => { const e=document.getElementById('l-email').value, p=document.getElementById('l-pass').value; signInWithEmailAndPassword(auth, e, p).then((c)=>{if(!c.user.emailVerified){document.getElementById('verify-modal').style.display='flex';signOut(auth);}else closeModal();}).catch(e=>alert(e.message)); };
     window.emailRegister = () => { const e=document.getElementById('r-email').value, p=document.getElementById('r-pass').value; createUserWithEmailAndPassword(auth, e, p).then(async(c)=>{await sendEmailVerification(c.user);document.getElementById('auth-modal').style.display='none';document.getElementById('verify-modal').style.display='flex';}).catch(e=>alert(e.message)); };
     window.googleLogin = () => signInWithPopup(auth, provider).then(()=>closeModal()).catch(e=>alert(e.message));
+    
+    // --- FUNCIÓN DE LIMPIEZA TOTAL (LOGOUT) ---
     window.logout = (e) => { 
         if(e) e.stopPropagation(); 
-        // LIMPIEZA DE SESIÓN (Versión 56)
+        const key = `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`;
+        localStorage.removeItem(key); // Borrar historial local
         localStorage.removeItem('alexia_last_chat_id');
         signOut(auth).then(() => {
-            updateUserUI(null);
-            renderLocalHistory();
-            window.location.reload(); // Recarga forzada para limpiar memoria RAM
+            window.location.reload(); // Reinicio limpio
         });
     }
+    
     window.uploadDictionary = async () => { const fileInput = document.getElementById('json-upload'); const statusDiv = document.getElementById('upload-status'); if(fileInput.files.length === 0) return alert("Selecciona archivo"); statusDiv.innerHTML = "Analizando..."; const reader = new FileReader(); reader.onload = async (e) => { try { const words = JSON.parse(e.target.result); let added = 0; const chunkSize = 400; for (let i = 0; i < words.length; i += chunkSize) { const chunk = words.slice(i, i + chunkSize); const batch = writeBatch(db); chunk.forEach(word => { const ref = doc(db, "dictionary", normalize(word.id)); batch.set(ref, word); added++; }); await batch.commit(); statusDiv.innerHTML = `Subiendo... (${added})`; } statusDiv.innerHTML = `✅ Terminado: ${added}`; } catch (err) { statusDiv.innerHTML = "❌ Error JSON"; } }; reader.readAsText(fileInput.files[0]); };
     
     function renderAdminQueue() {
@@ -562,37 +560,41 @@
         content.innerHTML = reviewHTML + missingHTML;
     }
 
-    // --- REPARACIÓN DE HISTORIAL DAÑADO ---
+    // --- REPARADOR AUTOMÁTICO DE HISTORIAL (SELF-HEALING) ---
     function renderLocalHistory() {
         const key = getLocalKey(); 
         let chats = [];
         try {
-            chats = JSON.parse(localStorage.getItem(key)) || [];
+            chats = JSON.parse(localStorage.getItem(key));
+            if (!Array.isArray(chats)) throw new Error("Invalid format");
         } catch(e) {
-            console.warn("Historial corrupto detectado. Limpiando...");
-            localStorage.removeItem(key);
+            console.warn("Historial corrupto detectado. Iniciando purga...");
+            localStorage.removeItem(key); // Borrar historial dañado
+            localStorage.removeItem('alexia_last_chat_id'); // Borrar estado anterior
             chats = [];
         }
 
         const pc = document.getElementById('pinned-container'); const hc = document.getElementById('history-container');
         pc.innerHTML = ""; hc.innerHTML = ""; let hasPinned = false;
+        
         if(chats.length === 0) {
             hc.innerHTML = `<div style="text-align:center; padding:20px; color:#555; font-size:0.85rem;">Historial vacío</div>`;
         } else {
             chats.forEach(chat => {
-                const active = (chat.id === currentChatId) ? 'active' : ''; const pinClass = chat.isPinned ? 'pinned' : '';
-                const html = `<div class="chat-item ${active}" onclick="loadLocalChat('${chat.id}')"><div class="chat-title"><i class="far fa-comment-alt" style="opacity:0.7; margin-right:8px;"></i>${chat.title}</div><button class="pin-btn ${pinClass}" onclick="togglePinLocal(event, '${chat.id}')"><i class="fas fa-thumbtack"></i></button></div>`;
+                const active = (chat.id === currentChatId) ? 'active' : ''; 
+                // Protección extra contra objetos vacíos
+                const title = chat.title || "Chat sin título";
+                const pinClass = chat.isPinned ? 'pinned' : '';
+                const html = `<div class="chat-item ${active}" onclick="loadLocalChat('${chat.id}')"><div class="chat-title"><i class="far fa-comment-alt" style="opacity:0.7; margin-right:8px;"></i>${title}</div><button class="pin-btn ${pinClass}" onclick="togglePinLocal(event, '${chat.id}')"><i class="fas fa-thumbtack"></i></button></div>`;
                 if (chat.isPinned) { pc.innerHTML += html; hasPinned = true; } else hc.innerHTML += html;
             });
         }
         document.getElementById('pinned-section').style.display = hasPinned ? 'block' : 'none';
     }
 
-    function saveLocalChat(uMsg, aiMsg) { const key = getLocalKey(); let chats = JSON.parse(localStorage.getItem(key)) || []; if (!currentChatId) { currentChatId = Date.now().toString(); chats.unshift({ id: currentChatId, title: uMsg.substring(0, 25) + "...", timestamp: Date.now(), isPinned: false, messages: [{r:'user', t:uMsg}, {r:'ai', t:aiMsg}] }); } else { const idx = chats.findIndex(c => c.id === currentChatId); if (idx > -1) { chats[idx].messages.push({r:'user', t:uMsg}, {r:'ai', t:aiMsg}); chats[idx].timestamp = Date.now(); } } localStorage.setItem(key, JSON.stringify(chats)); localStorage.setItem('alexia_last_chat_id', currentChatId); renderLocalHistory(); }
+    function saveLocalChat(uMsg, aiMsg) { const key = getLocalKey(); let chats = []; try { chats = JSON.parse(localStorage.getItem(key)) || []; } catch(e){ chats = []; } if (!currentChatId) { currentChatId = Date.now().toString(); chats.unshift({ id: currentChatId, title: uMsg.substring(0, 25) + "...", timestamp: Date.now(), isPinned: false, messages: [{r:'user', t:uMsg}, {r:'ai', t:aiMsg}] }); } else { const idx = chats.findIndex(c => c.id === currentChatId); if (idx > -1) { chats[idx].messages.push({r:'user', t:uMsg}, {r:'ai', t:aiMsg}); chats[idx].timestamp = Date.now(); } } localStorage.setItem(key, JSON.stringify(chats)); localStorage.setItem('alexia_last_chat_id', currentChatId); renderLocalHistory(); }
     
-    // --- FUNCIÓN CLAVE CORREGIDA: getLocalKey ---
     function getLocalKey() { 
-        // Si currentUser existe, usa su ID. Si no, usa 'guest'.
         const uid = currentUser ? currentUser.uid : 'guest';
         return `alexia_chats_${uid}`; 
     }
