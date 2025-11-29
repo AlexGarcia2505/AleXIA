@@ -3,16 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA Fixed</title>
+    <title>AleXIA V34</title>
     
-    <!-- ICONO -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
-
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
     
     <style>
-        /* --- ESTILOS VISUALES --- */
+        /* --- ESTILOS VISUALES (Sin cambios mayores) --- */
         :root {
             --bg-body: #131314; --bg-sidebar: #1e1f20; --bg-input: #282a2c;
             --text-main: #e3e3e3; --text-muted: #c4c7c5;
@@ -54,7 +52,6 @@
         .msg-bubble { max-width: 75%; line-height: 1.6; font-size: 1rem; }
         .user-row .msg-bubble { background: var(--user-msg); padding: 10px 18px; border-radius: 20px 20px 4px 20px; }
         
-        /* TARJETA DICCIONARIO */
         .dict-card { background: #1e293b; padding: 15px; border-radius: 12px; border-left: 3px solid var(--accent); margin-top: 5px; }
         .dict-word { font-weight: bold; font-size: 1.1rem; color: var(--accent); text-transform: capitalize; }
         .dict-type { font-size: 0.75rem; color: #94a3b8; font-style: italic; display:block; margin-top:5px; }
@@ -63,7 +60,7 @@
         .input-container { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px 20px 10px 20px; background: var(--bg-body); display: flex; flex-direction: column; align-items: center; z-index: 20; border-top: 1px solid #222; }
         .input-wrapper { background: var(--bg-input); width: 100%; max-width: 800px; border-radius: 30px; display: flex; align-items: center; padding: 8px 15px; border: 1px solid #444; }
         
-        /* CORRECCIÓN INPUT PASSWORD */
+        /* FIX AUTOCOMPLETE: name aleatorio */
         .chat-input { flex: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; font-size: 16px; }
         
         .send-btn { background: var(--text-main); color: #000; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; }
@@ -112,7 +109,7 @@
 <div class="main-content">
     <div class="top-bar">
         <button class="menu-btn toggle-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-        <span style="font-weight:500;">AleXIAv1</span>
+        <span style="font-weight:500;">AleXv2</span>
         <div style="flex:1"></div>
         <button id="top-login-btn" onclick="openLogin()" class="btn-login">Entrar</button>
     </div>
@@ -125,16 +122,19 @@
     </div>
 
     <div class="input-container">
+        <!-- FORMULARIOS AISLADOS (Hack para evitar autocompletado) -->
         <div class="input-wrapper">
-            <!-- INPUT CON NOMBRE ÚNICO PARA EVITAR GESTOR DE CONTRASEÑAS -->
-            <input type="text" id="chat-input" class="chat-input" placeholder="Pregunta algo..." autocomplete="off" name="alexia_msg_field" spellcheck="false">
+            <!-- Usamos name aleatorio y autocomplete off -->
+            <input type="text" id="chat-input" class="chat-input" 
+                   placeholder="Pregunta algo..." autocomplete="off" 
+                   name="search_query_alexia_v34" role="search">
             <button class="send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
         </div>
         <div class="footer-info">IA en proceso de entrenamiento e investigación.</div>
     </div>
 </div>
 
-<!-- MODAL LOGIN CORREGIDO -->
+<!-- MODAL LOGIN (ENCAPSULADO EN FORM PARA AISLAR CREDENCIALES) -->
 <div id="auth-modal" class="modal">
     <div class="card">
         <div style="text-align:center; margin-bottom:15px;">
@@ -147,18 +147,20 @@
             <button class="tab-btn" onclick="showAuth('register')" id="tab-register">Registrarse</button>
         </div>
 
-        <div id="section-login">
-            <input type="email" id="l-email" class="field" placeholder="Correo electrónico" autocomplete="username">
-            <input type="password" id="l-pass" class="field" placeholder="Contraseña" autocomplete="current-password">
-            <button class="btn-full btn-primary" onclick="emailLogin()">Iniciar Sesión</button>
-        </div>
+        <!-- Formulario de Login (Encapsulado) -->
+        <form id="section-login" onsubmit="emailLogin(); return false;">
+            <input type="email" id="l-email" class="field" placeholder="Correo electrónico" autocomplete="username" required>
+            <input type="password" id="l-pass" class="field" placeholder="Contraseña" autocomplete="current-password" required>
+            <button type="submit" class="btn-full btn-primary">Iniciar Sesión</button>
+        </form>
 
-        <div id="section-register" style="display:none;">
-            <input type="email" id="r-email" class="field" placeholder="Tu Correo Real" autocomplete="username">
-            <input type="password" id="r-pass" class="field" placeholder="Crea una Contraseña" autocomplete="new-password">
-            <button class="btn-full btn-primary" onclick="emailRegister()">Crear Cuenta Gratis</button>
+        <!-- Formulario de Registro (Encapsulado) -->
+        <form id="section-register" style="display:none;" onsubmit="emailRegister(); return false;">
+            <input type="email" id="r-email" class="field" placeholder="Tu Correo Real" autocomplete="username" required>
+            <input type="password" id="r-pass" class="field" placeholder="Crea una Contraseña" autocomplete="new-password" required>
+            <button type="submit" class="btn-full btn-primary">Crear Cuenta Gratis</button>
             <p style="font-size:0.75rem; color:#aaa; margin-top:10px;">* Te enviaremos un link de verificación.</p>
-        </div>
+        </form>
 
         <div style="margin:20px 0; border-top:1px solid #333; position:relative;">
             <span style="background:#1e1f20; padding:0 10px; position:absolute; top:-10px; left:45%; color:#777; font-size:0.8rem;">O</span>
@@ -181,7 +183,7 @@
     </div>
 </div>
 
-<!-- ADMIN DASHBOARD (CARGA JSON CORREGIDA) -->
+<!-- ADMIN DASHBOARD -->
 <div id="admin-dash" class="modal">
     <div class="card" style="max-width:600px; width:95%; max-height:80vh; overflow:hidden; display:flex; flex-direction:column;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -191,9 +193,8 @@
         
         <div style="background:#27272a; padding:10px; border-radius:8px; margin-bottom:15px; text-align:left;">
             <h4 style="margin:0; color:var(--accent);">📚 Cargar Diccionario</h4>
-            <p style="font-size:0.8rem; color:#aaa;">Detecta duplicados automáticamente.</p>
             <input type="file" id="json-upload" accept=".json" style="margin-top:5px; width:100%;">
-            <button onclick="uploadDictionary()" style="background:var(--accent); color:#000; border:none; padding:5px 10px; border-radius:5px; margin-top:5px; cursor:pointer; font-weight:bold;">Procesar y Subir</button>
+            <button onclick="uploadDictionary()" style="background:var(--accent); color:#000; border:none; padding:5px 10px; border-radius:5px; margin-top:5px; cursor:pointer; font-weight:bold;">Procesar (Lotes)</button>
             <div id="upload-status" style="margin-top:5px; font-size:0.8rem; color:var(--success);"></div>
         </div>
 
@@ -207,15 +208,15 @@
     import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
     // -----------------------------------------------------------
-    //  ⚠️ PEGA TUS LLAVES AQUÍ
+    //  ⚠️ ¡PEGA AQUÍ TUS LLAVES DE FIREBASE!
     // -----------------------------------------------------------
     const firebaseConfig = {
         apiKey: "AIzaSyAeNVoB1ZasZSauIf6G7GbIa4bbJJ3_5cw",
-        authDomain: "alexia-1c4f2.firebaseapp.com",
-        projectId: "alexia-1c4f2",
-        storageBucket: "alexia-1c4f2.firebasestorage.app",
-        messagingSenderId: "483778313354",
-        appId: "1:483778313354:web:c28c9da35d5674b174c173"
+  authDomain: "alexia-1c4f2.firebaseapp.com",
+  projectId: "alexia-1c4f2",
+  storageBucket: "alexia-1c4f2.firebasestorage.app",
+  messagingSenderId: "483778313354",
+  appId: "1:483778313354:web:c28c9da35d5674b174c173"
     };
     // -----------------------------------------------------------
 
@@ -227,12 +228,13 @@
         provider = new GoogleAuthProvider();
     } catch(e) { console.error("Error Firebase:", e); }
 
+    // VARIABLES
     let currentUser = null;
     let brain = { memory: [], reviewQueue: [], missingLog: [], userDebts: {} };
     let learningState = { active: false, question: "", isDebt: false };
     const ADMIN_EMAIL = "eljacksonyt@gmail.com";
 
-    // AUTH
+    // AUTH OBSERVER
     if(auth) {
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -309,6 +311,7 @@
                     missingLog: arrayUnion({ q: text, date: new Date().toISOString(), user: "Invitado" }) 
                 });
             }
+            
             setTimeout(() => {
                 appendMsg('ai', "No tengo esa información. ¿Tú la sabes? (Escríbela para enseñarme o pon 'no se' para saltar).");
                 learningState = { active: true, question: text, isDebt: false };
@@ -331,7 +334,7 @@
             await updateDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayUnion({ q: learningState.question, a: ans, user: userName }) });
             
             if(!currentUser) {
-                appendMsg('ai', "¡Gracias! Respuesta enviada.<br><br>💡 <em>Soy nueva. Para seguir enseñándome, por favor regístrate (es gratis).</em>");
+                appendMsg('ai', "¡Gracias! Respuesta enviada.<br><br>💡 <em>Soy nueva. Para seguir enseñándome, por favor regístrate (es gratis y ayudas a la comunidad).</em>");
             } else {
                 appendMsg('ai', "Gracias, enviado a validación.");
             }
@@ -353,32 +356,21 @@
             try {
                 const words = JSON.parse(e.target.result);
                 let added = 0;
-                let skipped = 0;
                 
-                // FIRESTORE LIMITA A 500 OPERACIONES POR LOTE.
-                // DIVIDIMOS EN FRAGMENTOS DE 400.
+                // FIRESTORE LIMIT: 500
                 const chunkSize = 400; 
                 for (let i = 0; i < words.length; i += chunkSize) {
                     const chunk = words.slice(i, i + chunkSize);
                     const batch = writeBatch(db);
-                    let opsInBatch = 0;
-
-                    for (const word of chunk) {
-                        const wordId = word.id.toLowerCase();
-                        const ref = doc(db, "dictionary", wordId);
-                        
-                        // Usamos SET para sobrescribir (más eficiente que verificar existencia en masivo)
-                        // Si quieres solo los nuevos, necesitarías leer primero, pero consume mucha cuota.
-                        // Asumiremos que tu JSON es la fuente de la verdad.
-                        batch.set(ref, word); 
-                        opsInBatch++;
-                        added++;
-                    }
                     
-                    if(opsInBatch > 0) {
-                        await batch.commit();
-                        statusDiv.innerHTML = `Subiendo bloque... (${added})`;
-                    }
+                    chunk.forEach(word => {
+                        const ref = doc(db, "dictionary", word.id.toLowerCase());
+                        batch.set(ref, word); 
+                        added++;
+                    });
+                    
+                    await batch.commit();
+                    statusDiv.innerHTML = `Subiendo... (${added})`;
                 }
 
                 statusDiv.innerHTML = `✅ <b>¡Terminado!</b><br>Total palabras: ${added}`;
@@ -394,6 +386,7 @@
     window.emailLogin = () => {
         const e = document.getElementById('l-email').value;
         const p = document.getElementById('l-pass').value;
+        if(!e || !p) return alert("Completa los campos");
         signInWithEmailAndPassword(auth, e, p).then((cred)=>{
             if(!cred.user.emailVerified){ 
                 document.getElementById('verify-modal').style.display='flex'; signOut(auth);
@@ -403,6 +396,7 @@
     window.emailRegister = () => {
         const e = document.getElementById('r-email').value;
         const p = document.getElementById('r-pass').value;
+        if(!e || !p) return alert("Completa los campos");
         createUserWithEmailAndPassword(auth, e, p).then(async(cred)=>{
             await sendEmailVerification(cred.user);
             document.getElementById('auth-modal').style.display='none';
