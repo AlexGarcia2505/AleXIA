@@ -390,7 +390,7 @@
                 // Buscar en Wikipedia (si falla diccionario)
                 if (!definition) {
                     const wikiDef = await fetchWikipediaDef(word);
-                    if (wikiDef) { definition = wikiDef; source = "Wikipedia"; }
+                    if (wikiDef) { definition = wikiDef; source = "Web"; }
                 }
 
                 if (definition) {
