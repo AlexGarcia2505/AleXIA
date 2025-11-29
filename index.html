@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V42 - Scroll & Diseño Corregido</title>
+    <title>AleXIA V43 - Final Stable</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -15,21 +15,24 @@
             --bg-body: #131314; --bg-sidebar: #1e1f20; --bg-input: #282a2c;
             --text-main: #e3e3e3; --text-muted: #c4c7c5;
             --accent: #a8c7fa; --user-msg: #282a2c; --danger: #ff897d; --success: #81c995;
+            --accent-glow: rgba(168, 199, 250, 0.2);
         }
         body { font-family: 'Outfit', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; height: 100dvh; display: flex; overflow: hidden; }
         
-        /* SIDEBAR */
+        /* SIDEBAR (Móvil por defecto) */
         .sidebar {
             width: 280px; background: var(--bg-sidebar); height: 100%; display: flex; flex-direction: column;
             position: absolute; z-index: 50; left: 0; top: 0; bottom: 0;
             transform: translateX(-100%); border-right: 1px solid #333; transition: transform 0.3s ease;
+            flex-shrink: 0; /* Evita que se aplaste en flex */
         }
-        .sidebar.open { transform: translateX(0); }
+        .sidebar.open { transform: translateX(0); box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
         .overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index: 40; }
         .overlay.active { display: block; }
         
+        /* SIDEBAR (Escritorio - Fijo) */
         @media(min-width: 800px) {
-            .sidebar { position: relative; transform: translateX(0); }
+            .sidebar { position: relative; transform: translateX(0); box-shadow: none; }
             .toggle-btn { display: none !important; }
             .overlay { display: none !important; }
         }
@@ -71,58 +74,81 @@
             line-height: 1.6; 
             font-size: 1rem; 
             position: relative; 
-            word-wrap: break-word; /* Importante para que no se salga texto */
+            word-wrap: break-word; 
         }
         .user-row .msg-bubble { background: var(--user-msg); padding: 10px 18px; border-radius: 20px 20px 4px 20px; }
         
-        /* ESTILO CORREGIDO PARA LA IA Y EL BOTÓN */
         .ai-row .msg-bubble { 
             background: transparent; 
-            padding: 0 45px 0 10px; /* Padding derecho extra grande para el botón */
+            padding: 0 45px 0 10px; 
             position: relative; 
         }
         
-        /* CONTENIDO RICO (RESPUESTAS LARGAS) */
+        /* CONTENIDO RICO - CORRECCIÓN DE ESPACIADO */
         .rich-content {
-            /* Límite de ~15 líneas (suponiendo ~1.6em por línea) */
             max-height: 24rem; 
-            overflow-y: auto; /* Scroll interno si excede */
-            padding-right: 5px; /* Espacio para el scrollbar */
+            overflow-y: auto; 
+            padding-right: 5px; 
         }
-        /* Scrollbar estilizado para el contenido rico */
         .rich-content::-webkit-scrollbar { width: 6px; }
         .rich-content::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
         .rich-content::-webkit-scrollbar-track { background: transparent; }
 
         .rich-content p { margin-bottom: 15px; text-align: justify; }
-        .rich-source { margin-top: 15px; padding-top: 10px; border-top: 1px solid #333; font-size: 0.85rem; color: var(--accent); }
-        .rich-source a { color: var(--accent); text-decoration: none; display: flex; align-items: center; gap: 5px; }
+        
+        /* CORRECCIÓN LETRAS AZULES ENCIMADAS */
+        .rich-source { 
+            margin-top: 15px; 
+            padding-top: 12px; /* Más espacio arriba */
+            border-top: 1px solid #333; 
+            font-size: 0.9rem; 
+            color: var(--accent);
+            display: inline-block; /* Evita colapso */
+            width: 100%;
+        }
+        .rich-source a { 
+            color: var(--accent); 
+            text-decoration: none; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            padding: 5px 0; /* Zona de click más grande */
+        }
         .rich-source a:hover { text-decoration: underline; }
 
-        /* BOTÓN DE VOZ FLOTANTE SUPERIOR DERECHA */
+        /* SUGERENCIAS (A, B, C) - ESPACIADO */
+        .suggestion-prompt { 
+            margin-top: 20px; 
+            font-weight: 500; 
+            color: var(--accent); 
+            display: block; 
+            margin-bottom: 10px; 
+        }
+        .suggestion-item { 
+            display: block; 
+            margin-top: 8px; /* Separación entre opciones */
+            font-size: 0.95rem; 
+            cursor: pointer; 
+            transition: color 0.2s;
+            line-height: 1.5; /* Evita que se encimen si son largas */
+        }
+        .suggestion-item:hover { color: white; text-decoration: underline; }
+
+        /* BOTÓN DE VOZ FLOTANTE */
         .tts-btn {
             background: rgba(255,255,255,0.08); border: 1px solid #444; color: var(--accent);
             width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
             display: flex; justify-content: center; align-items: center;
             font-size: 0.9rem;
-            
-            /* POSICIONAMIENTO ABSOLUTO FIJO */
             position: absolute;
-            top: 0;
-            right: 0;
-            z-index: 10; /* Asegurar que esté encima del texto */
-            
+            top: 0; right: 0;
+            z-index: 10;
             transition: 0.2s;
         }
         .tts-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.1); border-color: white; }
         .tts-btn.speaking { color: var(--danger); border-color: var(--danger); animation: pulse 1s infinite; background: rgba(255, 137, 125, 0.1); }
 
-        /* SUGERENCIAS DE CONVERSACIÓN */
-        .suggestion-prompt { margin-top: 15px; font-weight: 500; color: var(--accent); display: block; margin-bottom: 5px; }
-        .suggestion-item { display: block; margin-top: 6px; font-size: 0.9rem; cursor: pointer; transition: color 0.2s; }
-        .suggestion-item:hover { color: white; text-decoration: underline; }
-
-        /* INPUT AREA & MICROPHONE */
+        /* INPUT AREA */
         .input-container { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px 20px 10px 20px; background: var(--bg-body); display: flex; flex-direction: column; align-items: center; z-index: 20; border-top: 1px solid #222; }
         .input-wrapper { background: var(--bg-input); width: 100%; max-width: 800px; border-radius: 30px; display: flex; align-items: center; padding: 5px 10px 5px 15px; border: 1px solid #444; }
         .chat-input { flex: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; font-size: 16px; }
@@ -131,8 +157,6 @@
         .action-btn:hover { background: rgba(255,255,255,0.1); color: white; }
         .send-btn { background: var(--text-main); color: #000; }
         .send-btn:hover { background: white; }
-
-        /* ANIMACIÓN MICROFONO */
         .mic-btn.listening { color: var(--danger); background: rgba(255, 68, 68, 0.1); animation: pulseRed 1.5s infinite; }
 
         .footer-info { font-size: 0.7rem; color: #555; text-align: center; margin-bottom: 5px; margin-top: 5px; }
@@ -233,8 +257,10 @@
     let brain = { memory: [], reviewQueue: [], missingLog: [] };
     const ADMIN_EMAIL = "eljacksonyt@gmail.com";
     let currentChatId = null;
-    let chatState = { mode: 'normal', lastQuery: '', constructedAnswer: '', continuationText: '', continuationURL: '' }; 
-    let activeSuggestions = []; 
+    let chatState = { mode: 'normal' }; 
+    
+    // --- CORRECCIÓN: Recuperar sugerencias guardadas para que no fallen al volver ---
+    let activeSuggestions = JSON.parse(localStorage.getItem('alexia_active_suggestions')) || []; 
     
     let isVoiceActive = false;
     let recognition;
@@ -264,6 +290,12 @@
                 renderLocalHistory();
                 closeModal(); 
             } else { currentUser = null; updateUserUI(null); currentChatId = null; renderLocalHistory(); }
+
+            // --- CORRECCIÓN: Recuperar el último chat abierto si existe ---
+            const lastChatId = localStorage.getItem('alexia_last_chat_id');
+            if (lastChatId) {
+                loadLocalChat(lastChatId);
+            }
         });
     }
 
@@ -271,7 +303,6 @@
 
     function normalize(str) { return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[¿?¡!.,]/g, "").trim(); }
     function processSynonyms(text) { return text.split(" ").map(w => { const cw = normalize(w); return slangMap[cw] || cw; }).join(" "); }
-    function getTodayDate() { return new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }); }
 
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -295,20 +326,16 @@
         else recognition.start();
     }
 
-    // --- SISTEMA DE AUDIO (PLAY/STOP) ---
     window.speakText = (text, btnId) => {
-        // Si ya está hablando...
         if (synth.speaking) {
-            synth.cancel(); // Detener inmediatamente
-            // Si presionamos el mismo botón que estaba activo, es un "Pause/Stop"
+            synth.cancel();
             if (window.activeSpeakingBtnId === btnId) {
                 resetSpeakerIcons();
                 window.activeSpeakingBtnId = null;
-                return; // No iniciamos nueva lectura
+                return;
             }
         }
         
-        // Iniciar nueva lectura
         const cleanText = text.replace(/<[^>]*>/g, '').replace(/http\S+/g, 'enlace').replace(/A\)|B\)|C\)/g, '');
         const utterance = new SpeechSynthesisUtterance(cleanText);
         utterance.lang = 'es-MX';
@@ -319,7 +346,7 @@
             const btn = document.getElementById(btnId);
             if(btn) { 
                 btn.classList.add('speaking'); 
-                btn.innerHTML = '<i class="fas fa-stop"></i>'; // Icono de Stop
+                btn.innerHTML = '<i class="fas fa-stop"></i>';
                 window.activeSpeakingBtnId = btnId;
             }
         };
@@ -335,7 +362,6 @@
         });
     }
 
-    // --- LÓGICA PRINCIPAL ---
     window.sendMessage = async function() {
         const input = document.getElementById('chat-input');
         const originalText = input.value.trim();
@@ -343,16 +369,12 @@
         
         const normInput = normalize(originalText);
         
-        // --- DETECCIÓN FLEXIBLE DE OPCIONES (A, B, C) ---
-        // Busca la letra 'a', 'b' o 'c' como palabra completa (\b).
-        // Ejemplo: "la b", "opción c", "b".
-        // Restricción: Solo si el mensaje total es corto (< 30 caracteres) para evitar falsos positivos en oraciones.
         const flexibleMatch = normInput.match(/\b([abc])\b/i);
         const isShortResponse = normInput.length < 30;
 
         if (flexibleMatch && isShortResponse) {
             const letter = flexibleMatch[1].toUpperCase();
-            const idx = letter.charCodeAt(0) - 65; // A=0, B=1...
+            const idx = letter.charCodeAt(0) - 65;
             
             if (activeSuggestions[idx]) {
                 const suggestion = activeSuggestions[idx];
@@ -367,7 +389,6 @@
         input.value = '';
         appendMsg('user', originalText); 
 
-        // --- EFECTO PENSANDO ---
         const loadingId = 'loading-' + Date.now();
         appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> <span id="think-text">Pensando...</span>`, false, loadingId);
         
@@ -384,7 +405,6 @@
         const loadingMsg = document.getElementById(loadingId);
         if(loadingMsg) loadingMsg.remove();
 
-        // --- RESPUESTA ---
         const interpretedText = processSynonyms(originalText);
         const words = interpretedText.split(/\s+/).filter(w => !stopWords.has(w) && w.length > 2);
 
@@ -452,7 +472,6 @@
 
     async function fetchExternalData(term, forceSource = 'Wikipedia/WEB') {
         const encoded = encodeURIComponent(term);
-        let url = '';
 
         if (forceSource === 'Meteo/WEB') {
             try {
@@ -465,9 +484,10 @@
                     if (weatherData.current_weather) {
                         return { 
                             def: `<p>Actualmente en <b>${place.name}, ${place.country}</b>, la temperatura es de <b>${weatherData.current_weather.temperature}°C</b>.</p>
-                                  <p>La velocidad del viento es de ${weatherData.current_weather.windspeed} km/h. Es un buen momento para verificar si necesitas paraguas o abrigo.</p>`, 
+                                  <p>La velocidad del viento es de ${weatherData.current_weather.windspeed} km/h.</p>`, 
                             src: "Meteo/WEB", 
-                            url: `https://www.google.com/maps/search/?api=1&query=${place.latitude},${place.longitude}` 
+                            // --- CORRECCIÓN: URL de Google Maps arreglada ---
+                            url: `https://www.google.com/maps?q=${place.latitude},${place.longitude}` 
                         };
                     }
                 }
@@ -483,10 +503,8 @@
                 if (searchData.docs && searchData.docs.length > 0) {
                     const book = searchData.docs[0];
                     const workKey = book.key;
-                    
                     const workResp = await fetch(`https://openlibrary.org${workKey}.json`);
                     const workDetails = await workResp.json();
-                    
                     let description = "No hay descripción disponible.";
                     if (typeof workDetails.description === 'string') description = workDetails.description;
                     else if (workDetails.description && workDetails.description.value) description = workDetails.description.value;
@@ -494,9 +512,7 @@
                     if (description.length < 50 || description.includes("No hay")) {
                         return fetchExternalData(term, 'Wikipedia/WEB');
                     }
-
                     const formattedDesc = description.split('\n').map(p => `<p>${p}</p>`).join('').substring(0, 1500);
-
                     return { 
                         def: `<p><b>Título:</b> ${book.title}</p><p><b>Autor:</b> ${book.author_name ? book.author_name[0] : 'Desconocido'}</p><hr>${formattedDesc}...`, 
                         src: "Biblioteca/WEB", 
@@ -510,16 +526,13 @@
         try {
             const searchResp = await fetch(`https://es.wikipedia.org/w/api.php?action=opensearch&search=${encoded}&limit=1&namespace=0&format=json&origin=*`);
             const searchData = await searchResp.json();
-            
             if (searchData[1] && searchData[1].length > 0) {
                 const title = searchData[1][0];
                 const cleanTitle = encodeURIComponent(title);
-                
                 const contentResp = await fetch(`https://es.wikipedia.org/w/api.php?action=query&prop=extracts&titles=${cleanTitle}&explaintext=0&exintro=1&format=json&origin=*`);
                 const contentData = await contentResp.json();
                 const pages = contentData.query.pages;
                 const pageId = Object.keys(pages)[0];
-                
                 if (pageId !== "-1") {
                     return { 
                         def: pages[pageId].extract, 
@@ -529,20 +542,16 @@
                 }
             }
         } catch(e) {}
-
         return null;
     }
 
-    // --- RENDERIZADO DE MENSAJE Y AUDIO ---
     async function finishResponse(userTxt, aiTxt, shouldSuggest) {
         const msgId = 'ai-msg-' + Date.now();
-        // SIEMPRE ponemos el botón de controles (hasControls = true) para mensajes IA
         appendMsg('ai', aiTxt, true, msgId); 
         
         saveLocalChat(userTxt, aiTxt);
         saveUserQueryHistory(userTxt);
 
-        // Auto-reproducción SOLO si fue por voz
         if (wasVoiceInput) {
             setTimeout(() => {
                 const btnId = `btn-${msgId}`;
@@ -555,8 +564,6 @@
             const msgBubbles = document.getElementById('chat-box').querySelectorAll('.msg-row.ai-row .msg-bubble');
             if (msgBubbles.length > 0) {
                  msgBubbles[msgBubbles.length - 1].innerHTML += suggestionsHTML;
-                 
-                 // Scroll final para ver sugerencias
                  const box = document.getElementById('chat-box');
                  box.scrollTop = box.scrollHeight;
             }
@@ -596,7 +603,10 @@
         } catch(e) {}
         activeSuggestions.push(weatherItem);
 
-        let html = `<br><br><span class="suggestion-prompt">Sugerencias: ¿Te interesa algún tema? Responde A, B o C:</span>`;
+        // --- CORRECCIÓN: Guardar sugerencias en localStorage ---
+        localStorage.setItem('alexia_active_suggestions', JSON.stringify(activeSuggestions));
+
+        let html = `<br><span class="suggestion-prompt">Sugerencias: ¿Te interesa algún tema? Responde A, B o C:</span>`;
         activeSuggestions.forEach((s, index) => {
             const letter = String.fromCharCode(65 + index);
             html += `<span class="suggestion-item" onclick="document.getElementById('chat-input').value='${letter}'; sendMessage();">
@@ -616,7 +626,6 @@
         if (role === 'ai' && hasControls) {
             const safeText = text.replace(/'/g, "\\'").replace(/"/g, '"');
             const btnId = `btn-${customId}`;
-            // Botón renderizado siempre para IA
             controlsHTML = `<button id="${btnId}" class="tts-btn" onclick="window.speakText('${safeText}', '${btnId}')"><i class="fas fa-volume-up"></i></button>`;
         }
 
@@ -625,8 +634,6 @@
         if(box.querySelector('h2')) box.innerHTML = '';
         box.appendChild(row);
         
-        // SCROLL INTELIGENTE: Si es un mensaje nuevo, scrollear para que el inicio sea visible
-        // Esto evita que el usuario tenga que subir para leer el principio
         setTimeout(() => {
             row.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 100);
@@ -684,6 +691,8 @@
             }
         }
         localStorage.setItem(key, JSON.stringify(chats));
+        // --- CORRECCIÓN: Guardar el ID actual para recuperarlo al recargar ---
+        localStorage.setItem('alexia_last_chat_id', currentChatId);
         renderLocalHistory();
     }
     function renderLocalHistory() {
@@ -700,10 +709,30 @@
     window.loadLocalChat = (id) => {
         const key = getLocalKey(); const chats = JSON.parse(localStorage.getItem(key)) || [];
         const chat = chats.find(c => c.id === id);
-        if (chat) { currentChatId = id; const box = document.getElementById('chat-box'); box.innerHTML = ""; chat.messages.forEach(m => appendMsg(m.r, m.t, m.r === 'ai')); renderLocalHistory(); if(window.innerWidth < 800) toggleSidebar(); }
+        if (chat) { 
+            currentChatId = id; 
+            // Guardamos que este es el activo
+            localStorage.setItem('alexia_last_chat_id', currentChatId);
+            
+            const box = document.getElementById('chat-box'); 
+            box.innerHTML = ""; 
+            chat.messages.forEach(m => appendMsg(m.r, m.t, m.r === 'ai')); 
+            renderLocalHistory(); 
+            if(window.innerWidth < 800) {
+                 document.getElementById('sidebar').classList.remove('open');
+                 document.getElementById('overlay').classList.remove('active');
+            }
+        }
     }
     window.togglePinLocal = (e, id) => { e.stopPropagation(); const key = getLocalKey(); let chats = JSON.parse(localStorage.getItem(key)) || []; const idx = chats.findIndex(c => c.id === id); if (idx > -1) { chats[idx].isPinned = !chats[idx].isPinned; localStorage.setItem(key, JSON.stringify(chats)); renderLocalHistory(); } }
-    window.startNewChat = () => { currentChatId = null; chatState = { mode: 'normal' }; document.getElementById('chat-box').innerHTML = `<div style="text-align:center; margin-top:80px; opacity:0.7; animation:fadeIn 1s;"><div style="width:80px; height:80px; background:linear-gradient(135deg, var(--accent), #ec4899); border-radius:50%; margin:0 auto 25px auto; display:flex; align-items:center; justify-content:center; box-shadow:0 0 40px var(--accent-glow);"><i class="fas fa-robot" style="font-size:40px; color:white;"></i></div><h2 style="font-weight:500;">¿En qué puedo ayudarte?</h2></div>`; renderLocalHistory(); if(window.innerWidth < 800) toggleSidebar(); }
+    window.startNewChat = () => { 
+        currentChatId = null; 
+        localStorage.removeItem('alexia_last_chat_id'); // Limpiar estado
+        chatState = { mode: 'normal' }; 
+        document.getElementById('chat-box').innerHTML = `<div style="text-align:center; margin-top:80px; opacity:0.7; animation:fadeIn 1s;"><div style="width:80px; height:80px; background:linear-gradient(135deg, var(--accent), #ec4899); border-radius:50%; margin:0 auto 25px auto; display:flex; align-items:center; justify-content:center; box-shadow:0 0 40px var(--accent-glow);"><i class="fas fa-robot" style="font-size:40px; color:white;"></i></div><h2 style="font-weight:500;">¿En qué puedo ayudarte?</h2></div>`; 
+        renderLocalHistory(); 
+        if(window.innerWidth < 800) toggleSidebar(); 
+    }
     function updateUserUI(u) {
         const adminBtn = document.getElementById('admin-menu-container');
         if(u) {
