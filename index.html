@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V46 - Texto Puro</title>
+    <title>AleXIA V47 - Diseño Fluido</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -63,7 +63,7 @@
 
         #chat-box { flex: 1; overflow-y: auto; padding: 80px 20px 140px 20px; display: flex; flex-direction: column; gap: 20px; max-width: 800px; margin: 0 auto; width: 100%; box-sizing: border-box; scroll-behavior: smooth; }
         
-        .msg-row { display: flex; gap: 15px; animation: fadeIn 0.3s; margin-bottom: 20px; }
+        .msg-row { display: flex; gap: 15px; animation: fadeIn 0.3s; margin-bottom: 20px; width: 100%; }
         .msg-row.user-row { justify-content: flex-end; }
         .msg-icon { width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #4285f4, #9b72cb); color: white; flex-shrink: 0; position: relative; }
         
@@ -77,15 +77,14 @@
         }
         .user-row .msg-bubble { background: var(--user-msg); padding: 10px 18px; border-radius: 20px 20px 4px 20px; }
         
-        /* CONTENEDOR IA BLINDADO */
+        /* --- CORRECCIÓN DE COLAPSO AQUÍ --- */
         .ai-row .msg-bubble { 
             background: transparent; 
-            padding: 0 45px 0 10px; 
+            padding: 0 10px; /* Padding simple */
             position: relative; 
-            display: flex;
-            flex-direction: column; 
-            width: 100%; /* Asegurar ancho */
-            overflow: hidden; /* Cortar cualquier cosa que flote fuera */
+            display: block; /* Volvemos a block para evitar colapso flex */
+            flex: 1; /* Ocupa el espacio restante */
+            min-width: 0; /* CRÍTICO: Permite al flex child encogerse si es necesario */
         }
         
         /* CONTENIDO RICO - "TEXTO PURO" */
@@ -94,7 +93,7 @@
             overflow-y: auto; 
             padding-right: 5px; 
             margin-bottom: 15px;
-            width: 100%;
+            /* Eliminamos width 100% fijo */
             display: block;
             text-align: left;
         }
@@ -102,16 +101,14 @@
         .rich-content::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
         .rich-content::-webkit-scrollbar-track { background: transparent; }
         
-        /* Esto fuerza a que los párrafos sean bloques simples */
         .rich-content p { 
             display: block;
             margin-bottom: 15px; 
             text-align: left; 
-            width: 100%;
             clear: both;
         }
 
-        /* ENLACE DE FUENTE - ASEGURADO */
+        /* ENLACE DE FUENTE */
         .rich-source { 
             display: block; 
             width: 100%;
@@ -153,6 +150,8 @@
             transition: all 0.2s;
             line-height: 1.5; 
             border: 1px solid transparent;
+            /* Evitar que se aplaste */
+            white-space: normal; 
         }
         .suggestion-item:hover { 
             background: rgba(168, 199, 250, 0.1); 
@@ -674,7 +673,9 @@
         
         let controlsHTML = '';
         if (role === 'ai' && hasControls) {
-            const safeText = text.replace(/'/g, "\\'").replace(/"/g, '"');
+            // CORRECCIÓN CRÍTICA: Eliminamos comillas del texto para el botón de audio
+            // Esto evita que el HTML del botón se rompa si el texto tiene comillas
+            const safeText = text.replace(/'/g, "").replace(/"/g, "").replace(/\n/g, " ");
             const btnId = `btn-${customId}`;
             controlsHTML = `<button id="${btnId}" class="tts-btn" onclick="window.speakText('${safeText}', '${btnId}')"><i class="fas fa-volume-up"></i></button>`;
         }
