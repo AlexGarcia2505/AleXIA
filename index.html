@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V43 - Final Stable</title>
+    <title>AleXIA V44 - Diseño Limpio</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
     
     <style>
-          /* --- ESTILOS VISUALES --- */
+        /* --- ESTILOS VISUALES --- */
         :root {
             --bg-body: #131314; --bg-sidebar: #1e1f20; --bg-input: #282a2c;
             --text-main: #e3e3e3; --text-muted: #c4c7c5;
@@ -67,6 +67,7 @@
         .msg-row.user-row { justify-content: flex-end; }
         .msg-icon { width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #4285f4, #9b72cb); color: white; flex-shrink: 0; position: relative; }
         
+        /* BURBUJAS */
         .msg-bubble { 
             max-width: 85%; 
             line-height: 1.6; 
@@ -76,37 +77,39 @@
         }
         .user-row .msg-bubble { background: var(--user-msg); padding: 10px 18px; border-radius: 20px 20px 4px 20px; }
         
+        /* CONTENEDOR IA MEJORADO */
         .ai-row .msg-bubble { 
             background: transparent; 
             padding: 0 45px 0 10px; 
             position: relative; 
-            /* Esto evita que elementos hijos floten fuera de control */
             display: flex;
-            flex-direction: column; 
+            flex-direction: column; /* Apilar contenido verticalmente */
         }
         
-        /* --- CORRECCIÓN CLAVE AQUÍ ABAJO --- */
-
+        /* CONTENIDO RICO - PROTEGIDO DE DESBORDAMIENTO */
         .rich-content {
             max-height: 24rem; 
             overflow-y: auto; 
             padding-right: 5px; 
-            margin-bottom: 10px; /* Empuja el enlace hacia abajo */
+            margin-bottom: 10px;
+            width: 100%;
+            overflow-x: hidden; /* Evitar scroll horizontal */
         }
         .rich-content::-webkit-scrollbar { width: 6px; }
         .rich-content::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
         .rich-content::-webkit-scrollbar-track { background: transparent; }
         .rich-content p { margin-bottom: 15px; text-align: justify; }
         
-        /* ESTILO CORREGIDO PARA EL ENLACE DE FUENTE */
+        /* ENLACE DE FUENTE - ASEGURADO */
         .rich-source { 
-            display: block; /* Fuerza que ocupe su propia línea */
+            display: block; 
             width: 100%;
             margin-top: 15px; 
             padding-top: 15px; 
             border-top: 1px solid #333; 
             font-size: 0.9rem; 
             color: var(--accent);
+            clear: both; /* Limpiar cualquier flotante */
         }
         .rich-source a { 
             color: var(--accent); 
@@ -118,14 +121,14 @@
         }
         .rich-source a:hover { text-decoration: underline; }
 
-        /* ESTILO CORREGIDO PARA SUGERENCIAS A, B, C */
+        /* SUGERENCIAS A, B, C */
         .suggestion-prompt { 
-            margin-top: 25px; /* Más espacio arriba */
+            margin-top: 25px; 
             font-weight: 500; 
             color: var(--accent); 
             display: block; 
             margin-bottom: 15px; 
-            border-top: 1px solid rgba(255,255,255,0.1); /* Separador sutil */
+            border-top: 1px solid rgba(255,255,255,0.1);
             padding-top: 15px;
         }
         .suggestion-item { 
@@ -133,7 +136,7 @@
             margin-top: 12px; 
             padding: 8px 12px;
             border-radius: 8px;
-            background: rgba(255,255,255,0.03); /* Fondo muy sutil */
+            background: rgba(255,255,255,0.03); 
             font-size: 0.95rem; 
             cursor: pointer; 
             transition: all 0.2s;
@@ -145,8 +148,6 @@
             border-color: var(--accent);
             color: white; 
         }
-
-        /* ----------------------------------- */
 
         .tts-btn {
             background: rgba(255,255,255,0.08); border: 1px solid #444; color: var(--accent);
@@ -186,7 +187,7 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: 0; } }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(255, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); } }
-     </style>
+    </style>
 </head>
 <body>
 
@@ -270,7 +271,7 @@
     let currentChatId = null;
     let chatState = { mode: 'normal' }; 
     
-    // --- CORRECCIÓN: Recuperar sugerencias guardadas para que no fallen al volver ---
+    // Recuperar sugerencias guardadas
     let activeSuggestions = JSON.parse(localStorage.getItem('alexia_active_suggestions')) || []; 
     
     let isVoiceActive = false;
@@ -302,7 +303,7 @@
                 closeModal(); 
             } else { currentUser = null; updateUserUI(null); currentChatId = null; renderLocalHistory(); }
 
-            // --- CORRECCIÓN: Recuperar el último chat abierto si existe ---
+            // Recuperar el último chat abierto
             const lastChatId = localStorage.getItem('alexia_last_chat_id');
             if (lastChatId) {
                 loadLocalChat(lastChatId);
@@ -497,7 +498,7 @@
                             def: `<p>Actualmente en <b>${place.name}, ${place.country}</b>, la temperatura es de <b>${weatherData.current_weather.temperature}°C</b>.</p>
                                   <p>La velocidad del viento es de ${weatherData.current_weather.windspeed} km/h.</p>`, 
                             src: "Meteo/WEB", 
-                            // --- CORRECCIÓN: URL de Google Maps arreglada ---
+                            // Corrección URL del mapa
                             url: `https://www.google.com/maps?q=${place.latitude},${place.longitude}` 
                         };
                     }
@@ -540,13 +541,18 @@
             if (searchData[1] && searchData[1].length > 0) {
                 const title = searchData[1][0];
                 const cleanTitle = encodeURIComponent(title);
-                const contentResp = await fetch(`https://es.wikipedia.org/w/api.php?action=query&prop=extracts&titles=${cleanTitle}&explaintext=0&exintro=1&format=json&origin=*`);
+                
+                // --- CORRECCIÓN CRÍTICA: 'explaintext=1' ---
+                // Esto fuerza a Wikipedia a darnos texto plano en lugar de HTML roto
+                const contentResp = await fetch(`https://es.wikipedia.org/w/api.php?action=query&prop=extracts&titles=${cleanTitle}&explaintext=1&exintro=1&format=json&origin=*`);
+                
                 const contentData = await contentResp.json();
                 const pages = contentData.query.pages;
                 const pageId = Object.keys(pages)[0];
                 if (pageId !== "-1") {
                     return { 
-                        def: pages[pageId].extract, 
+                        // Convertimos saltos de línea a <br> para que se vea bien
+                        def: pages[pageId].extract.replace(/\n/g, '<br>'), 
                         src: "Wikipedia/WEB", 
                         url: `https://es.wikipedia.org/?curid=${pageId}` 
                     };
@@ -614,7 +620,6 @@
         } catch(e) {}
         activeSuggestions.push(weatherItem);
 
-        // --- CORRECCIÓN: Guardar sugerencias en localStorage ---
         localStorage.setItem('alexia_active_suggestions', JSON.stringify(activeSuggestions));
 
         let html = `<br><span class="suggestion-prompt">Sugerencias: ¿Te interesa algún tema? Responde A, B o C:</span>`;
@@ -702,7 +707,6 @@
             }
         }
         localStorage.setItem(key, JSON.stringify(chats));
-        // --- CORRECCIÓN: Guardar el ID actual para recuperarlo al recargar ---
         localStorage.setItem('alexia_last_chat_id', currentChatId);
         renderLocalHistory();
     }
@@ -722,9 +726,7 @@
         const chat = chats.find(c => c.id === id);
         if (chat) { 
             currentChatId = id; 
-            // Guardamos que este es el activo
             localStorage.setItem('alexia_last_chat_id', currentChatId);
-            
             const box = document.getElementById('chat-box'); 
             box.innerHTML = ""; 
             chat.messages.forEach(m => appendMsg(m.r, m.t, m.r === 'ai')); 
@@ -738,7 +740,7 @@
     window.togglePinLocal = (e, id) => { e.stopPropagation(); const key = getLocalKey(); let chats = JSON.parse(localStorage.getItem(key)) || []; const idx = chats.findIndex(c => c.id === id); if (idx > -1) { chats[idx].isPinned = !chats[idx].isPinned; localStorage.setItem(key, JSON.stringify(chats)); renderLocalHistory(); } }
     window.startNewChat = () => { 
         currentChatId = null; 
-        localStorage.removeItem('alexia_last_chat_id'); // Limpiar estado
+        localStorage.removeItem('alexia_last_chat_id'); 
         chatState = { mode: 'normal' }; 
         document.getElementById('chat-box').innerHTML = `<div style="text-align:center; margin-top:80px; opacity:0.7; animation:fadeIn 1s;"><div style="width:80px; height:80px; background:linear-gradient(135deg, var(--accent), #ec4899); border-radius:50%; margin:0 auto 25px auto; display:flex; align-items:center; justify-content:center; box-shadow:0 0 40px var(--accent-glow);"><i class="fas fa-robot" style="font-size:40px; color:white;"></i></div><h2 style="font-weight:500;">¿En qué puedo ayudarte?</h2></div>`; 
         renderLocalHistory(); 
