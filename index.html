@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V51 - Sistema Robusto</title>
+    <title>AleXIA V52 - Sistema Blindado</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -331,44 +331,50 @@
         const originalText = input.value.trim();
         if(!originalText) return;
 
-        // --- MODO CORRECCIÓN (ENSEÑANZA) CON PROTECCIÓN DE ERRORES ---
+        // --- MODO CORRECCIÓN (ENSEÑANZA) ---
         if (chatState.mode === 'waiting_correction') {
             const correction = originalText;
             const userEmail = currentUser ? currentUser.email : "invitado";
             
-            // 1. Mostrar feedback inmediato
+            // Feedback inmediato visual
             input.value = '';
             appendMsg('user', originalText);
             const sendingMsgId = 'sending-' + Date.now();
-            appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> Guardando tu enseñanza...`, false, sendingMsgId);
+            appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> Guardando enseñanza...`, false, sendingMsgId);
 
             try {
                 if(db) {
+                    // PROTECCIÓN DE DATOS: Asegurar que nunca enviamos undefined
+                    const qData = chatState.lastQuery || "Pregunta no registrada";
+                    const aData = correction || "Respuesta vacía";
+                    
                     await setDoc(doc(db, "alexia_db", "main_brain"), {
-                        reviewQueue: arrayUnion({ q: chatState.lastQuery, a: correction, user: userEmail, date: new Date().toISOString() })
+                        reviewQueue: arrayUnion({ 
+                            q: qData, 
+                            a: aData, 
+                            user: userEmail, 
+                            date: new Date().toISOString() 
+                        })
                     }, { merge: true });
                     
-                    // Si todo sale bien, actualizamos el mensaje
+                    // Actualizar mensaje de éxito
                     const sendingEl = document.getElementById(sendingMsgId);
                     if(sendingEl) {
-                        // Buscamos la burbuja contenedora para cambiar el texto
                         const bubble = sendingEl.querySelector('.msg-bubble') || sendingEl;
                         bubble.innerHTML = `¡Gracias! He guardado tu respuesta. Un administrador la revisará.`;
                     }
                 } else {
-                    throw new Error("Base de datos no conectada.");
+                    throw new Error("Base de datos desconectada.");
                 }
             } catch (e) {
-                // SI FALLA, AVISAMOS AL USUARIO
                 const sendingEl = document.getElementById(sendingMsgId);
                 if(sendingEl) {
                     const bubble = sendingEl.querySelector('.msg-bubble') || sendingEl;
-                    bubble.innerHTML = `❌ <b>Error:</b> No pude guardar la enseñanza. Posiblemente faltan permisos en Firebase. <br><small>${e.message}</small>`;
+                    bubble.innerHTML = `❌ Error al guardar: ${e.message}`;
                     bubble.style.color = "var(--danger)";
                 }
             }
             
-            // Apagar botones
             document.querySelectorAll('.feedback-btn.active-teach').forEach(b => b.classList.remove('active-teach'));
             chatState = { mode: 'normal' }; 
             return;
@@ -376,7 +382,6 @@
         
         const normInput = normalize(originalText);
         
-        // IDENTIDAD (Quién te creó)
         if (normInput.match(/quien (te )?creo|quien es tu creador|quien te hizo/)) {
             input.value = '';
             appendMsg('user', originalText);
@@ -605,7 +610,8 @@
         const msgId = 'ai-msg-' + Date.now();
         
         let feedbackHTML = "";
-        const safeUserTxt = userTxt.replace(/'/g, "\\'").replace(/"/g, '"');
+        // SANITIZACIÓN CRÍTICA: Quitamos saltos de línea para que no rompa el onclick
+        const safeUserTxt = userTxt.replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ');
         
         if (showFeedback) {
             feedbackHTML = `<div class="feedback-area">
