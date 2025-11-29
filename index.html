@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V35 - Lógica Avanzada</title>
+    <title>AleXIA V36 - Lógica Integrativa Final</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -67,7 +67,7 @@
         .user-row .msg-bubble { background: var(--user-msg); padding: 10px 18px; border-radius: 20px 20px 4px 20px; }
         .ai-row .msg-bubble { background: transparent; padding: 0 10px; }
         
-        /* ESTILOS NUEVOS PARA DEFINICIONES */
+        /* ESTILOS PARA DEFINICIONES */
         .word-definition { margin-bottom: 8px; border-left: 3px solid var(--accent); padding-left: 10px; background: rgba(255,255,255,0.03); border-radius: 0 8px 8px 0; padding: 8px 10px 8px 10px; }
         .word-source { font-size: 0.65rem; color: #777; margin-left: 5px; text-transform: uppercase; letter-spacing: 1px; }
 
@@ -254,7 +254,6 @@
     let chatState = { mode: 'normal', lastQuery: '', constructedAnswer: '' };
 
     // --- 4. DICCIONARIO DE SINÓNIMOS Y JERGA (LOGICA MEJORADA) ---
-    // Traduce Slang/Jerga a Español Neutro antes de buscar
     const slangMap = {
         "andas": "estas",
         "onda": "pasa",
@@ -281,8 +280,8 @@
         "chamba": "trabajo"
     };
 
-    // Palabras a ignorar (Stop words) para análisis profundo
-    const stopWords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'de', 'del', 'al', 'a', 'en', 'por', 'para', 'con', 'sin', 'que', 'como', 'cual', 'quien', 'es', 'son', 'fue', 'era', 'me', 'te', 'se', 'lo', 'mi', 'tu', 'su', 'nos', 'yo', 'tu', 'el', 'ella']);
+    // Palabras a ignorar para análisis profundo
+    const stopWords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'de', 'del', 'al', 'a', 'en', 'por', 'para', 'con', 'sin', 'que', 'como', 'cual', 'quien', 'es', 'son', 'fue', 'era', 'me', 'te', 'se', 'lo', 'mi', 'tu', 'su', 'nos', 'yo', 'tu', 'el', 'ella', 'dime', 'sobre', 'acerca', 'significa']);
 
     // 5. AUTH OBSERVER
     if(auth) {
@@ -329,7 +328,7 @@
         return cleanWords.join(" ");
     }
 
-    // 7. LOGICA PRINCIPAL (CHAT)
+    // 7. LÓGICA PRINCIPAL DEL CHAT (4 NIVELES)
     window.sendMessage = async function() {
         const input = document.getElementById('chat-input');
         const originalText = input.value.trim();
@@ -338,23 +337,20 @@
         input.value = '';
         appendMsg('user', originalText); 
 
-        // TRADUCCIÓN INTERNA ("Como andas" -> "Como estas")
         const interpretedText = processSynonyms(originalText);
 
-        // ESTADOS DE FEEDBACK (Si estamos esperando corrección)
+        // MANEJO DE ESTADOS (FEEDBACK)
         if (chatState.mode === 'waiting_feedback') { handleFeedback(interpretedText, originalText); return; }
         if (chatState.mode === 'waiting_correction') { handleCorrection(originalText); return; }
 
         let aiResponse = "";
 
-        // A) BÚSQUEDA EN MEMORIA (Usando el texto traducido)
+        // --- NIVEL 1: BÚSQUEDA EXACTA EN MEMORIA (FIREBASE) ---
         let bestMatch = null;
         let maxScore = 0;
-
         brain.memory.forEach(mem => {
             mem.inputs.forEach(key => {
                 const memKey = processSynonyms(key); 
-                // Coincidencia exacta o parcial fuerte en texto traducido
                 if (memKey === interpretedText) {
                     maxScore = 1.0; bestMatch = mem;
                 } else if (memKey.includes(interpretedText) && interpretedText.length > 3) {
@@ -363,94 +359,163 @@
             });
         });
 
-        // Si encontramos algo seguro en memoria
         if (maxScore >= 0.8) {
-            aiResponse = bestMatch.output;
+            finishResponse(originalText, bestMatch.output);
+            return;
+        }
+
+        // --- NIVEL 2: BÚSQUEDA DE FRASE COMPLETA EN WEB (WIKIPEDIA) ---
+        appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> Analizando contexto global...`);
+        
+        // El API más seguro para frases completas es Wikipedia (el primer intento en fetchExternalData)
+        const phraseSearch = await fetchExternalData(interpretedText);
+        
+        if (phraseSearch) {
+            const box = document.getElementById('chat-box');
+            if(box.lastChild.innerHTML.includes("fa-spin")) box.removeChild(box.lastChild);
+            
+            aiResponse = `<strong>Sobre "${originalText}":</strong><br>${phraseSearch.def}<br><span style="font-size:0.7rem; color:#888;">Fuente: ${phraseSearch.src}</span><br><br><em>¿Era esto lo que buscabas? (Si/No)</em>`;
+            chatState = { mode: 'waiting_feedback', lastQuery: originalText };
             finishResponse(originalText, aiResponse);
             return;
         }
 
-        // B) ANÁLISIS POR PALABRAS + WIKIPEDIA (FALLBACK)
+        // --- NIVEL 3: DESMENUZADO Y SÍNTESIS (MULTIPALABRA) ---
         const words = interpretedText.split(/\s+/).filter(w => !stopWords.has(w) && w.length > 2);
         
         if (words.length > 0) {
-            appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> Analizando: ${words.join(", ")}...`);
+            // Actualizamos mensaje de carga
+            const box = document.getElementById('chat-box');
+            if(box.lastChild.innerHTML.includes("fa-spin")) box.lastChild.innerHTML = `<div class="msg-bubble"><i class="fas fa-microchip"></i> Desmenuzando términos: ${words.join(", ")}...</div>`;
+
             let synthesis = [];
             
+            // BUSCAMOS CADA PALABRA (Memoria -> Web)
             for (let word of words) {
                 let definition = null;
-                let source = "Desconocido";
+                let source = "";
 
-                // Buscar en Diccionario Interno
+                // A. Memoria Local (Diccionario Firebase)
                 try {
                     const dictSnap = await getDoc(doc(db, "dictionary", word));
                     if (dictSnap.exists()) { definition = dictSnap.data().def; source = "Memoria"; }
                 } catch(e) {}
 
-                // Buscar en Wikipedia (si falla diccionario)
+                // B. Web Externa (Si falla la memoria)
                 if (!definition) {
-                    const wikiDef = await fetchWikipediaDef(word);
-                    if (wikiDef) { definition = wikiDef; source = "Web"; }
+                    const extData = await fetchExternalData(word);
+                    if (extData) { definition = extData.def; source = "WEB"; }
                 }
 
+                // Guardamos el hallazgo
                 if (definition) {
                     synthesis.push({ word: word, def: definition, src: source });
                 }
             }
 
+            // CONSTRUCCIÓN DE LA RESPUESTA UNIDA
             if (synthesis.length > 0) {
-                aiResponse = "<strong>Información encontrada:</strong><br><br>";
-                synthesis.forEach(item => {
-                    aiResponse += `<div class="word-definition"><strong>${item.word.toUpperCase()}:</strong> ${item.def} <span class="word-source">(${item.src})</span></div>`;
-                });
-                aiResponse += `<br><em>¿Es correcta esta respuesta? (Si/No)</em>`;
+                if(box.lastChild.innerHTML.includes("Desmenuzando")) box.removeChild(box.lastChild);
+
+                if (synthesis.length === 1 && synthesis[0].src !== "Memoria") {
+                    // Si solo encontró una palabra y no es de memoria, la muestra simple
+                    aiResponse = `Encontré información sobre <strong>${synthesis[0].word}</strong>:<br>${synthesis[0].def}`;
+                } else {
+                    // Encontró varias o es de memoria -> Respuesta Lógica Unida
+                    aiResponse = `<strong>Analizando tu frase palabra por palabra encontré esto:</strong><br><br>`;
+                    synthesis.forEach(item => {
+                        aiResponse += `<div class="word-definition" style="margin-bottom:12px;">
+                            <i class="fas fa-arrow-right" style="color:var(--accent); font-size:0.8rem;"></i> 
+                            <strong>${item.word.toUpperCase()}:</strong> ${item.def}
+                            <span class="word-source">(${item.src})</span>
+                        </div>`;
+                    });
+                    aiResponse += `<br><em>Uniendo estos conceptos... ¿Responde esto a tu duda? (Si/No)</em>`;
+                }
+                
                 chatState = { mode: 'waiting_feedback', lastQuery: originalText };
-                
-                // Borrar loader
-                const box = document.getElementById('chat-box');
-                if(box.lastChild.innerHTML.includes("fa-spin")) box.removeChild(box.lastChild);
-                
                 finishResponse(originalText, aiResponse);
                 return;
             }
         }
 
-        // C) SI NO ENTIENDE NADA
+        // --- NIVEL 4: RENDICIÓN (NO ENCONTRÓ NADA) ---
         const box = document.getElementById('chat-box');
-        if(box.lastChild && box.lastChild.innerHTML.includes("fa-spin")) box.removeChild(box.lastChild);
+        if(box.lastChild && (box.lastChild.innerHTML.includes("fa-spin") || box.lastChild.innerHTML.includes("Desmenuzando"))) box.removeChild(box.lastChild);
 
-        aiResponse = "No entendí tu expresión ni encontré datos. ¿Qué debo responder a eso?";
-        chatState = { mode: 'waiting_correction', lastQuery: originalText }; // Aprenderá la frase ORIGINAL
-        finishResponse(originalText, aiResponse);
+        finishResponse(originalText, "No logré encontrar información completa ni desmenuzada. ¿Te gustaría enseñarme la respuesta correcta?");
+        chatState = { mode: 'waiting_correction', lastQuery: originalText }; 
     }
 
-    // 8. FUNCIONES AUXILIARES
-    async function fetchWikipediaDef(term) {
+    // --- 8. MEGA-BUSCADOR DE APIS EXTERNAS ---
+    async function fetchExternalData(term) {
+        const encoded = encodeURIComponent(term);
+
+        // 1. Wikipedia (Para frases o conceptos amplios)
         try {
-            const url = `https://es.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(term)}&format=json&origin=*`;
-            const resp = await fetch(url);
-            const data = await resp.json();
-            if (data.query && data.query.search && data.query.search.length > 0) {
-                let snippet = data.query.search[0].snippet.replace(/<[^>]+>/g, "");
-                // CORTAR en punto o coma
-                const parts = snippet.split(/[.,]/);
-                if (parts.length > 0 && parts[0].length > 15) return parts[0]; 
-                return snippet;
+            const wikiResp = await fetch(`https://es.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encoded}&format=json&origin=*`);
+            const wikiData = await wikiResp.json();
+            if (wikiData.query && wikiData.query.search && wikiData.query.search.length > 0) {
+                let snippet = wikiData.query.search[0].snippet.replace(/<[^>]+>/g, "");
+                if (!snippet.includes("puede referirse a") && !snippet.includes("Wikipedia no tiene")) {
+                    const parts = snippet.split(". "); 
+                    const def = (parts.length > 0 && parts[0].length > 15) ? parts[0] + "." : snippet;
+                    return { def: def, src: "Wikipedia/WEB" };
+                }
             }
-        } catch(e) { console.error(e); }
+        } catch(e) {}
+
+        // 2. Diccionario (Para palabras simples)
+        if (!term.includes(" ")) { 
+            try {
+                const dictResp = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/es/${encoded}`);
+                if (dictResp.ok) {
+                    const data = await dictResp.json();
+                    if (data.length > 0 && data[0].meanings.length > 0) {
+                        return { def: data[0].meanings[0].definitions[0].definition, src: "Diccionario/WEB" };
+                    }
+                }
+            } catch (e) {}
+        }
+
+        // 3. Open-Meteo (Clima)
+        try {
+            const geoResp = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encoded}&count=1&language=es&format=json`);
+            const geoData = await geoResp.json();
+            if (geoData.results && geoData.results.length > 0) {
+                const place = geoData.results[0];
+                const weatherResp = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&current_weather=true`);
+                const weatherData = await weatherResp.json();
+                if (weatherData.current_weather) {
+                    return { def: `Clima actual en ${place.name}: ${weatherData.current_weather.temperature}°C, Viento: ${weatherData.current_weather.windspeed} km/h`, src: "Meteo/WEB" };
+                }
+            }
+        } catch(e) {}
+
+        // 4. Open Library (Libros)
+        try {
+            const bookResp = await fetch(`https://openlibrary.org/search.json?q=${encoded}&limit=1&fields=title,author_name,first_publish_year`);
+            const bookData = await bookResp.json();
+            if (bookData.docs && bookData.docs.length > 0) {
+                const book = bookData.docs[0];
+                const author = book.author_name ? book.author_name[0] : "Autor desconocido";
+                return { def: `Libro: "${book.title}", Autor: ${author} (${book.first_publish_year})`, src: "Biblioteca/WEB" };
+            }
+        } catch(e) {}
+        
         return null;
     }
 
+    // FUNCIONES UI Y AUXILIARES
     function handleFeedback(normInput, originalInput) {
         if (normInput === 'si' || normInput === 'claro' || normInput === 'simon') {
-            finishResponse(originalInput, "¡Excelente!");
+            finishResponse(originalInput, "¡Excelente! He aprendido esa conexión.");
             chatState = { mode: 'normal' };
         } else {
-            finishResponse(originalInput, "Entiendo. ¿Cuál debería ser la respuesta correcta?");
+            finishResponse(originalInput, "Entiendo. ¿Cuál sería la respuesta correcta completa?");
             chatState = { mode: 'waiting_correction', lastQuery: chatState.lastQuery };
         }
     }
-
     async function handleCorrection(correction) {
         const userName = currentUser ? currentUser.name : "Invitado";
         if(db) {
@@ -458,16 +523,24 @@
                 reviewQueue: arrayUnion({ q: chatState.lastQuery, a: correction, user: userName, date: new Date().toISOString() }) 
             });
         }
-        finishResponse(correction, "¡Gracias! He guardado tu enseñanza para revisarla.");
+        finishResponse(correction, "¡Gracias! Tu corrección ha sido enviada a revisión.");
         chatState = { mode: 'normal' };
     }
-
     function finishResponse(userTxt, aiTxt) {
         appendMsg('ai', aiTxt);
         saveLocalChat(userTxt, aiTxt);
     }
-
-    // UI & LOCAL STORAGE
+    function appendMsg(role, text) {
+        const box = document.getElementById('chat-box');
+        const row = document.createElement('div');
+        row.className = `msg-row ${role}-row`;
+        const icon = role === 'ai' ? `<div class="msg-icon"><i class="fas fa-robot"></i></div>` : '';
+        row.innerHTML = `${icon}<div class="msg-bubble">${text}</div>`;
+        if(box.querySelector('h2')) box.innerHTML = '';
+        box.appendChild(row);
+        setTimeout(() => box.scrollTop = box.scrollHeight, 100);
+    }
+    // GESTIÓN DE ESTADO Y LOCALSTORAGE (MANTENER IGUAL)
     function getLocalKey() { return `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`; }
     function saveLocalChat(uMsg, aiMsg) {
         const key = getLocalKey();
@@ -527,16 +600,6 @@
         document.getElementById('chat-box').innerHTML = `<div style="text-align:center; margin-top:80px; opacity:0.7; animation:fadeIn 1s;"><div style="width:80px; height:80px; background:linear-gradient(135deg, var(--accent), #ec4899); border-radius:50%; margin:0 auto 25px auto; display:flex; align-items:center; justify-content:center; box-shadow:0 0 40px var(--accent-glow);"><i class="fas fa-robot" style="font-size:40px; color:white;"></i></div><h2 style="font-weight:500;">¿En qué puedo ayudarte?</h2></div>`;
         renderLocalHistory();
         if(window.innerWidth < 800) toggleSidebar();
-    }
-    function appendMsg(role, text) {
-        const box = document.getElementById('chat-box');
-        const row = document.createElement('div');
-        row.className = `msg-row ${role}-row`;
-        const icon = role === 'ai' ? `<div class="msg-icon"><i class="fas fa-robot"></i></div>` : '';
-        row.innerHTML = `${icon}<div class="msg-bubble">${text}</div>`;
-        if(box.querySelector('h2')) box.innerHTML = '';
-        box.appendChild(row);
-        setTimeout(() => box.scrollTop = box.scrollHeight, 100);
     }
     function updateUserUI(u) {
         const adminBtn = document.getElementById('admin-menu-container');
