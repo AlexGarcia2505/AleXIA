@@ -87,7 +87,6 @@
 
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-<!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <span style="font-weight:bold; font-size:1.1rem; display:flex; align-items:center; gap:10px;"><i class="fas fa-brain" style="color:var(--accent)"></i> AleXIA</span>
@@ -105,7 +104,6 @@
     </div>
 </div>
 
-<!-- MAIN -->
 <div class="main-content">
     <div class="top-bar">
         <button class="menu-btn toggle-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
@@ -122,9 +120,7 @@
     </div>
 
     <div class="input-container">
-        <!-- FORMULARIOS AISLADOS (Hack para evitar autocompletado) -->
         <div class="input-wrapper">
-            <!-- Usamos name aleatorio y autocomplete off -->
             <input type="text" id="chat-input" class="chat-input" 
                    placeholder="Pregunta algo..." autocomplete="off" 
                    name="search_query_alexia_v34" role="search">
@@ -134,7 +130,6 @@
     </div>
 </div>
 
-<!-- MODAL LOGIN (ENCAPSULADO EN FORM PARA AISLAR CREDENCIALES) -->
 <div id="auth-modal" class="modal">
     <div class="card">
         <div style="text-align:center; margin-bottom:15px;">
@@ -147,14 +142,12 @@
             <button class="tab-btn" onclick="showAuth('register')" id="tab-register">Registrarse</button>
         </div>
 
-        <!-- Formulario de Login (Encapsulado) -->
         <form id="section-login" onsubmit="emailLogin(); return false;">
             <input type="email" id="l-email" class="field" placeholder="Correo electrónico" autocomplete="username" required>
             <input type="password" id="l-pass" class="field" placeholder="Contraseña" autocomplete="current-password" required>
             <button type="submit" class="btn-full btn-primary">Iniciar Sesión</button>
         </form>
 
-        <!-- Formulario de Registro (Encapsulado) -->
         <form id="section-register" style="display:none;" onsubmit="emailRegister(); return false;">
             <input type="email" id="r-email" class="field" placeholder="Tu Correo Real" autocomplete="username" required>
             <input type="password" id="r-pass" class="field" placeholder="Crea una Contraseña" autocomplete="new-password" required>
@@ -183,7 +176,6 @@
     </div>
 </div>
 
-<!-- ADMIN DASHBOARD -->
 <div id="admin-dash" class="modal">
     <div class="card" style="max-width:600px; width:95%; max-height:80vh; overflow:hidden; display:flex; flex-direction:column;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -203,26 +195,40 @@
 </div>
 
 <script type="module">
+    // 1. IMPORTACIONES (AGREGADO APP CHECK)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app-check.js";
     import { getFirestore, doc, onSnapshot, setDoc, updateDoc, arrayUnion, arrayRemove, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
     // -----------------------------------------------------------
-    //  ⚠️ ¡PEGA AQUÍ TUS LLAVES DE FIREBASE!
+    //  ⚠️ TUS LLAVES DE FIREBASE (NO TOCAR)
     // -----------------------------------------------------------
     const firebaseConfig = {
         apiKey: "AIzaSyAeNVoB1ZasZSauIf6G7GbIa4bbJJ3_5cw",
-  authDomain: "alexia-1c4f2.firebaseapp.com",
-  projectId: "alexia-1c4f2",
-  storageBucket: "alexia-1c4f2.firebasestorage.app",
-  messagingSenderId: "483778313354",
-  appId: "1:483778313354:web:c28c9da35d5674b174c173"
+        authDomain: "alexia-1c4f2.firebaseapp.com",
+        projectId: "alexia-1c4f2",
+        storageBucket: "alexia-1c4f2.firebasestorage.app",
+        messagingSenderId: "483778313354",
+        appId: "1:483778313354:web:c28c9da35d5674b174c173"
     };
     // -----------------------------------------------------------
 
     let app, db, auth, provider;
     try {
         app = initializeApp(firebaseConfig);
+        
+        // -----------------------------------------------------------
+        // 🛡️ 2. ACTIVAR APP CHECK (RECAPTCHA)
+        // -----------------------------------------------------------
+        // IMPORTANTE: REEMPLAZA EL TEXTO DE ABAJO CON TU "CLAVE DE SITIO" (PÚBLICA) DE GOOGLE RECAPTCHA
+        const appCheck = initializeAppCheck(app, {
+            provider: new ReCaptchaV3Provider('6LdzoRssAAAAAP7-cYQQiGv_bM9TKCb4BINojkYM'),
+            isTokenAutoRefreshEnabled: true
+        });
+        console.log("App Check activado con éxito 🛡️");
+        // -----------------------------------------------------------
+
         db = getFirestore(app);
         auth = getAuth(app);
         provider = new GoogleAuthProvider();
@@ -504,5 +510,3 @@
 </script>
 </body>
 </html>
-
-
