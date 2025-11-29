@@ -230,9 +230,8 @@
 <script type="module">
     // 1. IMPORTACIONES FIREBASE
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-    import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app-check.js";
     import { getFirestore, doc, onSnapshot, setDoc, updateDoc, arrayUnion, arrayRemove, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
     // 2. CONFIGURACIÓN FIREBASE
     const firebaseConfig = {
@@ -247,10 +246,6 @@
     let app, db, auth, provider;
     try {
         app = initializeApp(firebaseConfig);
-        const appCheck = initializeAppCheck(app, {
-            provider: new ReCaptchaV3Provider('6LdzoRssAAAAAP7-cYQQiGv_bM9TKCb4BINojkYM'),
-            isTokenAutoRefreshEnabled: true
-        });
         db = getFirestore(app);
         auth = getAuth(app);
         provider = new GoogleAuthProvider();
@@ -261,8 +256,8 @@
     let brain = { memory: [], reviewQueue: [], missingLog: [] };
     const ADMIN_EMAIL = "eljacksonyt@gmail.com";
     let currentChatId = null;
-    // Modos: 'normal', 'waiting_feedback', 'waiting_correction', 'waiting_city'
-    let chatState = { mode: 'normal', lastQuery: '', constructedAnswer: '' }; 
+    // Modos: 'normal', 'waiting_feedback', 'waiting_correction', 'waiting_city', 'waiting_continuation'
+    let chatState = { mode: 'normal', lastQuery: '', constructedAnswer: '', continuationText: '', continuationURL: '' }; 
     let lastSuggestions = []; 
 
     // --- 4. DICCIONARIO DE SINÓNIMOS Y JERGA ---
@@ -357,8 +352,7 @@
             if (lastSuggestions[idx]) {
                 const suggestedQuery = lastSuggestions[idx].query;
                 input.value = suggestedQuery;
-                // CRUCIAL: Reinicia el estado antes de la recursión para que se procese como una consulta nueva
-                chatState.mode = 'normal';
+                chatState.mode = 'normal'; 
                 await sendMessage(); 
                 return;
             }
@@ -368,13 +362,35 @@
         appendMsg('user', originalText); 
 
         const interpretedText = processSynonyms(originalText);
-        const words = interpretedText.split(/\s+/).filter(w => !stopWords.has(w) && w.length > 2); // Palabras clave
+        const words = interpretedText.split(/\s+/).filter(w => !stopWords.has(w) && w.length > 2);
 
-        // --- 1. Manejo de Estados (Clima/Feedback/Corrección) ---
-        if (chatState.mode === 'waiting_city') {
-            await handleWeatherQuery(originalText);
+        // --- 1. Manejo de Estados (Continuation/Clima/Feedback/Correction) ---
+        if (chatState.mode === 'waiting_continuation') {
+            // FIX: Si el usuario quiere continuar
+            if (normInput === 'si' || normInput === 'sí' || normInput === 'claro') {
+                const continuation = chatState.continuationText;
+                const sourceURL = chatState.continuationURL;
+                
+                // Truncamiento de la continuación
+                const { finalResponse, continuationText } = checkTruncation(continuation, 500); 
+
+                chatState.continuationText = continuationText;
+                chatState.mode = continuationText ? 'waiting_continuation' : 'normal';
+
+                // Añadir el enlace al final de la respuesta final
+                const finalOutput = finalResponse + `<br><br><a href="${sourceURL}" target="_blank" style="color:var(--accent); text-decoration:underline;">Ver artículo completo</a>`;
+
+                finishResponse(originalText, finalOutput, true); 
+            } else {
+                 // FIX: Si no es 'Si', asume nueva consulta
+                 finishResponse(originalText, "Entendido. Procesando tu respuesta como una nueva consulta.", true);
+                 chatState.mode = 'normal';
+                 chatState.continuationText = '';
+            }
             return;
         }
+
+        if (chatState.mode === 'waiting_city') { await handleWeatherQuery(originalText); return; }
         if (chatState.mode === 'waiting_feedback') { handleFeedback(interpretedText, originalText); return; }
         if (chatState.mode === 'waiting_correction') { handleCorrection(originalText); return; }
         
@@ -388,21 +404,42 @@
                 chatState = { mode: 'waiting_city', lastQuery: originalText };
                 finishResponse(originalText, aiResponse, false);
                 return;
-            } else if (intentResult.action === 'execute_search') {
+            } 
+            else if (intentResult.action === 'execute_search') {
                 appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> Consultando ${intentResult.source}...`);
-                const searchData = await fetchExternalData(intentResult.query, intentResult.source);
                 
-                if (searchData) {
+                // 2.1 Ejecutar búsqueda primaria (Clima o Libro)
+                const primarySearchData = await fetchExternalData(intentResult.query, intentResult.source);
+                
+                // 2.2 Ejecutar búsqueda secundaria (Definición general del concepto)
+                const mainConcept = intentResult.source.includes('Meteo') ? 'clima' : 'libro';
+                const secondarySearchData = await fetchExternalData(mainConcept, 'Wikipedia/WEB');
+                
+                if (primarySearchData) {
+                    let aiResponse = `<strong>Sobre "${originalText}":</strong><br>${primarySearchData.def}<br><span style="font-size:0.7rem; color:#888;">Fuente: ${primarySearchData.src}</span>`;
+                    
+                    if (secondarySearchData) {
+                        aiResponse += `<br><hr style="border-color:#333; margin:10px 0;">`;
+                        aiResponse += `*Definición General de ${mainConcept}:* ${secondarySearchData.def}`;
+                    }
+
+                    // Truncamiento
+                    const { finalResponse, continuationText } = checkTruncation(aiResponse, 500);
+
+                    if (continuationText) {
+                        chatState = { mode: 'waiting_continuation', lastQuery: originalText, continuationText: continuationText, continuationURL: primarySearchData.url };
+                    } else {
+                        chatState = { mode: 'waiting_feedback', lastQuery: originalText };
+                    }
+                    
                     const box = document.getElementById('chat-box');
                     if(box.lastChild.innerHTML.includes("fa-spin")) box.removeChild(box.lastChild);
-                    
-                    const aiResponse = `<strong>Sobre "${originalText}":</strong><br>${searchData.def}<br><span style="font-size:0.7rem; color:#888;">Fuente: ${searchData.src}</span><br><br><em>¿Era esto lo que buscabas? (Si/No)</em>`;
-                    chatState = { mode: 'waiting_feedback', lastQuery: originalText };
-                    finishResponse(originalText, aiResponse, true); 
+
+                    finishResponse(originalText, finalResponse, true); 
                     return;
                 }
             }
-        } // Fin checkIntent
+        } 
 
         // --- 3. NIVEL 1: BÚSQUEDA EXACTA EN MEMORIA (FIREBASE) ---
         let bestMatch = null;
@@ -448,8 +485,18 @@
             
             aiResponse += `<br><em>Uniendo estos conceptos... ¿Responde esto a tu duda? (Si/No)</em>`;
             
-            chatState = { mode: 'waiting_feedback', lastQuery: originalText };
-            finishResponse(originalText, aiResponse, true);
+            // Truncamiento
+            const { finalResponse, continuationText } = checkTruncation(aiResponse, 500);
+
+            if (continuationText) {
+                // Aquí usamos una URL genérica de Google Search para el desmenuzado
+                const genericURL = `https://www.google.com/search?q=${encodeURIComponent(originalText)}`;
+                chatState = { mode: 'waiting_continuation', lastQuery: originalText, continuationText: continuationText, continuationURL: genericURL };
+            } else {
+                chatState = { mode: 'waiting_feedback', lastQuery: originalText };
+            }
+
+            finishResponse(originalText, finalResponse, true);
             return;
         }
 
@@ -468,22 +515,17 @@
         const isBookQuery = interpretedText.includes("libro") || interpretedText.includes("autor") || interpretedText.includes("escribio");
 
         if (isWeatherQuery) {
-            // Filtra 'clima'/'tiempo' y el resto son posibles ubicaciones
             const locationWords = words.filter(w => w !== 'clima' && w !== 'tiempo' && w.length > 1); 
             
             if (locationWords.length >= 1) {
-                // Ubicación provista (e.g., "clima Ciudad de Mexico")
                 const locationQuery = locationWords.join(' ');
-                // Ejecuta la búsqueda de clima directamente, saltando memoria y wiki
                 return { action: 'execute_search', source: 'Meteo/WEB', query: locationQuery };
             } else {
-                // Ubicación faltante (e.g., "cómo está el clima")
                 return { action: 'ask_city' };
             }
         }
 
         if (isBookQuery) {
-            // Si hay 'libro'/'autor', el resto es el query del libro
             const bookQueryWords = words.filter(w => w !== 'libro' && w !== 'autor' && w !== 'escribio');
             const bookQuery = bookQueryWords.join(' ');
 
@@ -492,24 +534,37 @@
             }
         }
 
-        return null; // No strong intent detected
+        return null;
     }
 
-    // FUNCIÓN PARA PROCESAR CIUDAD DESPUÉS DEL PROMPT
     async function handleWeatherQuery(cityName) {
         const weatherData = await fetchExternalData(cityName, 'Meteo/WEB'); 
         const today = getTodayDate();
 
         if (weatherData && weatherData.src === "Meteo/WEB") {
-            const finalResponse = `El pronóstico para **${cityName}** hoy ${today} es:<br>${weatherData.def}`;
+            let aiResponse = `El pronóstico para **${cityName}** hoy ${today} es:<br>${weatherData.def}`;
+            
+            const secondarySearchData = await fetchExternalData('clima', 'Wikipedia/WEB'); 
+            if (secondarySearchData) {
+                aiResponse += `<br><hr style="border-color:#333; margin:10px 0;">`;
+                aiResponse += `*Definición General de Clima:* ${secondarySearchData.def}`;
+            }
+
+            const { finalResponse, continuationText } = checkTruncation(aiResponse, 500);
+
+            if (continuationText) {
+                chatState = { mode: 'waiting_continuation', lastQuery: cityName, continuationText: continuationText, continuationURL: weatherData.url };
+            } else {
+                chatState = { mode: 'normal', lastQuery: '' };
+            }
+
             finishResponse(cityName, finalResponse, true);
         } else {
-            finishResponse(cityName, `Disculpa, no pude encontrar el pronóstico para **${cityName}** (Asegúrate de escribir bien la ciudad). ¿Probamos con otra ciudad o tema?`, true);
+            finishResponse(cityName, `Disculpa, no pude encontrar el pronóstico para **${cityName}**. ¿Probamos con otra ciudad o tema?`, true);
+            chatState = { mode: 'normal', lastQuery: '' };
         }
-        chatState = { mode: 'normal', lastQuery: '' };
     }
 
-    // FUNCIÓN PARA DESMENUZAR PALABRA POR PALABRA (NIVEL 3)
     async function runWordDecomposition(interpretedText, words) {
         let synthesis = [];
         for (let word of words) {
@@ -522,9 +577,8 @@
                 if (dictSnap.exists()) { definition = dictSnap.data().def; source = "Memoria"; }
             } catch(e) {}
 
-            // B. Web Externa (Si falla la memoria)
+            // B. Web Externa (Solo Wiki/Diccionario)
             if (!definition) {
-                // Aquí solo usamos Wikipedia o Diccionario para evitar respuestas de clima/libros que no son relevantes para el desmenuzado
                 const extData = await fetchExternalData(word, 'Wikipedia/WEB'); 
                 if (extData) { definition = extData.def; source = "WEB"; }
             }
@@ -536,46 +590,45 @@
         return synthesis;
     }
 
-    // --- 11. MEGA-BUSCADOR DE APIS EXTERNAS (4 CAPAS) ---
-    // El parámetro forceSource ahora acepta el tipo de fuente (ej: 'Meteo/WEB', 'Wikipedia/WEB')
+    // --- 11. MEGA-BUSCADOR DE APIS EXTERNAS ---
     async function fetchExternalData(term, forceSource = 'Wikipedia/WEB') {
         const encoded = encodeURIComponent(term);
+        let url = '';
 
-        // Si estamos forzando una API específica (Clima o Libros)
+        // 1. Lógica de APIs Específicas (Meteo o Biblioteca)
         if (forceSource === 'Meteo/WEB') {
-            // Lógica de Open-Meteo
             try {
                 const geoResp = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encoded}&count=1&language=es&format=json`);
                 const geoData = await geoResp.json();
                 if (geoData.results && geoData.results.length > 0) {
                     const place = geoData.results[0];
+                    url = `https://www.google.com/maps/search/?api=1&query=${place.name}`; // Enlace a Google Maps
                     const weatherResp = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&current_weather=true`);
                     const weatherData = await weatherResp.json();
                     if (weatherData.current_weather) {
-                        return { def: `Clima en ${place.name}: ${weatherData.current_weather.temperature}°C, Viento: ${weatherData.current_weather.windspeed} km/h`, src: "Meteo/WEB" };
+                        return { def: `Clima en ${place.name}: ${weatherData.current_weather.temperature}°C, Viento: ${weatherData.current_weather.windspeed} km/h`, src: "Meteo/WEB", url: url };
                     }
                 }
             } catch(e) {}
             return null;
         }
-
         if (forceSource === 'Biblioteca/WEB') {
-            // Lógica de Open Library
              try {
                 const bookResp = await fetch(`https://openlibrary.org/search.json?q=${encoded}&limit=1&fields=title,author_name,first_publish_year`);
                 const bookData = await bookResp.json();
                 if (bookData.docs && bookData.docs.length > 0) {
                     const book = bookData.docs[0];
                     const author = book.author_name ? book.author_name[0] : "Autor desconocido";
-                    return { def: `Libro: "${book.title}", Autor: ${author} (${book.first_publish_year})`, src: "Biblioteca/WEB" };
+                    url = `https://openlibrary.org/search?q=${encoded}`;
+                    return { def: `Libro: "${book.title}", Autor: ${author} (${book.first_publish_year})`, src: "Biblioteca/WEB", url: url };
                 }
             } catch(e) {}
             return null;
         }
         
-        // Búsqueda General (para Nivel 2, 3)
+        // 2. Búsqueda General (Wiki/Diccionario)
         
-        // 1. Wikipedia (si es frase)
+        // Wikipedia
         try {
             const wikiResp = await fetch(`https://es.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encoded}&format=json&origin=*`);
             const wikiData = await wikiResp.json();
@@ -584,19 +637,21 @@
                 if (!snippet.includes("puede referirse a") && !snippet.includes("Wikipedia no tiene")) {
                     const parts = snippet.split(". "); 
                     const def = (parts.length > 0 && parts[0].length > 15) ? parts[0] + "." : snippet;
-                    return { def: def, src: "Wikipedia/WEB" };
+                    url = `https://es.wikipedia.org/?curid=${wikiData.query.search[0].pageid}`;
+                    return { def: def, src: "Wikipedia/WEB", url: url };
                 }
             }
         } catch(e) {}
 
-        // 2. Diccionario (si es palabra)
+        // Diccionario
         if (!term.includes(" ")) { 
             try {
                 const dictResp = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/es/${encoded}`);
                 if (dictResp.ok) {
                     const data = await dictResp.json();
                     if (data.length > 0 && data[0].meanings.length > 0) {
-                        return { def: data[0].meanings[0].definitions[0].definition, src: "Diccionario/WEB" };
+                        url = `https://www.google.com/search?q=definicion+${encoded}`;
+                        return { def: data[0].meanings[0].definitions[0].definition, src: "Diccionario/WEB", url: url };
                     }
                 }
             } catch (e) {}
@@ -605,42 +660,24 @@
         return null;
     }
 
+    // --- 12. SISTEMA DE TRUNCAMIENTO Y FEEDBACK ---
+    
+    function checkTruncation(text, maxLength) {
+        if (text.length > maxLength) {
+            let splitIndex = text.lastIndexOf('.', maxLength);
+            if (splitIndex === -1 || splitIndex < maxLength * 0.9) {
+                 splitIndex = maxLength; 
+            }
+            
+            const truncated = text.substring(0, splitIndex + 1);
+            const continuation = text.substring(splitIndex + 1).trim();
 
-    // --- 12. FUNCIONES DE ESTADO Y FEEDBACK ---
-    function handleFeedback(normInput, originalInput) {
-        const isAffirmative = normInput === 'si' || normInput === 'sí' || normInput === 'claro' || normInput === 'simon';
-        const isNegative = normInput === 'no' || normInput === 'nop' || normInput === 'incorrecto';
-
-        if (isAffirmative) {
-            const synonyms = contextualReplies["si"];
-            const response = synonyms[Math.floor(Math.random() * synonyms.length)];
-            finishResponse(originalInput, response, true);
-            chatState = { mode: 'normal' };
-        } 
-        else if (isNegative) {
-            const synonyms = contextualReplies["no"];
-            const response = synonyms[Math.floor(Math.random() * synonyms.length)];
-            finishResponse(originalInput, response, false);
-            chatState = { mode: 'waiting_correction', lastQuery: chatState.lastQuery };
+            return { 
+                finalResponse: truncated + '... <br><br><span style="color:var(--accent);">¿Quieres que siga mostrando la información? (Si/No)</span>',
+                continuationText: continuation
+            };
         }
-        else {
-            // 🔥 FIX Q2: Si no es Si/No, vuelve a modo normal y trata el input como una nueva pregunta.
-            finishResponse(originalInput, "Entendido. Procesando tu respuesta como una nueva consulta.", true);
-            chatState = { mode: 'normal' };
-            // Ejecuta la consulta original como si fuera una nueva pregunta
-            document.getElementById('chat-input').value = originalInput;
-            sendMessage();
-        }
-    }
-    async function handleCorrection(correction) {
-        const userName = currentUser ? currentUser.name : "Invitado";
-        if(db) {
-            await updateDoc(doc(db, "alexia_db", "main_brain"), { 
-                reviewQueue: arrayUnion({ q: chatState.lastQuery, a: correction, user: userName, date: new Date().toISOString() }) 
-            });
-        }
-        finishResponse(correction, "¡Gracias! Tu corrección ha sido enviada a revisión.", true);
-        chatState = { mode: 'normal' };
+        return { finalResponse: text, continuationText: null };
     }
 
     // FUNCIONES UI Y LOCAL STORAGE
@@ -655,6 +692,7 @@
             appendMsg('ai', suggestionsHTML);
         }
     }
+    
     function generateSuggestions() {
         const history = getUserQueryHistory();
         lastSuggestions = []; 
@@ -701,8 +739,6 @@
         localStorage.setItem(key, JSON.stringify(history));
     }
     function getUserQueryHistory() { const key = getHistoryKey(); return JSON.parse(localStorage.getItem(key)) || []; }
-
-    // GESTIÓN DE ESTADO Y LOCALSTORAGE (MANTENER IGUAL)
     function appendMsg(role, text) {
         const box = document.getElementById('chat-box');
         const row = document.createElement('div');
