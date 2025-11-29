@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V45 - Diseño Blindado</title>
+    <title>AleXIA V46 - Texto Puro</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -84,31 +84,33 @@
             position: relative; 
             display: flex;
             flex-direction: column; 
-            min-width: 0; /* Evita desbordes flex */
+            width: 100%; /* Asegurar ancho */
+            overflow: hidden; /* Cortar cualquier cosa que flote fuera */
         }
         
-        /* CONTENIDO RICO - PROTEGIDO DE DESBORDAMIENTO */
+        /* CONTENIDO RICO - "TEXTO PURO" */
         .rich-content {
             max-height: 24rem; 
             overflow-y: auto; 
             padding-right: 5px; 
             margin-bottom: 15px;
             width: 100%;
-            /* Forzar ruptura de palabras largas */
-            overflow-wrap: break-word;
-            word-wrap: break-word;
-            word-break: break-word;
+            display: block;
+            text-align: left;
         }
         .rich-content::-webkit-scrollbar { width: 6px; }
         .rich-content::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
         .rich-content::-webkit-scrollbar-track { background: transparent; }
-        .rich-content p { margin-bottom: 15px; text-align: justify; }
-
-        /* REGLA NUCLEAR: Ocultar cualquier tabla o imagen que se escape */
-        .rich-content table, .rich-content img, .rich-content .infobox, .rich-content .sidebar { 
-            display: none !important; 
-        }
         
+        /* Esto fuerza a que los párrafos sean bloques simples */
+        .rich-content p { 
+            display: block;
+            margin-bottom: 15px; 
+            text-align: left; 
+            width: 100%;
+            clear: both;
+        }
+
         /* ENLACE DE FUENTE - ASEGURADO */
         .rich-source { 
             display: block; 
@@ -118,8 +120,7 @@
             border-top: 1px solid #333; 
             font-size: 0.9rem; 
             color: var(--accent);
-            clear: both; /* Limpiar flotantes */
-            position: relative; /* Posicionamiento seguro */
+            clear: both; 
         }
         .rich-source a { 
             color: var(--accent); 
@@ -508,7 +509,6 @@
                             def: `<p>Actualmente en <b>${place.name}, ${place.country}</b>, la temperatura es de <b>${weatherData.current_weather.temperature}°C</b>.</p>
                                   <p>La velocidad del viento es de ${weatherData.current_weather.windspeed} km/h.</p>`, 
                             src: "Meteo/WEB", 
-                            // Corrección URL del mapa
                             url: `https://www.google.com/maps?q=${place.latitude},${place.longitude}` 
                         };
                     }
@@ -552,28 +552,41 @@
                 const title = searchData[1][0];
                 const cleanTitle = encodeURIComponent(title);
                 
+                // NOTA: Usamos explaintext=1 para pedir texto, pero aun así Wikipedia manda cosas raras.
+                // Por eso abajo filtramos manualmente.
                 const contentResp = await fetch(`https://es.wikipedia.org/w/api.php?action=query&prop=extracts&titles=${cleanTitle}&explaintext=1&exintro=1&format=json&origin=*`);
                 
                 const contentData = await contentResp.json();
                 const pages = contentData.query.pages;
                 const pageId = Object.keys(pages)[0];
                 if (pageId !== "-1") {
+                    let rawText = pages[pageId].extract;
                     
-                    // --- FILTRADO NUCLEAR DE HTML ---
-                    // Esto asegura que NO pase ningún link azul ni tabla rara
-                    let cleanText = pages[pageId].extract;
+                    // --- FILTRADO MANUAL (ELIMINAR TODO HTML) ---
+                    // 1. Borrar cualquier etiqueta <...> para evitar que tablas/links floten
+                    let cleanText = rawText.replace(/<[^>]+>/g, '');
                     
-                    // Borrar cualquier tag HTML que haya sobrevivido
-                    cleanText = cleanText.replace(/<[^>]+>/g, ''); 
-                    
-                    // Arreglar espacios dobles
+                    // 2. Limpiar espacios raros y saltos múltiples
                     cleanText = cleanText.replace(/\s+/g, ' ').trim();
                     
-                    // Poner saltos de línea bonitos
-                    cleanText = cleanText.replace(/\. /g, '.<br><br>');
+                    // 3. Recrear párrafos para que no sea un bloque gigante
+                    // (Separamos por puntos y añadimos <p>)
+                    const sentences = cleanText.split('. ');
+                    let formattedText = "";
+                    let chunk = "";
+                    
+                    sentences.forEach((s, i) => {
+                        chunk += s + ". ";
+                        // Cada 3 oraciones aprox, o si es muy larga, hacemos párrafo nuevo
+                        if (i > 0 && i % 3 === 0) {
+                             formattedText += `<p>${chunk}</p>`;
+                             chunk = "";
+                        }
+                    });
+                    if(chunk) formattedText += `<p>${chunk}</p>`;
 
                     return { 
-                        def: cleanText, 
+                        def: formattedText, 
                         src: "Wikipedia/WEB", 
                         url: `https://es.wikipedia.org/?curid=${pageId}` 
                     };
