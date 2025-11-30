@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V1.1</title>
+    <title>AleXIA V1.2</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -18,28 +18,16 @@
         }
         body { font-family: 'Outfit', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; height: 100dvh; display: flex; overflow: hidden; }
         
-        /* SIDEBAR - AHORA ES IGUAL PARA MÓVIL Y ESCRITORIO (TOGGLEABLE) */
         .sidebar {
             width: 280px; background: var(--bg-sidebar); height: 100%; display: flex; flex-direction: column;
             position: absolute; z-index: 50; left: 0; top: 0; bottom: 0;
-            transform: translateX(-100%); /* Cerrado por defecto o controlado por JS */
-            border-right: 1px solid #333; transition: transform 0.3s ease;
-            flex-shrink: 0;
-            box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+            transform: translateX(-100%); border-right: 1px solid #333; transition: transform 0.3s ease;
+            flex-shrink: 0; box-shadow: 5px 0 15px rgba(0,0,0,0.5);
         }
-        /* Clase para abrir el menú */
         .sidebar.open { transform: translateX(0); }
-
-        /* Overlay para cerrar al dar clic fuera (funciona en ambos) */
         .overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index: 40; }
         .overlay.active { display: block; }
         
-        /* Ajuste Desktop: Si quieres que empiece abierto, descomenta la siguiente linea en JS, pero por CSS lo dejamos flexible */
-        @media(min-width: 800px) {
-            /* Ya no forzamos transform: translateX(0) aquí para permitir cerrar */
-            /* La sidebar se comportará igual que en móvil, permitiendo abrir/cerrar */
-        }
-
         .sidebar-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
         .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #555; display: inline-block; margin-left: 5px; transition: 0.3s; }
         .status-dot.online { background: var(--success); box-shadow: 0 0 8px var(--success); }
@@ -61,23 +49,14 @@
         .user-panel { padding: 15px; border-top: 1px solid #333; display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: #000; display: flex; justify-content: center; align-items: center; font-weight: bold; }
 
-        /* MAIN CONTENT */
         .main-content { flex: 1; display: flex; flex-direction: column; position: relative; height: 100%; width: 100%; }
-        
-        /* TOP BAR: Siempre muestra el botón de menú */
         .top-bar { padding: 15px; display: flex; align-items: center; gap: 15px; position: absolute; top: 0; left: 0; right: 0; z-index: 10; background: rgba(19, 19, 20, 0.9); backdrop-filter: blur(5px); }
-        .menu-btn { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; display: block; /* Siempre visible */ }
+        .menu-btn { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; display: block; }
 
-        /* CABECERA Y PERFIL */
         .header-profile { cursor: pointer; margin-left: 10px; display: none; position: relative; }
         .user-avatar.small { width: 35px; height: 35px; font-size: 1rem; border: 2px solid rgba(255,255,255,0.2); display: flex; justify-content: center; align-items: center; border-radius: 50%; background: var(--accent); color: #000; font-weight: bold; }
         
-        .profile-dropdown {
-            display: none; position: absolute; top: 50px; right: 10px;
-            background: #282a2c; border: 1px solid #444; border-radius: 12px;
-            width: 250px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); z-index: 100;
-            overflow: hidden; animation: fadeIn 0.2s;
-        }
+        .profile-dropdown { display: none; position: absolute; top: 50px; right: 10px; background: #282a2c; border: 1px solid #444; border-radius: 12px; width: 250px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); z-index: 100; overflow: hidden; animation: fadeIn 0.2s; }
         .profile-dropdown.show { display: block; }
         .dropdown-header { padding: 15px; border-bottom: 1px solid #333; background: rgba(255,255,255,0.02); }
         .dd-name { font-weight: bold; color: white; font-size: 1rem; margin-bottom: 5px; }
@@ -86,7 +65,6 @@
         .dropdown-item:hover { background: rgba(255,255,255,0.1); }
         .dropdown-item.danger { color: var(--danger); }
         
-        /* CHAT AREA */
         #chat-box { flex: 1; overflow-y: auto; padding: 80px 20px 140px 20px; display: flex; flex-direction: column; gap: 20px; max-width: 800px; margin: 0 auto; width: 100%; box-sizing: border-box; scroll-behavior: smooth; }
         .msg-row { display: flex; gap: 15px; animation: fadeIn 0.3s; margin-bottom: 20px; width: 100%; }
         .msg-row.user-row { justify-content: flex-end; }
@@ -112,7 +90,6 @@
         .feedback-btn:hover { background: rgba(255,255,255,0.1); color: white; }
         .feedback-btn.active-teach { background: var(--accent); color: #000; border-color: var(--accent); font-weight: bold; box-shadow: 0 0 10px var(--accent-glow); }
 
-        /* AUDIO BUTTON */
         .tts-btn { 
             float: right; margin-left: 15px; margin-bottom: 5px; 
             background: rgba(255,255,255,0.08); border: 1px solid #444; color: var(--accent); 
@@ -123,7 +100,6 @@
         .tts-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.1); border-color: white; }
         .tts-btn.speaking { color: var(--danger); border-color: var(--danger); animation: pulse 1s infinite; background: rgba(255, 137, 125, 0.1); }
 
-        /* INPUT & BOTONES */
         .input-container { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px 20px 10px 20px; background: var(--bg-body); display: flex; flex-direction: column; align-items: center; z-index: 20; border-top: 1px solid #222; }
         .input-wrapper { background: var(--bg-input); width: 100%; max-width: 800px; border-radius: 30px; display: flex; align-items: center; padding: 5px 10px 5px 15px; border: 1px solid #444; position: relative; }
         .chat-input { flex: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; font-size: 16px; }
@@ -171,8 +147,8 @@
         @keyframes pulseIdea { 0% { text-shadow: 0 0 5px #ffd700; } 50% { text-shadow: 0 0 20px #ffd700; transform: scale(1.1); } 100% { text-shadow: 0 0 5px #ffd700; } }
         @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(255, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); } }
     </style>
-	<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/toxicity"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/toxicity"></script>
 </head>
 <body>
 
@@ -199,7 +175,7 @@
 <div class="main-content">
     <div class="top-bar">
         <button class="menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-        <span style="font-weight:500;">AleXIA V1.0</span>
+        <span style="font-weight:500;">AleXIA V1.2</span>
         <div style="flex:1"></div>
         
         <button id="top-login-btn" onclick="openLogin()" class="btn-login">Entrar</button>
@@ -241,7 +217,7 @@
             <button class="action-btn mic-btn" id="mic-btn" onclick="toggleVoice()"><i class="fas fa-microphone"></i></button>
             <button class="action-btn send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
         </div>
-        <div class="footer-info">AleXIA puede cometer errores. aprendera cuando le enseñas.</div>
+        <div class="footer-info">AleXIA puede cometer errores. Aprenderá cuando le enseñas.</div>
     </div>
 </div>
 
@@ -261,11 +237,11 @@
             <div id="upload-status" style="margin-top:5px; font-size:0.8rem; color:var(--success);"></div>
         </div>
         <div style="background:#27272a; padding:10px; border-radius:8px; margin-bottom:15px; text-align:left; border-left: 3px solid #ff897d;">
-    <h4 style="margin:0; color:#ff897d; font-size:0.9rem;">🔑 Cargar Palabras Clave (Predicciones)</h4>
-    <input type="file" id="json-keywords-upload" accept=".json" style="margin-top:5px; width:100%; font-size:0.8rem;">
-    <button onclick="uploadKeywords()" style="background:#ff897d; color:#000; border:none; padding:4px 10px; border-radius:5px; margin-top:5px; cursor:pointer; font-weight:bold; font-size:0.8rem;">Subir a 'preguntaspalbraclave'</button>
-    <div id="upload-status-keywords" style="margin-top:5px; font-size:0.8rem; color:var(--success);"></div>
-</div>
+            <h4 style="margin:0; color:#ff897d; font-size:0.9rem;">🔑 Cargar Palabras Clave</h4>
+            <input type="file" id="json-keywords-upload" accept=".json" style="margin-top:5px; width:100%; font-size:0.8rem;">
+            <button onclick="uploadKeywords()" style="background:#ff897d; color:#000; border:none; padding:4px 10px; border-radius:5px; margin-top:5px; cursor:pointer; font-weight:bold; font-size:0.8rem;">Subir a 'preguntaspalbraclave'</button>
+            <div id="upload-status-keywords" style="margin-top:5px; font-size:0.8rem; color:var(--success);"></div>
+        </div>
         <div id="dash-content" style="flex:1; overflow-y:auto; text-align:left; padding-right:5px;"></div>
     </div>
 </div>
@@ -299,20 +275,17 @@
 
     let currentUser = null;
     let brain = { memory: [], reviewQueue: [], missingLog: [] };
-   
-	// --- AGREGA ESTO AQUÍ ---
-let toxicityModel = null;
-// Cargar modelo de toxicidad (umbral 0.85 para estar seguros)
-// Usamos window.toxicity porque viene de los scripts del head
-if(window.toxicity) {
-    window.toxicity.load(0.85).then(model => {
-        toxicityModel = model;
-        console.log("✅ Modelo de Toxicidad: ACTIVO");
-    });
-}
-// ------------------------
+    
+    // --- CARGAR CEREBRO DE TOXICIDAD ---
+    let toxicityModel = null;
+    if(window.toxicity) {
+        window.toxicity.load(0.85).then(model => {
+            toxicityModel = model;
+            console.log("✅ Modelo de Toxicidad: ACTIVO");
+        });
+    }
 
-	const ADMIN_EMAIL = "eljacksonyt@gmail.com";
+    const ADMIN_EMAIL = "eljacksonyt@gmail.com";
     let currentChatId = null;
     let chatState = { mode: 'normal', lastQuery: '' }; 
     let activeSuggestions = JSON.parse(localStorage.getItem('alexia_active_suggestions')) || []; 
@@ -326,12 +299,14 @@ if(window.toxicity) {
     const globalCities = ["Cancún", "Ciudad de México", "Madrid", "Tokio", "Nueva York", "Buenos Aires", "Londres", "París", "Monterrey", "Guadalajara", "Bogotá", "Lima", "Berlín", "Roma"];
 
     const slangMap = { "andas": "estas", "onda": "pasa", "hubo": "paso", "pex": "pasa", "pedo": "problema", "chido": "bueno", "padre": "bueno", "gwey": "amigo", "wey": "amigo", "camara": "adios", "simon": "si", "nelson": "no", "chale": "que mal", "neto": "verdad", "neta": "verdad", "jalo": "acepto", "sobres": "esta bien" };
-    // NUEVA LISTA OPTIMIZADA: Solo borra el "ruido" extremo
-const stopWords = new Set([
-    'el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 
-    'lo', 'al', 'del', 'y', 'o', 'a', 'e', 'u', 'de', 'en', 'con', 
-    'mi', 'tu', 'su', 'me', 'te', 'se', 'nos' 
-]);
+    
+    // NOTA: No usamos stopWords en el "Escaneo de Cebolla", solo en el último recurso
+    const stopWords = new Set([
+        'el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 
+        'lo', 'al', 'del', 'y', 'o', 'a', 'e', 'u', 'de', 'en', 'con', 
+        'mi', 'tu', 'su', 'me', 'te', 'se', 'nos' 
+    ]);
+
     window.toggleUserMenu = (e) => { e.stopPropagation(); document.getElementById('user-dropdown').classList.toggle('show'); }
     window.onclick = (e) => { 
         if (!e.target.matches('.header-profile') && !e.target.matches('.header-profile *')) { 
@@ -345,7 +320,6 @@ const stopWords = new Set([
     window.toggleSuggestions = () => { const popup = document.getElementById('suggestions-popup'); popup.classList.toggle('show'); }
     window.useSuggestion = (query) => { document.getElementById('suggestions-popup').classList.remove('show'); document.getElementById('chat-input').value = query; sendMessage(); }
 
-    // --- FIX: NAV Y SIDEBAR ---
     window.toggleSidebar = () => { 
         const sb = document.getElementById('sidebar');
         const ov = document.getElementById('overlay');
@@ -392,16 +366,41 @@ const stopWords = new Set([
     };
     function resetSpeakerIcons() { document.querySelectorAll('.tts-btn').forEach(b => { b.classList.remove('speaking'); b.innerHTML = '<i class="fas fa-volume-up"></i>'; }); }
 
-    function normalize(str) { return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[¿?¡!.,]/g, "").trim(); }
+    // --- FUNCIONES DE LIMPIEZA Y FUZZY SEARCH ---
+    
+    // Algoritmo Levenshtein para "distancia" entre palabras (Corrector)
+    function levenshteinDistance(a, b) {
+        const matrix = [];
+        for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+        for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+        for (let i = 1; i <= b.length; i++) {
+            for (let j = 1; j <= a.length; j++) {
+                if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                    matrix[i][j] = matrix[i - 1][j - 1];
+                } else {
+                    matrix[i][j] = Math.min(
+                        matrix[i - 1][j - 1] + 1, // sustitución
+                        Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1) // inserción/borrado
+                    );
+                }
+            }
+        }
+        return matrix[b.length][a.length];
+    }
+
+    function cleanString(str) { 
+        return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim(); 
+    }
+    
+    function normalize(str) { return cleanString(str).replace(/[¿?¡!.,]/g, ""); }
     function processSynonyms(text) { return text.split(" ").map(w => { const cw = normalize(w); return slangMap[cw] || cw; }).join(" "); }
     function removeDuplicates(text) { const words = text.split(/\s+/); return [...new Set(words)].join(" "); }
     function truncateLog(text) { if (!text) return ""; let limit = text.split('\n')[0]; if (limit.length > 100) limit = limit.substring(0, 100) + "..."; return limit; }
-// PASO 2: Función para buscar frase conectora en la nueva colección
+
     async function getConnectorPhrase(word) {
         if(!word) return null;
         try {
-            const cleanId = normalize(word);
-            // OJO: Aquí debe decir exactamente el nombre de tu colección nueva
+            const cleanId = cleanString(word); // Usamos cleanString para buscar IDs
             const docRef = doc(db, "preguntaspalbraclave", cleanId);
             const snap = await getDoc(docRef);
             if (snap.exists()) {
@@ -410,6 +409,29 @@ const stopWords = new Set([
         } catch (e) { console.error("Error buscando conector:", e); }
         return null;
     }
+    
+    // Busca en memoria RAM con tolerancia a fallos ortográficos
+    function findInMemoryFuzzy(phrase) {
+        if(!brain || !brain.memory) return null;
+        const target = cleanString(phrase);
+        
+        // 1. Búsqueda exacta primero (Rápida)
+        const exact = brain.memory.find(mem => mem.inputs.some(inp => cleanString(inp) === target));
+        if(exact) return { def: exact.output, src: "Memoria", extra: { type: "Entrenamiento", pais: "Local" } };
+
+        // 2. Búsqueda borrosa (Solo si no es muy corta)
+        if(target.length > 4) {
+             const fuzzy = brain.memory.find(mem => mem.inputs.some(inp => {
+                 const cln = cleanString(inp);
+                 // Si la distancia es pequeña (ej: 1 o 2 letras de error)
+                 const dist = levenshteinDistance(target, cln);
+                 return dist <= 2; // Tolerancia de 2 errores
+             }));
+             if(fuzzy) return { def: fuzzy.output, src: "Memoria", extra: { type: "Entrenamiento (Corregido)", pais: "Local" } };
+        }
+        return null;
+    }
+
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         recognition = new SpeechRecognition();
@@ -428,124 +450,113 @@ const stopWords = new Set([
         return null;
     }
 
-   window.sendMessage = async function() {
+    // --- FUNCIÓN DE BÚSQUEDA INTELIGENTE CON PRIORIDADES DINÁMICAS ---
+    async function searchInAllSources(phrase) {
+        const cleanPhrase = cleanString(phrase);
+        const wordCount = phrase.trim().split(/\s+/).length;
+        if(!cleanPhrase) return null;
+
+        // CASO A: FRASE LARGA (>= 3 palabras) -> WIKI PRIMERO
+        if (wordCount >= 3) {
+            // 1. Wikipedia (Maneja redirects automáticos)
+            const wikiData = await fetchExternalData(phrase, 'Wikipedia/WEB');
+            if(wikiData) return wikiData;
+
+            // 2. Memoria Local (Con Fuzzy Search)
+            const memData = findInMemoryFuzzy(phrase);
+            if(memData) return memData;
+        } 
+        
+        // CASO B: FRASE CORTA (1-2 palabras) -> DICCIONARIO PRIMERO
+        else {
+            // 1. Diccionario Personal (Firebase)
+            try {
+                const docRef = doc(db, "dictionary", cleanPhrase);
+                const snap = await getDoc(docRef);
+                if(snap.exists()) return { def: snap.data().def, src: "Memoria", extra: snap.data() };
+            } catch(e) {}
+
+            // 2. Memoria Local (Con Fuzzy Search)
+            const memData = findInMemoryFuzzy(phrase);
+            if(memData) return memData;
+
+            // 3. Palabras Clave
+            try {
+                const docRef = doc(db, "preguntaspalbraclave", cleanPhrase);
+                const snap = await getDoc(docRef);
+                if(snap.exists()) return { def: snap.data().def, src: "Memoria", extra: { type: "Palabra Clave" } };
+            } catch(e) {}
+            
+            // 4. Diccionario Global
+            const apiData = await fetchExternalData(phrase, 'DiccionarioAPI');
+            if (apiData) return apiData;
+
+            // 5. Wikipedia (Fallback)
+            const wikiData = await fetchExternalData(phrase, 'Wikipedia/WEB');
+            if(wikiData) return wikiData;
+        }
+
+        return null;
+    }
+
+    window.sendMessage = async function() {
         if(!db) return alert("Sin conexión a base de datos.");
         const input = document.getElementById('chat-input');
         const originalText = input.value.trim();
         if(!originalText) return;
 
-// ---   // --- / 🛡️ INICIO: FILTRO DE TOXICIDAD INTELIGENTE (Traducción + Detección)
-    // ==================================================================================
-    if (typeof toxicityModel !== 'undefined' && toxicityModel) {
-        const btnSend = document.querySelector('.send-btn');
-        const oldIcon = btnSend.innerHTML;
-        // Cambiamos el icono para mostrar que está "pensando/analizando"
-        btnSend.innerHTML = '<i class="fas fa-shield-alt fa-pulse"></i>';
+        // --- FILTRO DE TOXICIDAD ---
+        if (typeof toxicityModel !== 'undefined' && toxicityModel) {
+            const btnSend = document.querySelector('.send-btn');
+            const oldIcon = btnSend.innerHTML;
+            btnSend.innerHTML = '<i class="fas fa-shield-alt fa-pulse"></i>';
+            try {
+                const translatedText = await translateText(originalText, "es|en");
+                const predictions = await toxicityModel.classify([translatedText]);
+                const isToxic = predictions.some(p => p.results[0].match === true);
 
-        try {
-            // 1. TRADUCIR: Convertimos lo que dijo el usuario a Inglés
-            //    (El modelo de Google entiende mucho mejor los insultos en inglés)
-            const translatedText = await translateText(originalText, "es|en");
-            console.log(`🛡️ Filtro analizando: "${originalText}" -> "${translatedText}"`);
-
-            // 2. CLASIFICAR: Usamos el texto traducido para detectar veneno
-            const predictions = await toxicityModel.classify([translatedText]);
-            const isToxic = predictions.some(p => p.results[0].match === true);
-
-            if (isToxic) {
-                // --- SÍ ES TÓXICO ---
-                input.value = ''; // Limpiamos la caja de texto
-                appendMsg('user', originalText); // Mostramos lo que escribió el usuario
-
-                // LISTA DE RESPUESTAS VARIADAS
-                const warnings = [
-                    // Formales
-                    "⚠️ Detecto lenguaje ofensivo. Por favor, mantengamos el respeto.",
-                    "🚫 Mis protocolos de seguridad me impiden procesar ese mensaje.",
-                    "⚠️ Error: No puedo responder a agresiones verbales.", 
-                    // Educativas
-                    "Oye, no es necesario ser grosero. Hablemos bien. 🤝",
-                    "Recuerda que soy una IA aprendiendo. Los insultos no me ayudan. 🎓",
-                    "Trato de ser útil, pero necesito respeto para funcionar.",
-                    // Con Actitud
-                    "¿Es necesario hablar así? Yo creo que no. 🤨",
-                    "Mis circuitos son sensibles, por favor no uses esas palabras. 💔",
-                    "No encuentro la necesidad de ser hostil. ¿Probamos de nuevo? 🔄",
-                    "Vaya... esa no es forma de tratar a una inteligencia artificial. 🤖"
-                ];
-
-                // Elegimos una al azar
-                const randomWarning = warnings[Math.floor(Math.random() * warnings.length)];
-
-                // Enviamos el regaño (en rojo)
-                appendMsg('ai', `<span style="color:#ff897d;">${randomWarning}</span>`, false, 'warn-'+Date.now());
-
-                // RESTAURAMOS EL BOTÓN Y DETENEMOS TODO
-                btnSend.innerHTML = oldIcon;
-                return; // <--- ⛔ AQUÍ SE DETIENE ALEXIA. NO HACE NADA MÁS.
-            }
-
-        } catch (err) {
-            console.error("Error en el módulo de seguridad:", err);
-            // Si falla la traducción o el modelo, dejamos pasar el mensaje 
-            // para no bloquear el chat por un error técnico.
+                if (isToxic) {
+                    input.value = ''; appendMsg('user', originalText);
+                    const warnings = [
+                        "⚠️ Detecto lenguaje ofensivo. Por favor, mantengamos el respeto.",
+                        "🚫 Mis protocolos de seguridad me impiden procesar ese mensaje.",
+                        "Oye, no es necesario ser grosero. Hablemos bien. 🤝",
+                        "No encuentro la necesidad de ser hostil. ¿Probamos de nuevo? 🔄"
+                    ];
+                    const randomWarning = warnings[Math.floor(Math.random() * warnings.length)];
+                    appendMsg('ai', `<span style="color:#ff897d;">${randomWarning}</span>`, false, 'warn-'+Date.now());
+                    btnSend.innerHTML = oldIcon;
+                    return; 
+                }
+            } catch (err) { console.error("Error seguridad:", err); }
+            btnSend.innerHTML = oldIcon;
         }
-        // Restauramos el icono si no fue tóxico
-        btnSend.innerHTML = oldIcon;
-    }
-    // ===========================
-    // ----------------------------------------------------
+        // -----------------------------
 
         document.getElementById('idea-btn').classList.remove('has-ideas');
 
         // MODO ENSEÑANZA
-       if (chatState.mode === 'waiting_correction') {
+        if (chatState.mode === 'waiting_correction') {
             const correction = originalText;
-            input.value = '';
-            appendMsg('user', originalText);
+            input.value = ''; appendMsg('user', originalText);
             const sendingMsgId = 'sending-' + Date.now();
             appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> Guardando...`, false, sendingMsgId);
-
             try {
                 const qData = String(chatState.lastQuery || "Pregunta no detectada");
                 const aData = String(correction || "Respuesta vacía");
                 const finalUser = String(currentUser ? currentUser.email : "Anónimo");
-                
                 await setDoc(doc(db, "alexia_db", "main_brain"), { 
                     reviewQueue: arrayUnion({ q: qData, a: aData, user: finalUser, date: new Date().toISOString() }) 
                 }, { merge: true });
-                
                 const sendingEl = document.getElementById(sendingMsgId);
-                
-               if(sendingEl) {
-                    // --- RESPUESTAS ALEATORIAS CON EMOJIS ---
-                    const respuestas = [
-                        "¡Gracias! Respuesta guardada. 💾",
-                        "¡Entendido! Pronto aprenderé esto. 🧠✨",
-                        "Guardado. Mi administrador lo revisará y aprobará pronto. 👨‍💻",
-                        "¡Excelente! Lo tendré en cuenta para mostrárselo a mi entrenador. 📝",
-                        "¡Anotado! Gracias por ayudarme a ser más inteligente. 💡",
-                        "Recibido. Procesaré esta nueva información en breve. 🚀",
-                        "¡Gracias profe! Me encanta aprender cosas nuevas. 🎓",
-                        "¡Hecho! Tu corrección está en camino a mi base de datos. 📤"
-                    ];
-                    
-                    // Elegimos una al azar
-                    const respuestaRandom = respuestas[Math.floor(Math.random() * respuestas.length)];
-                    
-                    sendingEl.querySelector('.msg-bubble').innerHTML = respuestaRandom;
+                if(sendingEl) {
+                    const respuestas = ["¡Gracias! Respuesta guardada. 💾", "¡Entendido! Pronto aprenderé esto. 🧠✨"];
+                    sendingEl.querySelector('.msg-bubble').innerHTML = respuestas[Math.floor(Math.random() * respuestas.length)];
                 }
-
-                document.querySelectorAll('.feedback-btn.active-teach').forEach(b => { 
-                    b.classList.remove('active-teach'); 
-                    b.innerHTML = '<i class="fas fa-graduation-cap"></i> Enseñar'; 
-                });
+                document.querySelectorAll('.feedback-btn.active-teach').forEach(b => { b.classList.remove('active-teach'); b.innerHTML = '<i class="fas fa-graduation-cap"></i> Enseñar'; });
             } catch (e) {
                 const sendingEl = document.getElementById(sendingMsgId);
-                if(sendingEl) { 
-                    sendingEl.querySelector('.msg-bubble').innerHTML = `❌ Error: ${e.message}`; 
-                    sendingEl.querySelector('.msg-bubble').style.color = "var(--danger)"; 
-                }
+                if(sendingEl) sendingEl.querySelector('.msg-bubble').innerHTML = `❌ Error: ${e.message}`; 
             }
             chatState = { mode: 'normal' }; return;
         }
@@ -574,108 +585,128 @@ const stopWords = new Set([
             }
         }
         
-        // --- ANIMACIÓN DE CARGA ESTILO GEMINI ---
+        // --- ANIMACIÓN ---
         input.value = ''; appendMsg('user', originalText); 
         const loadingId = 'loading-' + Date.now(); 
         appendMsg('ai', `<i class="fas fa-sparkles fa-pulse" style="color:var(--accent)"></i> <span id="think-${loadingId}">Analizando...</span>`, false, loadingId);
         
-        // Ciclo de mensajes de carga
-        const loadingSteps = ["Traduciendo conceptos...", "Consultando base global...", "Sintetizando respuesta...", "Analizando contexto..."];
+        const loadingSteps = ["Escaneando frase completa...", "Verificando memoria...", "Consultando web..."];
         let stepIdx = 0;
         const loaderInterval = setInterval(() => {
             const el = document.getElementById(`think-${loadingId}`);
-            if(el) {
-                el.innerText = loadingSteps[stepIdx % loadingSteps.length];
-                stepIdx++;
-            }
-        }, 800); // Cambia texto cada 800ms
-        // ----------------------------------------
+            if(el) { el.innerText = loadingSteps[stepIdx % loadingSteps.length]; stepIdx++; }
+        }, 800);
+        // -----------------
 
-        // Pequeña pausa inicial
         await new Promise(r => setTimeout(r, 800));
 
-        const interpretedText = processSynonyms(normInput);
-        const words = interpretedText.split(/\s+/).filter(w => !stopWords.has(w) && w.length > 2);
-
+        // INTENCIONES ESPECÍFICAS
         const specificIntent = checkSpecificIntent(originalText);
         if (specificIntent) { 
-            clearInterval(loaderInterval); // Detener animación
+            clearInterval(loaderInterval); 
             const loadEl = document.getElementById(loadingId); if(loadEl) loadEl.remove();
             await processSpecificIntent(specificIntent.query, specificIntent.source); wasVoiceInput = false; return; 
         }
 
-        let bestMatch = null, maxScore = 0;
-        brain.memory.forEach(mem => {
-            mem.inputs.forEach(key => {
-                const memKey = processSynonyms(key); 
-                if (memKey === interpretedText) { maxScore = 1.0; bestMatch = mem; } 
-                else if (memKey.includes(interpretedText) && interpretedText.length > 3) { if (0.8 > maxScore) { maxScore = 0.8; bestMatch = mem; } }
-            });
-        });
+        // =================================================================================
+        // 🔥 ESCANEO DE CEBOLLA CON PEGAMENTO INTELIGENTE
+        // =================================================================================
+        const interpretedText = processSynonyms(normInput); 
+        let phraseWords = originalText.trim().split(/\s+/); 
+        let foundFullConcept = null;
+        let skippedConnector = ""; // Para guardar lo que nos saltamos (ej: "Quién fue")
 
-        if (maxScore >= 0.8) {
-            clearInterval(loaderInterval); // Detener animación
-            const loadEl = document.getElementById(loadingId); if(loadEl) loadEl.remove();
-            const key = normalize(bestMatch.inputs[0]);
-            let finalResponse = bestMatch.output + "<br><br><div style='font-size:0.75rem; color:#888; border-top:1px solid #444; padding-top:5px;'><em>Extraído de mi memoria</em></div>";
-            await finishResponse(originalText, finalResponse, true, true); wasVoiceInput = false; return;
+        // Bucle: Buscar frase entera -> Quitar 1era palabra -> Buscar frase entera...
+        for (let i = 0; i < phraseWords.length; i++) {
+            let subPhrase = phraseWords.slice(i).join(" ");
+            if (subPhrase.length < 3 && i < phraseWords.length -1) continue; // Evitar buscar "de" o "el" si no es la última palabra
+
+            // Busca con las NUEVAS prioridades dinámicas
+            let result = await searchInAllSources(subPhrase);
+            if (result) {
+                foundFullConcept = result;
+                foundFullConcept.word = subPhrase; 
+                
+                // Si encontramos algo, recuperamos lo que saltamos (el conector)
+                if (i > 0) {
+                    skippedConnector = phraseWords.slice(0, i).join(" ");
+                }
+                break; // ¡Alto! Encontrado.
+            }
         }
 
-        // LÓGICA PRINCIPAL
+        // SI ENCONTRAMOS LA FRASE COMPLETA (O PARCIAL)
+        if (foundFullConcept) {
+             clearInterval(loaderInterval);
+             const loadEl = document.getElementById(loadingId); if(loadEl) loadEl.remove();
+             
+             // UNIR CONECTOR + DEFINICIÓN
+             let connectorDef = "";
+             if (skippedConnector) {
+                 const conDef = await getConnectorPhrase(skippedConnector); 
+                 if (conDef) connectorDef = conDef + " "; 
+             }
+
+             let aiResponse = "";
+             if (connectorDef) {
+                 // Respuesta Fluida: "Conector... Definición"
+                 let cleanDef = foundFullConcept.def.replace(/<[^>]*>/g, '').trim();
+                 aiResponse = `${connectorDef}${cleanDef}`;
+             } else {
+                 // Respuesta Estándar
+                 aiResponse = `<strong>Sobre "${foundFullConcept.word}":</strong><br>${foundFullConcept.def}`;
+             }
+
+             aiResponse += formatExtras(foundFullConcept.extra);
+             
+             let sources = "mi entrenamiento";
+             if (foundFullConcept.src === "Wiki" || foundFullConcept.src.includes("Wiki")) sources = "Wikipedia";
+             if (foundFullConcept.src === "DiccionarioAPI") sources = "Diccionario Global";
+             if (foundFullConcept.src === "Memoria") sources = "mi diccionario personal";
+             if (connectorDef) sources += " y mis palabras clave";
+
+             aiResponse += `<br><br><div style="font-size:0.75rem; color:#888; border-top:1px solid #444; padding-top:5px;"><em>Extraído de ${sources}</em></div>`;
+             
+             // Guardar log
+             if (db) {
+                setDoc(doc(db, "alexia_db", "main_brain"), { 
+                    missingLog: arrayUnion({ q: truncateLog(originalText), a: truncateLog(aiResponse.replace(/<[^>]*>/g, '')), user: currentUser?currentUser.email:"Invitado", date: new Date().toISOString() }) 
+                }, { merge: true });
+             }
+
+             await finishResponse(originalText, aiResponse, true, true);
+             wasVoiceInput = false;
+             return; // TERMINAMOS AQUÍ
+        }
+
+        // =================================================================================
+        // SI NO ENCONTRAMOS NADA COMPLETO -> USAMOS EL MÉTODO ANTIGUO (PALABRA X PALABRA)
+        // =================================================================================
+        const words = interpretedText.split(/\s+/).filter(w => !stopWords.has(w) && w.length > 2);
+        
+        // Ahora `runWordDecomposition` usa la misma lógica
         const synthesis = await runWordDecomposition(interpretedText, words);
         
-        // DETENER ANIMACIÓN AL FINALIZAR
         clearInterval(loaderInterval);
         const loadEl = document.getElementById(loadingId); if(loadEl) loadEl.remove();
 
         let aiResponse = ""; 
         let logThis = false;
 
-        const formatExtras = (data) => {
-            if (!data) return "";
-            let html = "";
-            if (data.pais && data.pais !== "Global") html += ` <span style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px; font-size:0.8rem; margin-left:5px;">🌎 ${data.pais}</span>`;
-            if (data.phonetic) html += ` <span style="color:#888; font-family:monospace; margin-left:5px;">[${data.phonetic}]</span>`;
-            if (data.audio) html += ` <button onclick="new Audio('${data.audio}').play()" style="background:none; border:1px solid var(--accent); color:var(--accent); border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:0.7rem; margin-left:5px;" title="Escuchar">🔊</button>`;
-            
-            // TIPO
-            if (data.type) html += `<div style="margin-top:6px; color:#aaa; font-size:0.9rem; padding-left:10px; border-left:2px solid var(--accent);"><em>ℹ️ ${data.type}</em></div>`;
-            
-            // PALABRA EN INGLÉS (NUEVO)
-            if (data.originalTerm) {
-                // Capitalizamos la primera letra
-                const enWord = data.originalTerm.charAt(0).toUpperCase() + data.originalTerm.slice(1);
-                html += `<div style="margin-top:4px; color:#aaa; font-size:0.85rem; padding-left:10px; border-left:2px solid #555;">🇬🇧 En inglés: <b>${enWord}</b></div>`;
-            }
-
-            // EJEMPLO
-            if (data.example) html += `<div style="margin-top:4px; color:#ccc; font-size:0.85rem; padding-left:10px; border-left:2px solid #555;">📝 "${data.example}"</div>`;
-            
-            return html;
-        };
-
         const generateFooter = () => {
             let sources = new Set();
             if (synthesis.connectors && synthesis.connectors.length > 0) sources.add("mi entrenamiento");
-
             if (synthesis.concepts) {
                 synthesis.concepts.forEach(c => {
                     if (c.src === "Memoria") sources.add("mi diccionario personal");
-                    // AHORA SÍ DETECTARÁ EL DICCIONARIO GLOBAL
                     if (c.src === "DiccionarioAPI") sources.add("Diccionario Global");
                     if (c.src === "Wiki" || c.src.includes("Wikipedia")) sources.add("Wikipedia");
-                    if (c.src.includes("Meteo")) sources.add("Web Clima");
-                    if (c.src.includes("Biblioteca")) sources.add("Biblioteca Web");
                 });
             }
-
             if (sources.size === 0) return "";
             const sourceArray = Array.from(sources);
             let text = sourceArray.join(", ");
-            if(sourceArray.length > 1) {
-                const last = sourceArray.pop();
-                text = sourceArray.join(", ") + " y " + last;
-            }
+            if(sourceArray.length > 1) { const last = sourceArray.pop(); text = sourceArray.join(", ") + " y " + last; }
             return `<br><br><div style="font-size:0.75rem; color:#888; border-top:1px solid #444; padding-top:5px; margin-top:10px;"><em>Extraído de ${text}</em></div>`;
         };
 
@@ -686,7 +717,6 @@ const stopWords = new Set([
             let defClean = mainConcept.def.replace(/<[^>]*>/g, '').trim(); 
             aiResponse = `${finalConnectorPhrase} ${defClean}`;
             aiResponse += formatExtras(mainConcept.extra);
-            
             if (synthesis.concepts.length > 1) {
                 aiResponse += `<br><br><small>También encontré:</small><br>`;
                 for(let i=1; i<synthesis.concepts.length; i++) {
@@ -705,17 +735,7 @@ const stopWords = new Set([
                  aiResponse = `<strong>Analizando conceptos:</strong><br>` + 
                      synthesis.concepts.map(it => `- <b>${it.word}:</b> ${it.def}${formatExtras(it.extra)}`).join('<br>');
              }
-            // --- FRASES DE CIERRE ALEATORIAS ---
-             const cierres = [
-                "<br><br>¿Te sirve esta información? 🤔",
-                "<br><br>Espero haberte ayudado. ✨",
-                "<br><br>¿Era esto lo que buscabas? 🧐",
-                "<br><br>Dime si necesitas saber más detalles. 👍",
-                "<br><br>¿Qué te parece este dato? 💡",
-                "<br><br>Ojalá esto aclare tu duda. 🌟"
-             ];
-             
-             // Elegimos una y la agregamos
+             const cierres = ["<br><br>¿Te sirve esta información? 🤔", "<br><br>Espero haberte ayudado. ✨", "<br><br>¿Era esto lo que buscabas? 🧐"];
              aiResponse += cierres[Math.floor(Math.random() * cierres.length)];
              aiResponse += generateFooter();
              logThis = true;
@@ -725,20 +745,14 @@ const stopWords = new Set([
             aiResponse += generateFooter();
             logThis = true;
         }
-       // CASO D: Nada (Respuestas aleatorias de "No sé")
         else { 
             const noSeRespuestas = [
-                "Espera 🥺 No logré encontrar información. 🙏 ¿Podrías enseñarme? Soy aprendiz, presiona el botón 'Enseñar'.",
-                "¡Ups! 🤯 Me has atrapado, no sé la respuesta. Pero me encantaría aprenderla si me ayudas. 🎓",
-                "Lo siento 😔, busqué en todos lados pero no encontré nada. ¿Me dices la respuesta usando el botón 'Enseñar'?",
-                "Aún soy pequeña y no sé todo del mundo. 🐣 ¿Me ayudas a crecer enseñándome esto?",
-                "Mis circuitos están en blanco con este tema. 🤖❓ ¡Necesito tu ayuda humana para aprender!",
-                "No encontré nada en mi memoria ni en la web. 🕵️‍♀️ ¿Me das una pista o la respuesta correcta?"
+                "Espera 🥺 No logré encontrar información. 🙏 ¿Podrías enseñarme? Soy aprendiz.",
+                "¡Ups! 🤯 Me has atrapado, no sé la respuesta. Pero me encantaría aprenderla.",
+                "Lo siento 😔, busqué en todos lados pero no encontré nada.",
+                "Aún soy pequeña y no sé todo del mundo. 🐣 ¿Me ayudas a crecer enseñándome esto?"
             ];
-            
-            // Elegimos una al azar
             aiResponse = noSeRespuestas[Math.floor(Math.random() * noSeRespuestas.length)];
-            
             logThis = true; 
         }
 
@@ -749,9 +763,24 @@ const stopWords = new Set([
 
         await finishResponse(originalText, aiResponse, true, true); wasVoiceInput = false;
     };
-	
+    
+    const formatExtras = (data) => {
+        if (!data) return "";
+        let html = "";
+        if (data.pais && data.pais !== "Global") html += ` <span style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px; font-size:0.8rem; margin-left:5px;">🌎 ${data.pais}</span>`;
+        if (data.phonetic) html += ` <span style="color:#888; font-family:monospace; margin-left:5px;">[${data.phonetic}]</span>`;
+        if (data.audio) html += ` <button onclick="new Audio('${data.audio}').play()" style="background:none; border:1px solid var(--accent); color:var(--accent); border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:0.7rem; margin-left:5px;" title="Escuchar">🔊</button>`;
+        if (data.type) html += `<div style="margin-top:6px; color:#aaa; font-size:0.9rem; padding-left:10px; border-left:2px solid var(--accent);"><em>ℹ️ ${data.type}</em></div>`;
+        if (data.originalTerm) {
+            const enWord = data.originalTerm.charAt(0).toUpperCase() + data.originalTerm.slice(1);
+            html += `<div style="margin-top:4px; color:#aaa; font-size:0.85rem; padding-left:10px; border-left:2px solid #555;">🇬🇧 En inglés: <b>${enWord}</b></div>`;
+        }
+        if (data.example) html += `<div style="margin-top:4px; color:#ccc; font-size:0.85rem; padding-left:10px; border-left:2px solid #555;">📝 "${data.example}"</div>`;
+        return html;
+    };
+
     function checkSpecificIntent(originalText) {
-        const normText = normalize(originalText);
+        const normText = cleanString(originalText); 
         let match = normText.match(/(?:clima|tiempo)\s+(?:en|de)\s+(.+)/); if (match) return { action: 'execute_search', source: 'Meteo/WEB', query: match[1] };
         match = normText.match(/(?:libro|obra)\s+(?:de|titulado|sobre)?\s*(.+)/); if (match) return { action: 'execute_search', source: 'Biblioteca/WEB', query: match[1].replace(/^(de|sobre|el|la|los|las)\s+/, '') };
         match = normText.match(/(?:articulo|informacion|biografia)\s+(?:de|sobre|del|de la)\s+(.+)/); if (match) return { action: 'execute_search', source: 'Wikipedia/WEB', query: match[1] };
@@ -769,22 +798,19 @@ const stopWords = new Set([
             await finishResponse(query, aiResponse, true, true); 
         } else { await finishResponse(query, `No pude conectar con ${source}.`, true, true); }
     }
-// --- NUEVA FUNCIÓN: TRADUCTOR ---
+
     async function translateText(text, langPair) {
-        // Ejemplo langPair: "es|en" (Español a Inglés)
         try {
             const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`);
             const data = await res.json();
             return data.responseData.translatedText;
-        } catch (e) {
-            console.error("Error traduciendo:", e);
-            return text; // Si falla, devuelve texto original
-        }
+        } catch (e) { console.error("Error traduciendo:", e); return text; }
     }
-   async function fetchExternalData(term, forceSource = 'Wikipedia/WEB') {
+    
+    async function fetchExternalData(term, forceSource = 'Wikipedia/WEB') {
         const encoded = encodeURIComponent(term);
-        
-        // 1. CLIMA
+        const cleanTerm = cleanString(term); 
+
         if (forceSource === 'Meteo/WEB') {
             try {
                 const geoResp = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encoded}&count=1&language=es&format=json`);
@@ -798,7 +824,6 @@ const stopWords = new Set([
             } catch(e) {} return null;
         }
 
-        // 2. BIBLIOTECA
         if (forceSource === 'Biblioteca/WEB') {
              try {
                 const searchResp = await fetch(`https://openlibrary.org/search.json?q=${encoded}&limit=1`);
@@ -812,60 +837,36 @@ const stopWords = new Set([
             } catch(e) {} return null;
         }
 
-        // 3. DICCIONARIO API (Aquí están los cambios)
         if (forceSource === 'DiccionarioAPI') {
             try {
-                // A) Traducir (ES -> EN)
                 const englishWord = await translateText(term, "es|en");
-                
-                // B) API en Inglés
                 const resp = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(englishWord)}`);
                 const data = await resp.json();
-                
                 if (Array.isArray(data) && data.length > 0) {
                     const entry = data[0];
                     const firstMeaning = entry.meanings[0];
                     const defObj = firstMeaning.definitions[0];
-                    
                     const rawDef = defObj.definition;
                     const rawExample = defObj.example || ""; 
                     const rawType = firstMeaning.partOfSpeech;
                     const phoneticText = entry.phonetic || ""; 
-                    
-                    // Audio
                     let audioUrl = "";
-                    if (entry.phonetics) {
-                        const audioObj = entry.phonetics.find(p => p.audio && p.audio !== "");
-                        if (audioObj) audioUrl = audioObj.audio;
-                    }
-
-                    // C) Traducir de vuelta (EN -> ES)
+                    if (entry.phonetics) { const audioObj = entry.phonetics.find(p => p.audio && p.audio !== ""); if (audioObj) audioUrl = audioObj.audio; }
                     const translatedDef = await translateText(rawDef, "en|es");
                     const translatedType = await translateText(rawType, "en|es");
                     let translatedExample = "";
-                    if (rawExample) {
-                        translatedExample = await translateText(rawExample, "en|es");
-                    }
-                    
+                    if (rawExample) { translatedExample = await translateText(rawExample, "en|es"); }
                     return { 
                         def: translatedDef, 
-                        src: "DiccionarioGlobal", // ETIQUETA CORREGIDA PARA EL FOOTER
+                        src: "DiccionarioAPI", 
                         url: entry.sourceUrls ? entry.sourceUrls[0] : "",
-                        extra: { 
-                            type: translatedType, 
-                            pais: "Global",
-                            phonetic: phoneticText,
-                            audio: audioUrl,
-                            example: translatedExample,
-                            originalTerm: englishWord // GUARDAMOS LA PALABRA EN INGLÉS
-                        }
+                        extra: { type: translatedType, pais: "Global", phonetic: phoneticText, audio: audioUrl, example: translatedExample, originalTerm: englishWord }
                     };
                 }
             } catch(e) {}
             return null;
         }
 
-        // 4. WIKIPEDIA
         try {
             const searchResp = await fetch(`https://es.wikipedia.org/w/api.php?action=opensearch&search=${encoded}&limit=1&namespace=0&format=json&origin=*`);
             const searchData = await searchResp.json();
@@ -886,79 +887,20 @@ const stopWords = new Set([
         } catch(e) {} return null;
     }
 
-   // PASO 3: Nueva lógica de descomposición (Separa Conectores de Conceptos)
-async function runWordDecomposition(interpretedText, words) {
+    async function runWordDecomposition(interpretedText, words) {
         let synthesis = { connectors: [], concepts: [] };
-        
         for (let word of words) {
-            // 1. CONECTORES (Gramática)
             const phrase = await getConnectorPhrase(word);
-            if (phrase) {
-                synthesis.connectors.push(phrase);
-                continue; 
-            }
-
-            let definition = null; 
-            let source = "";
-            let fullData = null;
+            if (phrase) { synthesis.connectors.push(phrase); continue; }
             
-            // 2. DICCIONARIO PERSONAL (Colección 'dictionary') - Prioridad 1
-            try { 
-                const dictSnap = await getDoc(doc(db, "dictionary", word)); 
-                if (dictSnap.exists()) { 
-                    fullData = dictSnap.data();
-                    definition = fullData.def; 
-                    source = "Memoria"; 
-                } 
-            } catch(e) {}
-
-            // 3. MEMORIA DE ENTRENAMIENTO (main_brain) - Prioridad 2 (NUEVO)
-            // Si no estaba en el diccionario, buscamos si existe como keyword en tu entrenamiento
-            if (!definition && brain && brain.memory) {
-                // Buscamos si alguna entrada de memoria tiene esta palabra exacta como input
-                const memoryMatch = brain.memory.find(mem => 
-                    mem.inputs.some(input => normalize(input) === normalize(word))
-                );
-                
-                if (memoryMatch) {
-                    definition = memoryMatch.output;
-                    source = "Memoria"; // Lo marcamos también como memoria local
-                    // Simulamos datos extra para que se vea bonito
-                    fullData = { type: "Entrenamiento", pais: "Local" };
-                }
-            }
-            
-            // 4. API DICCIONARIO GLOBAL (Prioridad 3)
-            if (!definition) {
-                const apiData = await fetchExternalData(word, 'DiccionarioAPI');
-                if (apiData) {
-                    definition = apiData.def;
-                    source = "DiccionarioAPI"; 
-                    fullData = apiData.extra; 
-                }
-            }
-
-            // 5. WIKIPEDIA (Prioridad 4)
-            if (!definition) { 
-                const extData = await fetchExternalData(word, 'Wikipedia/WEB'); 
-                if (extData) { definition = extData.def; source = "Wiki"; } 
-            }
-            
-            // Guardar resultado
-           // Guardar resultado (Solo si hay texto real)
-            if (definition && definition.trim() !== "") {
-                synthesis.concepts.push({ 
-                    word: word, 
-                    def: definition, 
-                    src: source,
-                    extra: fullData 
-                });
+            // Usamos searchInAllSources aquí para respetar la prioridad estricta
+            const result = await searchInAllSources(word);
+            if(result) {
+                synthesis.concepts.push({ word: word, def: result.def, src: result.src, extra: result.extra });
             }
         }
         return synthesis;
     }
-
-
 
     function appendMsg(role, text, hasControls = false, customId = null) {
         const box = document.getElementById('chat-box');
@@ -986,10 +928,7 @@ async function runWordDecomposition(interpretedText, words) {
         appendMsg('ai', aiTxt + feedbackHTML, true, msgId); 
         saveLocalChat(userTxt, aiTxt + feedbackHTML);
         if (wasVoiceInput) { setTimeout(() => { const btnId = `btn-${msgId}`; const cleanSpeakTxt = aiTxt.replace(/<[^>]*>/g, " "); window.speakText(cleanSpeakTxt, btnId); }, 500); }
-        
-        if (shouldSuggest) { 
-            generateSuggestions(); // Generar pero NO pegar
-        }
+        if (shouldSuggest) { generateSuggestions(); }
     }
     
     async function generateSuggestions() {
@@ -1018,7 +957,6 @@ async function runWordDecomposition(interpretedText, words) {
         localStorage.setItem('alexia_active_suggestions', JSON.stringify(activeSuggestions));
         const ideaBtn = document.getElementById('idea-btn');
         ideaBtn.classList.add('has-ideas');
-        
         const content = document.getElementById('suggestions-content');
         content.innerHTML = "";
         activeSuggestions.forEach(s => {
@@ -1043,29 +981,14 @@ async function runWordDecomposition(interpretedText, words) {
 
     // Funciones Admin/Aux
     window.dashAct = async (act, idx) => { const item = brain.reviewQueue[idx]; const editedA = document.getElementById(`edit-a-${idx}`).value; if(act === 'app') { await updateDoc(doc(db, "alexia_db", "main_brain"), { memory: arrayUnion({ inputs: [processSynonyms(item.q)], output: editedA }), reviewQueue: arrayRemove(item) }); } else { await updateDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayRemove(item) }); } setTimeout(renderAdminQueue, 500); };
-window.promoteToMemory = async (idx) => { 
-    const item = brain.missingLog[idx]; 
-    const newAnswer = document.getElementById(`teach-a-${idx}`).value; 
-    if(!newAnswer) return; 
-    
-    await updateDoc(doc(db, "alexia_db", "main_brain"), { 
-        memory: arrayUnion({ inputs: [processSynonyms(item.q)], output: newAnswer }), 
-        missingLog: arrayRemove(item) 
-    }); 
-    
-    // Esto recarga la lista después de medio segundo
-    setTimeout(renderAdminQueue, 500); 
-};
-window.deleteLog = async (idx) => { 
-    const item = brain.missingLog[idx]; 
-    
-    await updateDoc(doc(db, "alexia_db", "main_brain"), { 
-        missingLog: arrayRemove(item) 
-    }); 
-    
-    // Esto recarga la lista después de medio segundo
-    setTimeout(renderAdminQueue, 500); 
-};
+    window.promoteToMemory = async (idx) => { 
+        const item = brain.missingLog[idx]; 
+        const newAnswer = document.getElementById(`teach-a-${idx}`).value; 
+        if(!newAnswer) return; 
+        await updateDoc(doc(db, "alexia_db", "main_brain"), { memory: arrayUnion({ inputs: [processSynonyms(item.q)], output: newAnswer }), missingLog: arrayRemove(item) }); 
+        setTimeout(renderAdminQueue, 500); 
+    };
+    window.deleteLog = async (idx) => { const item = brain.missingLog[idx]; await updateDoc(doc(db, "alexia_db", "main_brain"), { missingLog: arrayRemove(item) }); setTimeout(renderAdminQueue, 500); };
     window.openDash = () => { document.getElementById('admin-dash').style.display = 'flex'; renderAdminQueue(); }
     window.closeDash = () => document.getElementById('admin-dash').style.display = 'none';
     window.checkLoginAction = () => { if(currentUser) { if(confirm("¿Cerrar sesión?")) signOut(auth); } else { openLogin(); } }
@@ -1077,41 +1000,31 @@ window.deleteLog = async (idx) => {
     window.emailRegister = () => { const e=document.getElementById('r-email').value, p=document.getElementById('r-pass').value; createUserWithEmailAndPassword(auth, e, p).then(async(c)=>{await sendEmailVerification(c.user);document.getElementById('auth-modal').style.display='none';document.getElementById('verify-modal').style.display='flex';}).catch(e=>alert(e.message)); };
     window.googleLogin = () => signInWithPopup(auth, provider).then(()=>closeModal()).catch(e=>alert(e.message));
     window.logout = (e) => { if(e) e.stopPropagation(); const key = `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`; localStorage.removeItem(key); localStorage.removeItem('alexia_last_chat_id'); signOut(auth).then(() => { window.location.reload(); }); }
-    window.uploadDictionary = async () => { const fileInput = document.getElementById('json-upload'); const statusDiv = document.getElementById('upload-status'); if(fileInput.files.length === 0) return alert("Selecciona archivo"); statusDiv.innerHTML = "Analizando..."; const reader = new FileReader(); reader.onload = async (e) => { try { const words = JSON.parse(e.target.result); let added = 0; const chunkSize = 400; for (let i = 0; i < words.length; i += chunkSize) { const chunk = words.slice(i, i + chunkSize); const batch = writeBatch(db); chunk.forEach(word => { const ref = doc(db, "dictionary", normalize(word.id)); batch.set(ref, word); added++; }); await batch.commit(); statusDiv.innerHTML = `Subiendo... (${added})`; } statusDiv.innerHTML = `✅ Terminado: ${added}`; } catch (err) { statusDiv.innerHTML = "❌ Error JSON"; } }; reader.readAsText(fileInput.files[0]); };
+    window.uploadDictionary = async () => { const fileInput = document.getElementById('json-upload'); const statusDiv = document.getElementById('upload-status'); if(fileInput.files.length === 0) return alert("Selecciona archivo"); statusDiv.innerHTML = "Analizando..."; const reader = new FileReader(); reader.onload = async (e) => { try { const words = JSON.parse(e.target.result); let added = 0; const chunkSize = 400; for (let i = 0; i < words.length; i += chunkSize) { const chunk = words.slice(i, i + chunkSize); const batch = writeBatch(db); chunk.forEach(word => { const ref = doc(db, "dictionary", cleanString(word.id)); batch.set(ref, word); added++; }); await batch.commit(); statusDiv.innerHTML = `Subiendo... (${added})`; } statusDiv.innerHTML = `✅ Terminado: ${added}`; } catch (err) { statusDiv.innerHTML = "❌ Error JSON"; } }; reader.readAsText(fileInput.files[0]); };
     window.uploadKeywords = async () => { 
         const fileInput = document.getElementById('json-keywords-upload'); 
         const statusDiv = document.getElementById('upload-status-keywords'); 
-        
         if(fileInput.files.length === 0) return alert("Selecciona el archivo JSON de conectores"); 
-        
         statusDiv.innerHTML = "Analizando..."; 
         const reader = new FileReader(); 
-        
         reader.onload = async (e) => { 
             try { 
                 const words = JSON.parse(e.target.result); 
                 let added = 0; 
                 const chunkSize = 400; 
-                
                 for (let i = 0; i < words.length; i += chunkSize) { 
                     const chunk = words.slice(i, i + chunkSize); 
                     const batch = writeBatch(db); 
-                    
                     chunk.forEach(word => { 
-                        // AQUÍ ES DONDE CAMBIA EL DESTINO A TU NUEVA COLECCIÓN
-                        const ref = doc(db, "preguntaspalbraclave", normalize(word.id)); 
+                        const ref = doc(db, "preguntaspalbraclave", cleanString(word.id)); 
                         batch.set(ref, word); 
                         added++; 
                     }); 
-                    
                     await batch.commit(); 
                     statusDiv.innerHTML = `Subiendo... (${added})`; 
                 } 
                 statusDiv.innerHTML = `✅ ¡Listo! ${added} conectores subidos.`; 
-            } catch (err) { 
-                console.error(err);
-                statusDiv.innerHTML = "❌ Error en el JSON"; 
-            } 
+            } catch (err) { console.error(err); statusDiv.innerHTML = "❌ Error en el JSON"; } 
         }; 
         reader.readAsText(fileInput.files[0]); 
     };
@@ -1127,13 +1040,11 @@ window.deleteLog = async (idx) => {
         missingHTML += "</div>";
         content.innerHTML = reviewHTML + missingHTML;
     }
-
     function renderLocalHistory() {
         const key = getLocalKey(); let chats = []; try { chats = JSON.parse(localStorage.getItem(key)); if (!Array.isArray(chats)) throw new Error("Invalid format"); } catch(e) { console.warn("Limpiando historial corrupto..."); localStorage.removeItem(key); localStorage.removeItem('alexia_last_chat_id'); chats = []; }
         const pc = document.getElementById('pinned-container'); const hc = document.getElementById('history-container'); pc.innerHTML = ""; hc.innerHTML = ""; let hasPinned = false;
         if(chats.length === 0) { hc.innerHTML = `<div style="text-align:center; padding:20px; color:#555; font-size:0.85rem;">Historial vacío</div>`; } else { chats.forEach(chat => { const active = (chat.id === currentChatId) ? 'active' : ''; const title = chat.title || "Chat sin título"; const pinClass = chat.isPinned ? 'pinned' : ''; const html = `<div class="chat-item ${active}" onclick="window.loadLocalChat('${chat.id}')"><div class="chat-title"><i class="far fa-comment-alt" style="opacity:0.7; margin-right:8px;"></i>${title}</div><button class="pin-btn ${pinClass}" onclick="togglePinLocal(event, '${chat.id}')"><i class="fas fa-thumbtack"></i></button></div>`; if (chat.isPinned) { pc.innerHTML += html; hasPinned = true; } else hc.innerHTML += html; }); } document.getElementById('pinned-section').style.display = hasPinned ? 'block' : 'none';
     }
-
     window.loadLocalChat = (id) => {
         const key = getLocalKey(); 
         const chats = JSON.parse(localStorage.getItem(key)) || []; 
@@ -1145,14 +1056,9 @@ window.deleteLog = async (idx) => {
             box.innerHTML = ""; 
             chat.messages.forEach(m => appendMsg(m.r, m.t, m.r === 'ai')); 
             renderLocalHistory(); 
-            // CERRAR SIDEBAR AL SELECCIONAR CHAT
-            if(window.innerWidth < 800) { 
-                document.getElementById('sidebar').classList.remove('open'); 
-                document.getElementById('overlay').classList.remove('active'); 
-            } 
+            if(window.innerWidth < 800) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('active'); } 
         }
     }
-    
     window.togglePinLocal = (e, id) => { 
         e.stopPropagation(); 
         const key = getLocalKey(); 
@@ -1160,31 +1066,21 @@ window.deleteLog = async (idx) => {
         const idx = chats.findIndex(c => c.id === id); 
         if (idx > -1) { 
             chats[idx].isPinned = !chats[idx].isPinned; 
-            // Si se fija, mover al principio
-            if(chats[idx].isPinned) {
-                const c = chats.splice(idx, 1)[0];
-                chats.unshift(c);
-            }
+            if(chats[idx].isPinned) { const c = chats.splice(idx, 1)[0]; chats.unshift(c); }
             localStorage.setItem(key, JSON.stringify(chats)); 
             renderLocalHistory(); 
         } 
     }
-
     window.startNewChat = () => { 
         currentChatId = null; 
         localStorage.removeItem('alexia_last_chat_id'); 
         chatState = { mode: 'normal' }; 
         document.getElementById('chat-box').innerHTML = `<div style="text-align:center; margin-top:80px; opacity:0.7; animation:fadeIn 1s;"><div style="width:80px; height:80px; background:linear-gradient(135deg, var(--accent), #ec4899); border-radius:50%; margin:0 auto 25px auto; display:flex; align-items:center; justify-content:center; box-shadow:0 0 40px var(--accent-glow);"><i class="fas fa-robot" style="font-size:40px; color:white;"></i></div><h2 style="font-weight:500;">¿En qué puedo ayudarte?</h2></div>`; 
         renderLocalHistory(); 
-        if(window.innerWidth < 800) {
-             document.getElementById('sidebar').classList.remove('open');
-             document.getElementById('overlay').classList.remove('active');
-        }
+        if(window.innerWidth < 800) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('active'); }
     }
-
     function saveLocalChat(uMsg, aiMsg) { const key = getLocalKey(); let chats = JSON.parse(localStorage.getItem(key)) || []; if (!currentChatId) { currentChatId = Date.now().toString(); chats.unshift({ id: currentChatId, title: uMsg.substring(0, 25) + "...", timestamp: Date.now(), isPinned: false, messages: [{r:'user', t:uMsg}, {r:'ai', t:aiMsg}] }); } else { const idx = chats.findIndex(c => c.id === currentChatId); if (idx > -1) { chats[idx].messages.push({r:'user', t:uMsg}, {r:'ai', t:aiMsg}); chats[idx].timestamp = Date.now(); } } localStorage.setItem(key, JSON.stringify(chats)); localStorage.setItem('alexia_last_chat_id', currentChatId); renderLocalHistory(); }
     function getLocalKey() { const uid = currentUser ? currentUser.uid : 'guest'; return `alexia_chats_${uid}`; }
-
     function updateUserUI(u) {
         const btnLogin = document.getElementById('top-login-btn');
         const headerProfile = document.getElementById('header-user-profile');
@@ -1192,7 +1088,6 @@ window.deleteLog = async (idx) => {
         const ddName = document.getElementById('dd-name');
         const ddEmail = document.getElementById('dd-email');
         const adminLink = document.getElementById('admin-link-container');
-        
         if(u) {
             if(btnLogin) btnLogin.style.display = 'none';
             if(headerProfile) headerProfile.style.display = 'block';
@@ -1205,7 +1100,6 @@ window.deleteLog = async (idx) => {
             if(headerProfile) headerProfile.style.display = 'none';
         }
     }
-
     document.getElementById('chat-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
 </script>
 </body>
