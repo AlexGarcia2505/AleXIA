@@ -1,30 +1,28 @@
-// alexia_logic.js - CEREBRO MAESTRO (VERSION 4.1 - ARREGLO DE INICIALIZACIÓN)
-// Este archivo ahora obtiene la configuración de Firebase desde window.FIREBASE_CONFIG.
+// alexia_logic.js - CEREBRO MAESTRO (VERSION 4.3 - FINAL FIX)
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
 import { getFirestore, doc, onSnapshot, setDoc, updateDoc, arrayUnion, arrayRemove, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
 // =========================================================================
-// I. INICIALIZACIÓN DE FIREBASE
+// I. INICIALIZACIÓN DE FIREBASE (Usa la configuración del HTML)
 // =========================================================================
-
-// En tu alexia_logic.js (Línea 10, aproximadamente, dentro de la inicialización)
-
 let app, db, auth, provider;
 try {
-    // CAMBIO CLAVE: Checamos que la configuración exista
-    if (!window.FIREBASE_CONFIG) {
-        console.error("FIREBASE_CONFIG no encontrado en el window object. La inicialización fallará.");
-        return; // Detiene la inicialización si no hay config
-    }
+    // Verificar que la configuración exista
+    if (typeof window.FIREBASE_CONFIG === 'undefined') throw new Error("Firebase config not exposed globally.");
     
     app = initializeApp(window.FIREBASE_CONFIG); 
-    // ... (el resto del try/catch sigue igual)
-    
+    db = getFirestore(app);
+    auth = getAuth(app);
+    provider = new GoogleAuthProvider();
+    const dot = document.getElementById('connection-dot');
+    if(dot) { dot.classList.add('online'); dot.classList.remove('offline'); }
 } catch(e) { 
-    // ...
+    console.error("Firebase Init Error:", e);
+    // Si falla, el sitio carga, pero la funcionalidad de login y DB estará muerta.
 }
+
 // Variables de Estado
 let currentUser = null;
 let brain = { memory: [], reviewQueue: [], missingLog: [] };
@@ -36,7 +34,7 @@ let synth = window.speechSynthesis;
 let wasVoiceInput = false;
 
 // Constantes
-const ADMIN_EMAIL = window.ADMIN_EMAIL;
+const ADMIN_EMAIL = window.ADMIN_EMAIL || "eljacksonyt@gmail.com";
 const slangMap = { "andas": "estas", "onda": "pasa", "hubo": "paso", "pex": "pasa", "pedo": "problema", "chido": "bueno", "padre": "bueno", "gwey": "amigo", "wey": "amigo", "camara": "adios", "simon": "si", "nelson": "no", "chale": "que mal", "neto": "verdad", "neta": "verdad", "jalo": "acepto", "sobres": "esta bien" };
 const stopWords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'de', 'del', 'al', 'a', 'en', 'por', 'para', 'con', 'sin', 'que', 'como', 'cual', 'quien', 'es', 'son', 'fue', 'era', 'me', 'te', 'se', 'lo', 'mi', 'tu', 'su', 'nos', 'yo', 'tu', 'el', 'ella', 'dime', 'sobre', 'acerca', 'significa', 'busco', 'esta', 'está', 'cómo', 'hay', 'eres', 'soy', 'somos', 'todo', 'bien', 'tal', 'gracias']);
 const randomTopics = ["Universo", "Inteligencia Artificial", "Historia de México", "Biología", "Arte Moderno", "Filosofía", "Tecnología", "Dinosaurios", "Psicología", "Música Clásica"];
@@ -76,7 +74,7 @@ window.googleLogin = () => signInWithPopup(auth, provider).then(()=>window.close
 
 
 // =========================================================================
-// III. FUNCIONES SECUNDARIAS (Deben estar definidas ANTES de sendMessage)
+// III. FUNCIONES SECUNDARIAS
 // =========================================================================
 const processSynonyms = (text) => text.split(" ").map(w => { const cw = window.normalize(w); return slangMap[cw] || cw; }).join(" ");
 const removeDuplicates = (text) => [...new Set(text.split(/\s+/))].join(" ");
@@ -90,7 +88,6 @@ window.appendMsg = (role, text, hasControls = false, customId = null) => {
     if (role === 'ai' && hasControls) {
         const safeText = text.replace(/'/g, "").replace(/"/g, "").replace(/\n/g, " ");
         const btnId = `btn-${customId}`;
-        // window.speakText debe ser definido antes de que esto se ejecute (se define más abajo)
         controlsHTML = `<button id="${btnId}" class="tts-btn" onclick="window.speakText('${safeText}', '${btnId}')"><i class="fas fa-volume-up"></i></button>`;
     }
     const icon = role === 'ai' ? `<div class="msg-icon"><i class="fas fa-robot"></i></div>` : '';
@@ -110,7 +107,6 @@ window.finishResponse = async (userTxt, aiTxt, shouldSuggest, showFeedback = fal
     window.saveLocalChat(userTxt, aiTxt + feedbackHTML);
     if (shouldSuggest) window.generateSuggestions();
 }
-
 window.rateAnswer = (type, query, btnElement) => {
     if (type === 'good') { alert("¡Me alegra haber ayudado! 😊"); } else {
         if (chatState.mode === 'waiting_correction') {
@@ -142,7 +138,7 @@ window.generateSuggestions = () => {
 
 
 // Módulos de Conocimiento (APIs gratuitas)
-const fetchBible = async (query) => { /* ... lógica de la API de la biblia ... */ 
+const fetchBible = async (query) => { 
     try {
         const res = await fetch(`https://bible-api.com/${encodeURIComponent(query)}?translation=rv1960`);
         if (!res.ok) return null;
@@ -151,7 +147,7 @@ const fetchBible = async (query) => { /* ... lógica de la API de la biblia ... 
     } catch (e) { return null; }
     return null;
 }
-const fetchDictionaryEs = async (word) => { /* ... lógica del diccionario ... */
+const fetchDictionaryEs = async (word) => { 
     try {
         const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/es/${window.normalize(word)}`);
         if (!res.ok) return null;
@@ -162,7 +158,7 @@ const fetchDictionaryEs = async (word) => { /* ... lógica del diccionario ... *
         return { def: defs.slice(0, 3).join('; '), src: 'DictionaryAPI' };
     } catch (e) { return null; }
 }
-const fetchMeteo = async (city) => { /* ... lógica del clima ... */
+const fetchMeteo = async (city) => { 
     try {
         const geoResp = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=es&format=json`);
         const geoData = await geoResp.json();
@@ -174,7 +170,7 @@ const fetchMeteo = async (city) => { /* ... lógica del clima ... */
         }
     } catch (e) { } return null;
 }
-const fetchWikipedia = async (term) => { /* ... lógica de Wikipedia ... */
+const fetchWikipedia = async (term) => { 
     try {
         const enc = encodeURIComponent(term);
         const search = await fetch(`https://es.wikipedia.org/w/api.php?action=opensearch&search=${enc}&limit=1&format=json&origin=*`);
@@ -192,7 +188,7 @@ const fetchWikipedia = async (term) => { /* ... lógica de Wikipedia ... */
         return { def: text.split('. ').slice(0, 4).join('. ') + '...', src: 'Wikipedia', url: `https://es.wikipedia.org/?curid=${pid}` };
     } catch (e) { return null; }
 }
-const fetchOpenLibrary = async (query) => { /* ... lógica de OpenLibrary ... */
+const fetchOpenLibrary = async (query) => { 
     try {
         const searchResp = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=1`);
         const searchData = await searchResp.json();
@@ -202,7 +198,7 @@ const fetchOpenLibrary = async (query) => { /* ... lógica de OpenLibrary ... */
         }
     } catch(e) {} return null;
 }
-const fetchRestCountries = async (country) => { /* ... lógica de REST Countries ... */
+const fetchRestCountries = async (country) => { 
     try {
         const res = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(country)}?fields=capital,languages,population,flags`);
         const j = await res.json();
@@ -214,7 +210,7 @@ const fetchRestCountries = async (country) => { /* ... lógica de REST Countries
     } catch (e) { return null; }
     return null;
 }
-const sintesisPorPalabraClave = async (words) => { /* ... lógica de síntesis ... */
+const sintesisPorPalabraClave = async (words) => { 
     let synthesis = [];
     for (let word of words) {
         let definition = null; let source = "";
@@ -292,46 +288,47 @@ window.speakText = (text, btnId) => {
 };
 
 
-// =========================================================================
-// IV. AUTENTICACIÓN Y CONEXIÓN
-// =========================================================================
-
-// Inicialización de Voz
-if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognition = new SpeechRecognition();
-    recognition.lang = 'es-MX'; recognition.continuous = false; recognition.interimResults = false;
-    recognition.onstart = () => { isVoiceActive = true; document.getElementById('mic-btn').classList.add('listening'); document.getElementById('chat-input').placeholder = "Escuchando..."; };
-    recognition.onend = () => { isVoiceActive = false; document.getElementById('mic-btn').classList.remove('listening'); document.getElementById('chat-input').placeholder = "Pregunta algo..."; };
-    recognition.onresult = (event) => { document.getElementById('chat-input').value = event.results[0][0].transcript; wasVoiceInput = true; window.sendMessage(); };
+window.updateUserUI = (u) => {
+    const btnLogin = document.getElementById('top-login-btn');
+    const headerProfile = document.getElementById('header-user-profile');
+    const headerAvatar = document.getElementById('header-avatar');
+    const ddName = document.getElementById('dd-name');
+    const ddEmail = document.getElementById('dd-email');
+    const adminLink = document.getElementById('admin-link-container');
+    
+    if(u) {
+        if(btnLogin) btnLogin.style.display = 'none';
+        if(headerProfile) headerProfile.style.display = 'block';
+        if(headerAvatar) headerAvatar.innerHTML = u.name[0].toUpperCase();
+        if(ddName) ddName.innerText = u.name;
+        if(ddEmail) ddEmail.innerText = u.email;
+        if(adminLink) adminLink.style.display = (u.role === 'admin') ? 'block' : 'none';
+    } else {
+        if(btnLogin) btnLogin.style.display = 'block';
+        if(headerProfile) headerProfile.style.display = 'none';
+    }
 }
 
-// Autenticación (Se mantiene al final del archivo por la lógica asíncrona)
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        if (!user.emailVerified) return;
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
-        let role = "user";
-        if(user.email === ADMIN_EMAIL) role = "admin";
-        else if (userSnap.exists()) role = userSnap.data().role || "user";
-        if (!userSnap.exists()) await setDoc(userRef, { email: user.email, role: role, createdAt: new Date().toISOString() });
-        currentUser = { uid: user.uid, name: user.displayName || user.email.split('@')[0], role: role, email: user.email };
-        window.updateUserUI(currentUser);
-        window.renderLocalHistory();
-        window.closeModal(); 
-    } else { 
-        currentUser = null; 
-        window.updateUserUI(null); 
-        currentChatId = null; 
-        window.renderLocalHistory(); 
-    }
-    const lastChatId = localStorage.getItem('alexia_last_chat_id');
-    if (lastChatId) window.loadLocalChat(lastChatId);
-});
 
-// Conexión a Base de Datos en Tiempo Real
-if(db) onSnapshot(doc(db, "alexia_db", "main_brain"), (snap) => { if(snap.exists()) brain = snap.data(); });
+// =========================================================================
+// IV. MOTOR DE INTENCIÓN (NEURO-ROUTER)
+// =========================================================================
+const detectarIntencion = (texto) => {
+    const t = window.normalize(texto);
+
+    // Biblia (Patrón flexible corregido para mateo 1:3)
+    if (/(?:biblia|versiculo|cita)\s*.*?(\w+\s\d{1,3}:\d{1,3}(?:\-\d{1,3})?)/i.test(t)) {
+        return { intent: "biblia", query: RegExp.$1.trim() }; 
+    }
+    
+    if (/(?:significado|define|que significa|que es|definicion|definir)\s+(.+)/i.test(t)) return { intent: "diccionario", query: RegExp.$1.trim() };
+    if (/(?:clima|tiempo)\s+(?:en|de)\s+(.+)/i.test(t)) return { intent: "clima", query: RegExp.$1.trim() };
+    if (/(?:libro|obra|autor|novela)\s+(?:de|sobre)?\s*(.+)/i.test(t)) return { intent: "libros", query: RegExp.$1.trim() };
+    if (/(?:quien es|que es|como funciona|cuando fue|donde esta|dime sobre|informacion de|biografia de)\s+(.+)/i.test(t)) return { intent: "wikipedia", query: RegExp.$1.trim() };
+    if (/(?:capital de|poblacion de|idioma de|país|de dónde es)\s+(.+)/i.test(t)) return { intent: "pais", query: RegExp.$1.trim() };
+
+    return { intent: "general", query: texto };
+}
 
 
 // =========================================================================
@@ -437,7 +434,14 @@ window.sendMessage = async function() {
     wasVoiceInput = false;
 }
 
+// Inicialización de Voz (continuación)
+if (document.getElementById('mic-btn')) {
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+        document.getElementById('mic-btn').style.display = 'none';
+    }
+}
+
+
 // Iniciar Enter listener
 const inputField = document.getElementById('chat-input');
 if(inputField) inputField.addEventListener('keypress', (e) => { if(e.key === 'Enter') window.sendMessage(); });
-
