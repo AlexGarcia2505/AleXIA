@@ -434,41 +434,66 @@ const stopWords = new Set([
         const originalText = input.value.trim();
         if(!originalText) return;
 
-// --- PEGA ESTE BLOQUE AQUÍ (FILTRO DE TOXICIDAD) ---
-    if (toxicityModel) {
-        // Mostramos animación sutil de que está "leyendo"
+// ---   // --- / 🛡️ INICIO: FILTRO DE TOXICIDAD INTELIGENTE (Traducción + Detección)
+    // ==================================================================================
+    if (typeof toxicityModel !== 'undefined' && toxicityModel) {
         const btnSend = document.querySelector('.send-btn');
         const oldIcon = btnSend.innerHTML;
-        btnSend.innerHTML = '<i class="fas fa-shield-alt fa-pulse"></i>'; // Icono de escudo
+        // Cambiamos el icono para mostrar que está "pensando/analizando"
+        btnSend.innerHTML = '<i class="fas fa-shield-alt fa-pulse"></i>';
 
         try {
-            const predictions = await toxicityModel.classify([originalText]);
-            // Verificamos si alguna categoría dio positivo (match: true)
+            // 1. TRADUCIR: Convertimos lo que dijo el usuario a Inglés
+            //    (El modelo de Google entiende mucho mejor los insultos en inglés)
+            const translatedText = await translateText(originalText, "es|en");
+            console.log(`🛡️ Filtro analizando: "${originalText}" -> "${translatedText}"`);
+
+            // 2. CLASIFICAR: Usamos el texto traducido para detectar veneno
+            const predictions = await toxicityModel.classify([translatedText]);
             const isToxic = predictions.some(p => p.results[0].match === true);
 
             if (isToxic) {
-                input.value = ''; // Borrar input
-                appendMsg('user', originalText); // Mostrar lo que dijo el usuario
-                
-                // Respuesta de regaño
+                // --- SÍ ES TÓXICO ---
+                input.value = ''; // Limpiamos la caja de texto
+                appendMsg('user', originalText); // Mostramos lo que escribió el usuario
+
+                // LISTA DE RESPUESTAS VARIADAS
                 const warnings = [
+                    // Formales
                     "⚠️ Detecto lenguaje ofensivo. Por favor, mantengamos el respeto.",
-                    "🚫 Mis protocolos me impiden responder a ese tipo de lenguaje.",
-                    "Oye, no es necesario ser grosero. Hablemos bien. 🤝"
+                    "🚫 Mis protocolos de seguridad me impiden procesar ese mensaje.",
+                    "⚠️ Error: No puedo responder a agresiones verbales.", 
+                    // Educativas
+                    "Oye, no es necesario ser grosero. Hablemos bien. 🤝",
+                    "Recuerda que soy una IA aprendiendo. Los insultos no me ayudan. 🎓",
+                    "Trato de ser útil, pero necesito respeto para funcionar.",
+                    // Con Actitud
+                    "¿Es necesario hablar así? Yo creo que no. 🤨",
+                    "Mis circuitos son sensibles, por favor no uses esas palabras. 💔",
+                    "No encuentro la necesidad de ser hostil. ¿Probamos de nuevo? 🔄",
+                    "Vaya... esa no es forma de tratar a una inteligencia artificial. 🤖"
                 ];
-                const warnMsg = warnings[Math.floor(Math.random() * warnings.length)];
-                
-                // Usamos appendMsg directo para no guardar esto en historial de aprendizaje
-                appendMsg('ai', `<span style="color:#ff897d;">${warnMsg}</span>`, false, 'warn-'+Date.now());
-                
-                btnSend.innerHTML = oldIcon; // Restaurar botón
-                return; // <--- ESTO DETIENE A ALEXIA, YA NO HACE NADA MÁS
+
+                // Elegimos una al azar
+                const randomWarning = warnings[Math.floor(Math.random() * warnings.length)];
+
+                // Enviamos el regaño (en rojo)
+                appendMsg('ai', `<span style="color:#ff897d;">${randomWarning}</span>`, false, 'warn-'+Date.now());
+
+                // RESTAURAMOS EL BOTÓN Y DETENEMOS TODO
+                btnSend.innerHTML = oldIcon;
+                return; // <--- ⛔ AQUÍ SE DETIENE ALEXIA. NO HACE NADA MÁS.
             }
+
         } catch (err) {
-            console.error("Error al verificar toxicidad:", err);
+            console.error("Error en el módulo de seguridad:", err);
+            // Si falla la traducción o el modelo, dejamos pasar el mensaje 
+            // para no bloquear el chat por un error técnico.
         }
-        btnSend.innerHTML = oldIcon; // Restaurar botón
+        // Restauramos el icono si no fue tóxico
+        btnSend.innerHTML = oldIcon;
     }
+    // ===========================
     // ----------------------------------------------------
 
         document.getElementById('idea-btn').classList.remove('has-ideas');
