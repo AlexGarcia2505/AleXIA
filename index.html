@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V65 - Navigation Fix</title>
+    <title>AleXIA V66 - UI Refinada</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -48,7 +48,9 @@
         .chat-item:hover { background-color: #282a2c; }
         .chat-item.active { background-color: #3c4043; font-weight: 500; }
         .chat-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
-        .pin-btn { background: none; border: none; color: #555; cursor: pointer; font-size: 0.8rem; padding: 5px; }
+        
+        /* ESTILO PIN */
+        .pin-btn { background: none; border: none; color: #555; cursor: pointer; font-size: 0.8rem; padding: 5px; transition: 0.2s; }
         .pin-btn:hover { color: var(--accent); }
         .pin-btn.pinned { color: var(--accent); opacity: 1; transform: rotate(-45deg); }
 
@@ -84,50 +86,75 @@
         .msg-icon { width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #4285f4, #9b72cb); color: white; flex-shrink: 0; position: relative; }
         .msg-bubble { max-width: 85%; line-height: 1.6; font-size: 1rem; position: relative; word-wrap: break-word; }
         .user-row .msg-bubble { background: var(--user-msg); padding: 10px 18px; border-radius: 20px 20px 4px 20px; }
+        
+        /* --- CORRECCIÓN: ICONO DE AUDIO EN PRIMERA LÍNEA --- */
         .ai-row .msg-bubble { background: transparent; padding: 0 10px; position: relative; display: block; flex: 1; min-width: 0; }
         
-        .rich-content { max-height: 24rem; overflow-y: auto; padding-right: 5px; margin-bottom: 15px; display: block; text-align: left; }
+        /* BOTÓN AUDIO: Flotando a la derecha, inline con el texto */
+        .tts-btn {
+            float: right; /* Se alinea a la derecha del texto */
+            margin-left: 15px; /* Espacio entre texto e icono */
+            margin-bottom: 5px;
+            background: rgba(255,255,255,0.05); 
+            border: 1px solid #444; 
+            color: var(--accent); 
+            width: 28px; height: 28px; 
+            border-radius: 50%; cursor: pointer; 
+            display: flex; justify-content: center; align-items: center; 
+            font-size: 0.8rem; 
+            transition: 0.2s;
+        }
+        .tts-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.1); border-color: white; }
+        .tts-btn.speaking { color: var(--danger); border-color: var(--danger); animation: pulse 1s infinite; background: rgba(255, 137, 125, 0.1); }
+
+        .rich-content { max-height: 24rem; overflow-y: auto; padding-right: 5px; margin-bottom: 15px; display: block; text-align: left; clear: both; /* Asegura que baje después del float */ }
         .rich-content::-webkit-scrollbar { width: 6px; }
         .rich-content::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
         .rich-content::-webkit-scrollbar-track { background: transparent; }
-        .rich-content p { display: block; margin-bottom: 15px; text-align: left; clear: both; }
+        .rich-content p { display: block; margin-bottom: 15px; text-align: left; }
         .rich-source { display: block; width: 100%; margin-top: 10px; padding-top: 15px; border-top: 1px solid #333; font-size: 0.9rem; color: var(--accent); clear: both; }
         .rich-source a { color: var(--accent); text-decoration: none; display: flex; align-items: center; gap: 10px; padding: 5px 0; }
 
-        .suggestion-prompt { margin-top: 25px; font-weight: 500; color: var(--accent); display: block; margin-bottom: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
-        .suggestion-item { display: block; margin-top: 12px; padding: 8px 12px; border-radius: 8px; background: rgba(255,255,255,0.03); font-size: 0.95rem; cursor: pointer; transition: all 0.2s; line-height: 1.5; border: 1px solid transparent; white-space: normal; }
-        .suggestion-item:hover { background: rgba(168, 199, 250, 0.1); border-color: var(--accent); color: white; }
-
-        .feedback-area { margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .feedback-area { margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; clear: both; }
         .feedback-btn { background: rgba(255,255,255,0.05); border: 1px solid #444; color: #ccc; padding: 5px 12px; border-radius: 15px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; transition: 0.2s; }
         .feedback-btn:hover { background: rgba(255,255,255,0.1); color: white; }
         .feedback-btn.active-teach { background: var(--accent); color: #000; border-color: var(--accent); font-weight: bold; box-shadow: 0 0 10px var(--accent-glow); }
 
-        .tts-btn { background: rgba(255,255,255,0.08); border: 1px solid #444; color: var(--accent); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 0.9rem; position: absolute; top: 0; right: 15px; z-index: 10; transition: 0.2s; }
-        .tts-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.1); border-color: white; }
-        .tts-btn.speaking { color: var(--danger); border-color: var(--danger); animation: pulse 1s infinite; background: rgba(255, 137, 125, 0.1); }
-
         /* INPUT & BOTONES */
         .input-container { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px 20px 10px 20px; background: var(--bg-body); display: flex; flex-direction: column; align-items: center; z-index: 20; border-top: 1px solid #222; }
-        .input-wrapper { background: var(--bg-input); width: 100%; max-width: 800px; border-radius: 30px; display: flex; align-items: center; padding: 5px 10px 5px 15px; border: 1px solid #444; }
+        .input-wrapper { background: var(--bg-input); width: 100%; max-width: 800px; border-radius: 30px; display: flex; align-items: center; padding: 5px 10px 5px 15px; border: 1px solid #444; position: relative; }
         .chat-input { flex: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; font-size: 16px; }
         
         .action-btn { background: transparent; color: #aaa; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background-color 0.2s; margin-left: 5px; }
         .action-btn:hover { background: rgba(255,255,255,0.1); color: white; }
         
-        /* --- ESTILO BOTÓN ENVIAR (GÉMINI STYLE) --- */
-        .send-btn { 
-            background: #e3e3e3; /* Color base claro/blanco */
-            color: #000; /* Icono negro */
-            transition: background-color 0.1s ease;
-        }
-        .send-btn:active { 
-            background: var(--accent); /* Cambia a azul al presionar */
-            color: #000;
-        }
+        /* BOTÓN ENVIAR GÉMINI */
+        .send-btn { background: #e3e3e3; color: #000; transition: background-color 0.1s ease; }
+        .send-btn:active { background: var(--accent); color: #000; }
         
+        /* BOTÓN SUGERENCIAS (FOCO) */
+        .idea-btn { color: #aaa; transition: 0.3s; }
+        .idea-btn:hover { color: #ffd700; background: rgba(255, 215, 0, 0.1); }
+        .idea-btn.has-ideas { color: #ffd700; animation: pulseIdea 2s infinite; }
+
         .mic-btn.listening { color: var(--danger); background: rgba(255, 68, 68, 0.1); animation: pulseRed 1.5s infinite; }
         .footer-info { font-size: 0.7rem; color: #555; text-align: center; margin-bottom: 5px; margin-top: 5px; }
+
+        /* MENÚ FLOTANTE DE SUGERENCIAS */
+        .suggestions-popup {
+            display: none; position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 350px; background: #1e1f20; border: 1px solid #444;
+            border-radius: 16px; box-shadow: 0 5px 20px rgba(0,0,0,0.6);
+            padding: 10px; z-index: 150; animation: slideUp 0.2s;
+        }
+        .suggestions-popup.show { display: block; }
+        .sug-item {
+            display: block; padding: 12px; margin-bottom: 5px; background: rgba(255,255,255,0.03);
+            border-radius: 10px; cursor: pointer; font-size: 0.9rem; color: #ddd;
+            border: 1px solid transparent; transition: 0.2s;
+        }
+        .sug-item:hover { background: rgba(168, 199, 250, 0.1); border-color: var(--accent); color: white; }
+        .sug-item strong { color: var(--accent); }
 
         .modal { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.85); z-index: 200; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .card { background: #1e1f20; padding: 30px; border-radius: 24px; width: 90%; max-width: 380px; text-align: center; border: 1px solid #444; }
@@ -147,7 +174,9 @@
         .log-input { width: 100%; background: #111; border: 1px solid #444; color: #ddd; padding: 8px; border-radius: 4px; margin-top: 5px; font-family: inherit; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: 0; } }
+        @keyframes slideUp { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        @keyframes pulseIdea { 0% { text-shadow: 0 0 5px #ffd700; } 50% { text-shadow: 0 0 20px #ffd700; transform: scale(1.1); } 100% { text-shadow: 0 0 5px #ffd700; } }
         @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(255, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); } }
     </style>
 </head>
@@ -202,9 +231,19 @@
             <h2>¿Qué tienes en mente?</h2>
         </div>
     </div>
+    
+    <div id="suggestions-popup" class="suggestions-popup">
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; color:#aaa; font-size:0.8rem;">
+            <span>Sugerencias del tema</span>
+            <button onclick="toggleSuggestions()" style="background:none; border:none; color:#777;"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="suggestions-content"></div>
+    </div>
 
     <div class="input-container">
         <div class="input-wrapper">
+            <button id="idea-btn" class="action-btn idea-btn" onclick="toggleSuggestions()" title="Ver sugerencias"><i class="far fa-lightbulb"></i></button>
+            
             <input type="text" id="chat-input" class="chat-input" placeholder="Pregunta o dicta..." autocomplete="off">
             <button class="action-btn mic-btn" id="mic-btn" onclick="toggleVoice()"><i class="fas fa-microphone"></i></button>
             <button class="action-btn send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
@@ -264,7 +303,7 @@
     const ADMIN_EMAIL = "eljacksonyt@gmail.com";
     let currentChatId = null;
     let chatState = { mode: 'normal', lastQuery: '' }; 
-    let activeSuggestions = JSON.parse(localStorage.getItem('alexia_active_suggestions')) || []; 
+    let activeSuggestions = []; // Ahora global real
     let isVoiceActive = false;
     let recognition;
     let synth = window.speechSynthesis;
@@ -276,11 +315,24 @@
 
     const slangMap = { "andas": "estas", "onda": "pasa", "hubo": "paso", "pex": "pasa", "pedo": "problema", "chido": "bueno", "padre": "bueno", "gwey": "amigo", "wey": "amigo", "camara": "adios", "simon": "si", "nelson": "no", "chale": "que mal", "neto": "verdad", "neta": "verdad", "jalo": "acepto", "sobres": "esta bien" };
     const stopWords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'de', 'del', 'al', 'a', 'en', 'por', 'para', 'con', 'sin', 'que', 'como', 'cual', 'quien', 'es', 'son', 'fue', 'era', 'me', 'te', 'se', 'lo', 'mi', 'tu', 'su', 'nos', 'yo', 'tu', 'el', 'ella', 'dime', 'sobre', 'acerca', 'significa', 'busco', 'esta', 'está', 'cómo', 'hay', 'eres', 'soy', 'somos', 'todo', 'bien', 'tal', 'gracias']);
-    const contextualReplies = { "que tal como estas": ["¿Qué gusto saludarte, yo muy bien, y tú?", "¿Cómo te ha ido últimamente?"], "hola": ["¡Hola! ¿Cómo andas?", "Saludos. ¿Qué me cuentas?"], "si": ["Perfecto.", "Excelente."], "no": ["Entendido."], "adios": ["¡Hasta luego!", "¡Cuídate mucho!"], "estoy bien y tu": ["Me alegra. Yo muy bien."] };
     
     window.toggleUserMenu = (e) => { e.stopPropagation(); document.getElementById('user-dropdown').classList.toggle('show'); }
-    window.onclick = (e) => { if (!e.target.matches('.header-profile') && !e.target.matches('.header-profile *')) { const menu = document.getElementById('user-dropdown'); if (menu && menu.classList.contains('show')) menu.classList.remove('show'); } }
+    window.onclick = (e) => { 
+        if (!e.target.matches('.header-profile') && !e.target.matches('.header-profile *')) { 
+            document.getElementById('user-dropdown').classList.remove('show'); 
+        } 
+        // Cerrar popup de sugerencias si click fuera
+        if (!e.target.closest('#suggestions-popup') && !e.target.closest('#idea-btn')) {
+            document.getElementById('suggestions-popup').classList.remove('show');
+        }
+    }
     window.emergencyReset = (e) => { if(e) e.stopPropagation(); if(confirm("⚠️ ¿Restablecer aplicación?")) { localStorage.clear(); sessionStorage.clear(); window.location.reload(); } };
+
+    // --- TOGGLE SUGERENCIAS FLOTANTES ---
+    window.toggleSuggestions = () => {
+        const popup = document.getElementById('suggestions-popup');
+        popup.classList.toggle('show');
+    }
 
     if(auth) {
         onAuthStateChanged(auth, async (user) => {
@@ -350,20 +402,29 @@
         const originalText = input.value.trim();
         if(!originalText) return;
 
+        // Desactivar el foco mientras piensa
+        document.getElementById('idea-btn').classList.remove('has-ideas');
+
         if (chatState.mode === 'waiting_correction') {
             const correction = originalText;
             input.value = '';
             appendMsg('user', originalText);
             const sendingMsgId = 'sending-' + Date.now();
             appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> Guardando...`, false, sendingMsgId);
+
             try {
                 const qData = String(chatState.lastQuery || "Pregunta no detectada");
                 const aData = String(correction || "Respuesta vacía");
                 const finalUser = String(currentUser ? currentUser.email : "Anónimo");
                 await setDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayUnion({ q: qData, a: aData, user: finalUser, date: new Date().toISOString() }) }, { merge: true });
+                
                 const sendingEl = document.getElementById(sendingMsgId);
                 if(sendingEl) sendingEl.querySelector('.msg-bubble').innerHTML = `¡Gracias! Respuesta guardada.`;
-                document.querySelectorAll('.feedback-btn.active-teach').forEach(b => { b.classList.remove('active-teach'); b.innerHTML = '<i class="fas fa-graduation-cap"></i> Enseñar'; });
+                
+                document.querySelectorAll('.feedback-btn.active-teach').forEach(b => {
+                    b.classList.remove('active-teach');
+                    b.innerHTML = '<i class="fas fa-graduation-cap"></i> Enseñar';
+                });
             } catch (e) {
                 const sendingEl = document.getElementById(sendingMsgId);
                 if(sendingEl) { sendingEl.querySelector('.msg-bubble').innerHTML = `❌ Error: ${e.message}`; sendingEl.querySelector('.msg-bubble').style.color = "var(--danger)"; }
@@ -372,9 +433,19 @@
         }
         
         let normInput = removeDuplicates(normalize(originalText));
-        if (normInput.match(/quien (te )?(creo|hizo)|quien eres|que eres|como te llamas/i)) { input.value = ''; appendMsg('user', originalText); await finishResponse(originalText, "Soy <b>AleXIA</b>, creada por <b>Alexis García</b>.", false, false); return; }
+        
+        if (normInput.match(/quien (te )?(creo|hizo)|quien eres|que eres|como te llamas/i)) {
+            input.value = ''; appendMsg('user', originalText);
+            await finishResponse(originalText, "Soy <b>AleXIA</b>, creada por <b>Alexis García</b>.", false, false); return;
+        }
+
         const conversationalReply = checkConversational(normInput);
-        if (conversationalReply) { input.value = ''; appendMsg('user', originalText); await finishResponse(originalText, conversationalReply, false, false); return; }
+        if (conversationalReply) {
+            input.value = ''; appendMsg('user', originalText);
+            await finishResponse(originalText, conversationalReply, false, false); return;
+        }
+        
+        // Detección de Opciones (A, B, C)
         const flexibleMatch = normInput.match(/\b([abc])\b/i);
         if (flexibleMatch && normInput.length < 30) {
             const idx = flexibleMatch[1].toUpperCase().charCodeAt(0) - 65;
@@ -387,12 +458,16 @@
         
         input.value = ''; appendMsg('user', originalText); 
         const loadingId = 'loading-' + Date.now(); appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> <span id="think-text">Pensando...</span>`, false, loadingId);
+        
         await new Promise(r => setTimeout(r, 1000));
         const loadingMsg = document.getElementById(loadingId); if(loadingMsg) loadingMsg.remove();
+
         const interpretedText = processSynonyms(normInput);
         const words = interpretedText.split(/\s+/).filter(w => !stopWords.has(w) && w.length > 2);
+
         const specificIntent = checkSpecificIntent(originalText);
         if (specificIntent) { await processSpecificIntent(specificIntent.query, specificIntent.source); wasVoiceInput = false; return; }
+
         let bestMatch = null, maxScore = 0;
         brain.memory.forEach(mem => {
             mem.inputs.forEach(key => {
@@ -401,22 +476,26 @@
                 else if (memKey.includes(interpretedText) && interpretedText.length > 3) { if (0.8 > maxScore) { maxScore = 0.8; bestMatch = mem; } }
             });
         });
+
         if (maxScore >= 0.8) {
             const key = normalize(bestMatch.inputs[0]);
             let finalResponse = bestMatch.output;
-            if (contextualReplies[key]) finalResponse = contextualReplies[key][Math.floor(Math.random() * contextualReplies[key].length)];
             await finishResponse(originalText, finalResponse, true, true); wasVoiceInput = false; return;
         }
+
         const synthesis = await runWordDecomposition(interpretedText, words);
         let aiResponse = ""; let logThis = false;
+
         if (synthesis.length > 0) {
             aiResponse = synthesis.length === 1 && synthesis[0].src !== "Memoria" ? `Encontré esto sobre <strong>${synthesis[0].word}</strong>:<br>${synthesis[0].def}` : `<strong>Analizando conceptos:</strong><br>` + synthesis.map(item => `- <b>${item.word}:</b> ${item.def}`).join('<br>');
             aiResponse += "<br><br>¿Te sirve esta información?"; logThis = true;
         } else { aiResponse = "No logré encontrar información detallada."; logThis = true; }
+
         if (logThis && db) {
             const logEntry = { q: truncateLog(originalText), a: truncateLog(aiResponse.replace(/<[^>]*>/g, '')), user: currentUser ? currentUser.email : "Invitado", date: new Date().toISOString() };
             setDoc(doc(db, "alexia_db", "main_brain"), { missingLog: arrayUnion(logEntry) }, { merge: true }).catch(err => console.log(err));
         }
+
         await finishResponse(originalText, aiResponse, true, true); wasVoiceInput = false;
     };
 
@@ -504,10 +583,11 @@
         if (role === 'ai' && hasControls) {
             const safeText = text.replace(/'/g, "").replace(/"/g, "").replace(/\n/g, " ");
             const btnId = `btn-${customId}`;
+            // ICONO DE AUDIO FLOTANTE DERECHA
             controlsHTML = `<button id="${btnId}" class="tts-btn" onclick="window.speakText('${safeText}', '${btnId}')"><i class="fas fa-volume-up"></i></button>`;
         }
         const icon = role === 'ai' ? `<div class="msg-icon"><i class="fas fa-robot"></i></div>` : '';
-        row.innerHTML = `${icon}<div class="msg-bubble">${text}${controlsHTML}</div>`;
+        row.innerHTML = `${icon}<div class="msg-bubble">${controlsHTML}${text}</div>`;
         if(box.querySelector('h2')) box.innerHTML = '';
         box.appendChild(row);
         setTimeout(() => { row.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
@@ -523,7 +603,57 @@
         appendMsg('ai', aiTxt + feedbackHTML, true, msgId); 
         saveLocalChat(userTxt, aiTxt + feedbackHTML);
         if (wasVoiceInput) { setTimeout(() => { const btnId = `btn-${msgId}`; const cleanSpeakTxt = aiTxt.replace(/<[^>]*>/g, " "); window.speakText(cleanSpeakTxt, btnId); }, 500); }
-        if (shouldSuggest) { const suggestionsHTML = await generateSuggestionsHTML(); const msgBubbles = document.getElementById('chat-box').querySelectorAll('.msg-row.ai-row .msg-bubble'); if (msgBubbles.length > 0) { msgBubbles[msgBubbles.length - 1].innerHTML += suggestionsHTML; const box = document.getElementById('chat-box'); box.scrollTop = box.scrollHeight; } }
+        
+        if (shouldSuggest) { 
+            generateSuggestions(); // Generar pero NO pegar
+        }
+    }
+    
+    // --- NUEVA LÓGICA DE SUGERENCIAS FLOTANTES ---
+    async function generateSuggestions() {
+        activeSuggestions = [];
+        // Generación asíncrona (igual que antes pero sin return HTML)
+        try {
+            const randomSubject = bookSubjects[Math.floor(Math.random() * bookSubjects.length)];
+            const bookResp = await fetch(`https://openlibrary.org/search.json?q=${randomSubject}&limit=5&fields=title`);
+            const bookJson = await bookResp.json();
+            if (bookJson.docs && bookJson.docs.length > 0) {
+                activeSuggestions.push({ label: `Libro: **${bookJson.docs[0].title}**`, query: `libro de ${bookJson.docs[0].title}`, source: 'Biblioteca/WEB' });
+            }
+        } catch(e) {}
+
+        try {
+            const randomTopic = randomTopics[Math.floor(Math.random() * randomTopics.length)];
+            const wikiResp = await fetch(`https://es.wikipedia.org/w/api.php?action=query&list=search&srsearch=${randomTopic}&format=json&origin=*`);
+            const wikiJson = await wikiResp.json();
+            if(wikiJson.query && wikiJson.query.search.length > 0) {
+                 activeSuggestions.push({ label: `Artículo: **${wikiJson.query.search[0].title}**`, query: `articulo de ${wikiJson.query.search[0].title}`, source: 'Wikipedia/WEB' });
+            }
+        } catch(e) {}
+        
+        try {
+            const randomCity = globalCities[Math.floor(Math.random() * globalCities.length)];
+            activeSuggestions.push({ label: `Clima en **${randomCity}**`, query: `clima en ${randomCity}`, source: 'Meteo/WEB' });
+        } catch(e) {}
+
+        localStorage.setItem('alexia_active_suggestions', JSON.stringify(activeSuggestions));
+        
+        // Activar foco visualmente
+        const ideaBtn = document.getElementById('idea-btn');
+        ideaBtn.classList.add('has-ideas');
+        
+        // Llenar el popup
+        const content = document.getElementById('suggestions-content');
+        content.innerHTML = "";
+        activeSuggestions.forEach(s => {
+            content.innerHTML += `<div class="sug-item" onclick="useSuggestion('${s.query}')">${s.label}</div>`;
+        });
+    }
+
+    window.useSuggestion = (query) => {
+        document.getElementById('suggestions-popup').classList.remove('show');
+        document.getElementById('chat-input').value = query;
+        sendMessage();
     }
 
     window.rateAnswer = (type, query, btnElement) => {
@@ -556,14 +686,7 @@
     window.emailLogin = () => { const e=document.getElementById('l-email').value, p=document.getElementById('l-pass').value; signInWithEmailAndPassword(auth, e, p).then((c)=>{if(!c.user.emailVerified){document.getElementById('verify-modal').style.display='flex';signOut(auth);}else closeModal();}).catch(e=>alert(e.message)); };
     window.emailRegister = () => { const e=document.getElementById('r-email').value, p=document.getElementById('r-pass').value; createUserWithEmailAndPassword(auth, e, p).then(async(c)=>{await sendEmailVerification(c.user);document.getElementById('auth-modal').style.display='none';document.getElementById('verify-modal').style.display='flex';}).catch(e=>alert(e.message)); };
     window.googleLogin = () => signInWithPopup(auth, provider).then(()=>closeModal()).catch(e=>alert(e.message));
-    window.logout = (e) => { 
-        if(e) e.stopPropagation(); 
-        const key = `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`;
-        // No borramos el historial del usuario registrado, solo limpiamos la sesión
-        localStorage.removeItem('alexia_last_chat_id');
-        signOut(auth).then(() => { window.location.reload(); }); 
-    }
-    
+    window.logout = (e) => { if(e) e.stopPropagation(); const key = `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`; localStorage.removeItem(key); localStorage.removeItem('alexia_last_chat_id'); signOut(auth).then(() => { window.location.reload(); }); }
     window.uploadDictionary = async () => { const fileInput = document.getElementById('json-upload'); const statusDiv = document.getElementById('upload-status'); if(fileInput.files.length === 0) return alert("Selecciona archivo"); statusDiv.innerHTML = "Analizando..."; const reader = new FileReader(); reader.onload = async (e) => { try { const words = JSON.parse(e.target.result); let added = 0; const chunkSize = 400; for (let i = 0; i < words.length; i += chunkSize) { const chunk = words.slice(i, i + chunkSize); const batch = writeBatch(db); chunk.forEach(word => { const ref = doc(db, "dictionary", normalize(word.id)); batch.set(ref, word); added++; }); await batch.commit(); statusDiv.innerHTML = `Subiendo... (${added})`; } statusDiv.innerHTML = `✅ Terminado: ${added}`; } catch (err) { statusDiv.innerHTML = "❌ Error JSON"; } }; reader.readAsText(fileInput.files[0]); };
     
     function renderAdminQueue() {
@@ -579,68 +702,13 @@
         content.innerHTML = reviewHTML + missingHTML;
     }
 
-    // --- RENDERIZADO Y NAVEGACIÓN ---
     function renderLocalHistory() {
-        const key = getLocalKey(); 
-        let chats = [];
-        try {
-            chats = JSON.parse(localStorage.getItem(key));
-            if (!Array.isArray(chats)) throw new Error("Invalid format");
-        } catch(e) {
-            console.warn("Limpiando historial...");
-            localStorage.removeItem(key);
-            chats = [];
-        }
-
-        const pc = document.getElementById('pinned-container'); const hc = document.getElementById('history-container');
-        pc.innerHTML = ""; hc.innerHTML = ""; let hasPinned = false;
-        
-        if(chats.length === 0) {
-            hc.innerHTML = `<div style="text-align:center; padding:20px; color:#555; font-size:0.85rem;">Historial vacío</div>`;
-        } else {
-            chats.forEach(chat => {
-                const active = (chat.id === currentChatId) ? 'active' : ''; 
-                const title = chat.title || "Chat sin título";
-                const pinClass = chat.isPinned ? 'pinned' : '';
-                const html = `<div class="chat-item ${active}" onclick="window.loadLocalChat('${chat.id}')"><div class="chat-title"><i class="far fa-comment-alt" style="opacity:0.7; margin-right:8px;"></i>${title}</div><button class="pin-btn ${pinClass}" onclick="togglePinLocal(event, '${chat.id}')"><i class="fas fa-thumbtack"></i></button></div>`;
-                if (chat.isPinned) { pc.innerHTML += html; hasPinned = true; } else hc.innerHTML += html;
-            });
-        }
-        document.getElementById('pinned-section').style.display = hasPinned ? 'block' : 'none';
+        const key = getLocalKey(); let chats = []; try { chats = JSON.parse(localStorage.getItem(key)); if (!Array.isArray(chats)) throw new Error("Invalid format"); } catch(e) { console.warn("Limpiando historial corrupto..."); localStorage.removeItem(key); localStorage.removeItem('alexia_last_chat_id'); chats = []; }
+        const pc = document.getElementById('pinned-container'); const hc = document.getElementById('history-container'); pc.innerHTML = ""; hc.innerHTML = ""; let hasPinned = false;
+        if(chats.length === 0) { hc.innerHTML = `<div style="text-align:center; padding:20px; color:#555; font-size:0.85rem;">Historial vacío</div>`; } else { chats.forEach(chat => { const active = (chat.id === currentChatId) ? 'active' : ''; const title = chat.title || "Chat sin título"; const pinClass = chat.isPinned ? 'pinned' : ''; const html = `<div class="chat-item ${active}" onclick="loadLocalChat('${chat.id}')"><div class="chat-title"><i class="far fa-comment-alt" style="opacity:0.7; margin-right:8px;"></i>${title}</div><button class="pin-btn ${pinClass}" onclick="togglePinLocal(event, '${chat.id}')"><i class="fas fa-thumbtack"></i></button></div>`; if (chat.isPinned) { pc.innerHTML += html; hasPinned = true; } else hc.innerHTML += html; }); } document.getElementById('pinned-section').style.display = hasPinned ? 'block' : 'none';
     }
 
-    window.loadLocalChat = (id) => {
-        const key = getLocalKey(); 
-        const chats = JSON.parse(localStorage.getItem(key)) || []; 
-        const chat = chats.find(c => c.id === id); 
-        if (chat) { 
-            currentChatId = id; 
-            localStorage.setItem('alexia_last_chat_id', currentChatId); 
-            const box = document.getElementById('chat-box'); 
-            box.innerHTML = ""; 
-            chat.messages.forEach(m => appendMsg(m.r, m.t, m.r === 'ai')); 
-            renderLocalHistory(); 
-            // CERRAR SIDEBAR EN MÓVIL
-            if(window.innerWidth < 800) { 
-                document.getElementById('sidebar').classList.remove('open'); 
-                document.getElementById('overlay').classList.remove('active'); 
-            } 
-        }
-    }
-    
-    window.startNewChat = () => { 
-        currentChatId = null; 
-        localStorage.removeItem('alexia_last_chat_id'); 
-        chatState = { mode: 'normal' }; 
-        document.getElementById('chat-box').innerHTML = `<div style="text-align:center; margin-top:80px; opacity:0.7; animation:fadeIn 1s;"><div style="width:80px; height:80px; background:linear-gradient(135deg, var(--accent), #ec4899); border-radius:50%; margin:0 auto 25px auto; display:flex; align-items:center; justify-content:center; box-shadow:0 0 40px var(--accent-glow);"><i class="fas fa-robot" style="font-size:40px; color:white;"></i></div><h2 style="font-weight:500;">¿En qué puedo ayudarte?</h2></div>`; 
-        renderLocalHistory(); 
-        if(window.innerWidth < 800) {
-             document.getElementById('sidebar').classList.remove('open');
-             document.getElementById('overlay').classList.remove('active');
-        }
-    }
-
-    function saveLocalChat(uMsg, aiMsg) { const key = getLocalKey(); let chats = JSON.parse(localStorage.getItem(key)) || []; if (!currentChatId) { currentChatId = Date.now().toString(); chats.unshift({ id: currentChatId, title: uMsg.substring(0, 25) + "...", timestamp: Date.now(), isPinned: false, messages: [{r:'user', t:uMsg}, {r:'ai', t:aiMsg}] }); } else { const idx = chats.findIndex(c => c.id === currentChatId); if (idx > -1) { chats[idx].messages.push({r:'user', t:uMsg}, {r:'ai', t:aiMsg}); chats[idx].timestamp = Date.now(); } } localStorage.setItem(key, JSON.stringify(chats)); localStorage.setItem('alexia_last_chat_id', currentChatId); renderLocalHistory(); }
+    function saveLocalChat(uMsg, aiMsg) { const key = getLocalKey(); let chats = []; try { chats = JSON.parse(localStorage.getItem(key)) || []; } catch(e){ chats = []; } if (!currentChatId) { currentChatId = Date.now().toString(); chats.unshift({ id: currentChatId, title: uMsg.substring(0, 25) + "...", timestamp: Date.now(), isPinned: false, messages: [{r:'user', t:uMsg}, {r:'ai', t:aiMsg}] }); } else { const idx = chats.findIndex(c => c.id === currentChatId); if (idx > -1) { chats[idx].messages.push({r:'user', t:uMsg}, {r:'ai', t:aiMsg}); chats[idx].timestamp = Date.now(); } } localStorage.setItem(key, JSON.stringify(chats)); localStorage.setItem('alexia_last_chat_id', currentChatId); renderLocalHistory(); }
     function getLocalKey() { const uid = currentUser ? currentUser.uid : 'guest'; return `alexia_chats_${uid}`; }
 
     function updateUserUI(u) {
