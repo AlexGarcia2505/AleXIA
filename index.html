@@ -257,6 +257,12 @@
             <button onclick="uploadDictionary()" style="background:var(--accent); color:#000; border:none; padding:4px 10px; border-radius:5px; margin-top:5px; cursor:pointer; font-weight:bold; font-size:0.8rem;">Procesar (Lotes)</button>
             <div id="upload-status" style="margin-top:5px; font-size:0.8rem; color:var(--success);"></div>
         </div>
+        <div style="background:#27272a; padding:10px; border-radius:8px; margin-bottom:15px; text-align:left; border-left: 3px solid #ff897d;">
+    <h4 style="margin:0; color:#ff897d; font-size:0.9rem;">🔑 Cargar Palabras Clave (Predicciones)</h4>
+    <input type="file" id="json-keywords-upload" accept=".json" style="margin-top:5px; width:100%; font-size:0.8rem;">
+    <button onclick="uploadKeywords()" style="background:#ff897d; color:#000; border:none; padding:4px 10px; border-radius:5px; margin-top:5px; cursor:pointer; font-weight:bold; font-size:0.8rem;">Subir a 'preguntaspalbraclave'</button>
+    <div id="upload-status-keywords" style="margin-top:5px; font-size:0.8rem; color:var(--success);"></div>
+</div>
         <div id="dash-content" style="flex:1; overflow-y:auto; text-align:left; padding-right:5px;"></div>
     </div>
 </div>
@@ -680,7 +686,43 @@ window.deleteLog = async (idx) => {
     window.googleLogin = () => signInWithPopup(auth, provider).then(()=>closeModal()).catch(e=>alert(e.message));
     window.logout = (e) => { if(e) e.stopPropagation(); const key = `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`; localStorage.removeItem(key); localStorage.removeItem('alexia_last_chat_id'); signOut(auth).then(() => { window.location.reload(); }); }
     window.uploadDictionary = async () => { const fileInput = document.getElementById('json-upload'); const statusDiv = document.getElementById('upload-status'); if(fileInput.files.length === 0) return alert("Selecciona archivo"); statusDiv.innerHTML = "Analizando..."; const reader = new FileReader(); reader.onload = async (e) => { try { const words = JSON.parse(e.target.result); let added = 0; const chunkSize = 400; for (let i = 0; i < words.length; i += chunkSize) { const chunk = words.slice(i, i + chunkSize); const batch = writeBatch(db); chunk.forEach(word => { const ref = doc(db, "dictionary", normalize(word.id)); batch.set(ref, word); added++; }); await batch.commit(); statusDiv.innerHTML = `Subiendo... (${added})`; } statusDiv.innerHTML = `✅ Terminado: ${added}`; } catch (err) { statusDiv.innerHTML = "❌ Error JSON"; } }; reader.readAsText(fileInput.files[0]); };
-    
+    window.uploadKeywords = async () => { 
+        const fileInput = document.getElementById('json-keywords-upload'); 
+        const statusDiv = document.getElementById('upload-status-keywords'); 
+        
+        if(fileInput.files.length === 0) return alert("Selecciona el archivo JSON de conectores"); 
+        
+        statusDiv.innerHTML = "Analizando..."; 
+        const reader = new FileReader(); 
+        
+        reader.onload = async (e) => { 
+            try { 
+                const words = JSON.parse(e.target.result); 
+                let added = 0; 
+                const chunkSize = 400; 
+                
+                for (let i = 0; i < words.length; i += chunkSize) { 
+                    const chunk = words.slice(i, i + chunkSize); 
+                    const batch = writeBatch(db); 
+                    
+                    chunk.forEach(word => { 
+                        // AQUÍ ES DONDE CAMBIA EL DESTINO A TU NUEVA COLECCIÓN
+                        const ref = doc(db, "preguntaspalbraclave", normalize(word.id)); 
+                        batch.set(ref, word); 
+                        added++; 
+                    }); 
+                    
+                    await batch.commit(); 
+                    statusDiv.innerHTML = `Subiendo... (${added})`; 
+                } 
+                statusDiv.innerHTML = `✅ ¡Listo! ${added} conectores subidos.`; 
+            } catch (err) { 
+                console.error(err);
+                statusDiv.innerHTML = "❌ Error en el JSON"; 
+            } 
+        }; 
+        reader.readAsText(fileInput.files[0]); 
+    };
     function renderAdminQueue() {
         const content = document.getElementById('dash-content'); content.innerHTML = "";
         let reviewHTML = `<div class="admin-section"><h4>📝 Pendientes</h4>`;
