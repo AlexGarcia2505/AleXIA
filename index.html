@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V57 - Clean Start</title>
+    <title>AleXIA V59 - Reinicio Total</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -36,7 +36,7 @@
 
         .sidebar-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
         
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #555; display: inline-block; margin-left: 10px; transition: 0.3s; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #555; display: inline-block; margin-left: 5px; transition: 0.3s; }
         .status-dot.online { background: var(--success); box-shadow: 0 0 8px var(--success); }
         .status-dot.offline { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
 
@@ -141,7 +141,10 @@
 
 <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
-        <span style="font-weight:bold; font-size:1.1rem; display:flex; align-items:center; gap:10px;"><i class="fas fa-brain" style="color:var(--accent)"></i> AleXIA</span>
+        <span style="font-weight:bold; font-size:1.1rem; display:flex; align-items:center; gap:10px;">
+            <i class="fas fa-brain" style="color:var(--accent)"></i> AleXIA
+            <button onclick="fullReset(event)" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:0.9rem;" title="Restablecer App"><i class="fas fa-trash-alt"></i></button>
+        </span>
         <div id="connection-dot" class="status-dot offline"></div>
         <button onclick="toggleSidebar()" style="background:none; border:none; color:white; cursor:pointer; margin-left:auto;" class="toggle-btn"><i class="fas fa-times"></i></button>
     </div>
@@ -250,9 +253,18 @@
     const globalCities = ["Cancún", "Ciudad de México", "Madrid", "Tokio", "Nueva York", "Buenos Aires", "Londres", "París", "Monterrey", "Guadalajara", "Bogotá", "Lima", "Berlín", "Roma"];
 
     const slangMap = { "andas": "estas", "onda": "pasa", "hubo": "paso", "pex": "pasa", "pedo": "problema", "chido": "bueno", "padre": "bueno", "gwey": "amigo", "wey": "amigo", "camara": "adios", "simon": "si", "nelson": "no", "chale": "que mal", "neto": "verdad", "neta": "verdad", "jalo": "acepto", "sobres": "esta bien" };
-    const stopWords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'de', 'del', 'al', 'a', 'en', 'por', 'para', 'con', 'sin', 'que', 'como', 'cual', 'quien', 'es', 'son', 'fue', 'era', 'me', 'te', 'se', 'lo', 'mi', 'tu', 'su', 'nos', 'yo', 'tu', 'el', 'ella', 'dime', 'sobre', 'acerca', 'significa', 'busco', 'esta', 'está', 'cómo', 'hay', 'eres', 'soy', 'somos']);
+    const stopWords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'de', 'del', 'al', 'a', 'en', 'por', 'para', 'con', 'sin', 'que', 'como', 'cual', 'quien', 'es', 'son', 'fue', 'era', 'me', 'te', 'se', 'lo', 'mi', 'tu', 'su', 'nos', 'yo', 'tu', 'el', 'ella', 'dime', 'sobre', 'acerca', 'significa', 'busco', 'esta', 'está', 'cómo', 'hay', 'eres', 'soy', 'somos', 'todo', 'bien', 'tal', 'gracias']);
     const contextualReplies = { "que tal como estas": ["¿Qué gusto saludarte, yo muy bien, y tú?", "¿Cómo te ha ido últimamente?"], "hola": ["¡Hola! ¿Cómo andas?", "Saludos. ¿Qué me cuentas?"], "si": ["Perfecto.", "Excelente."], "no": ["Entendido."], "adios": ["¡Hasta luego!", "¡Cuídate mucho!"], "estoy bien y tu": ["Me alegra. Yo muy bien."] };
     
+    // --- FUNCIÓN DE LIMPIEZA TOTAL (BOTÓN PAPELERA) ---
+    window.fullReset = (e) => {
+        if(e) e.stopPropagation();
+        if(confirm("¿Restablecer aplicación para corregir errores? Se borrará el historial local.")) {
+            localStorage.clear();
+            location.reload();
+        }
+    };
+
     if(auth) {
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -265,7 +277,7 @@
                 if (!userSnap.exists()) await setDoc(userRef, { email: user.email, role: role, createdAt: new Date().toISOString() });
                 currentUser = { uid: user.uid, name: user.displayName || user.email.split('@')[0], role: role, email: user.email };
                 updateUserUI(currentUser);
-                renderLocalHistory();
+                renderLocalHistory(); // Intentar renderizar
                 closeModal(); 
             } else { 
                 currentUser = null; 
@@ -274,6 +286,7 @@
                 renderLocalHistory(); 
             }
 
+            // CORRECCIÓN: Si el ID guardado no existe en el array limpio, no hacer nada (evita crash)
             const lastChatId = localStorage.getItem('alexia_last_chat_id');
             if (lastChatId) loadLocalChat(lastChatId);
         });
@@ -281,7 +294,7 @@
 
     if(db) { onSnapshot(doc(db, "alexia_db", "main_brain"), (snap) => { if(snap.exists()) brain = snap.data(); }); }
 
-    // EXPOSE FUNCTIONS TO WINDOW
+    // EXPOSE FUNCTIONS
     window.toggleVoice = () => { if(isVoiceActive) recognition.stop(); else recognition.start(); }
     window.speakText = (text, btnId) => {
         if (synth.speaking) { synth.cancel(); if (window.activeSpeakingBtnId === btnId) { resetSpeakerIcons(); window.activeSpeakingBtnId = null; return; } }
@@ -307,6 +320,16 @@
         recognition.onend = () => { isVoiceActive = false; document.getElementById('mic-btn').classList.remove('listening'); document.getElementById('chat-input').placeholder = "Pregunta algo..."; };
         recognition.onresult = (event) => { document.getElementById('chat-input').value = event.results[0][0].transcript; wasVoiceInput = true; window.sendMessage(); };
     } else { document.getElementById('mic-btn').style.display = 'none'; }
+
+    // DETECTOR DE CONVERSACIÓN
+    function checkConversational(normInput) {
+        const greetings = ["hola", "que tal", "como estas", "buenos dias", "buenas tardes", "buenas noches", "que onda", "todo bien", "saludos"];
+        if (greetings.some(g => normInput.includes(g))) {
+            const replies = ["¡Hola! Espero que estés genial. ¿En qué puedo ayudarte hoy?", "¡Saludos! Todo bien por aquí en mi mundo digital. ¿Y tú?", "¡Qué gusto saludarte! Cuéntame, ¿qué tienes en mente?", "¡Hola! Estoy lista para aprender o ayudarte."];
+            return replies[Math.floor(Math.random() * replies.length)];
+        }
+        return null;
+    }
 
     window.sendMessage = async function() {
         if(!db) return alert("Sin conexión a base de datos.");
@@ -341,6 +364,12 @@
         if (normInput.match(/quien (te )?(creo|hizo)|quien eres|que eres|como te llamas/i)) {
             input.value = ''; appendMsg('user', originalText);
             await finishResponse(originalText, "Soy <b>AleXIA</b>, creada por <b>Alexis García</b>.", false, false); return;
+        }
+
+        const conversationalReply = checkConversational(normInput);
+        if (conversationalReply) {
+            input.value = ''; appendMsg('user', originalText);
+            await finishResponse(originalText, conversationalReply, false, false); return;
         }
         
         const flexibleMatch = normInput.match(/\b([abc])\b/i);
@@ -533,18 +562,7 @@
     window.emailLogin = () => { const e=document.getElementById('l-email').value, p=document.getElementById('l-pass').value; signInWithEmailAndPassword(auth, e, p).then((c)=>{if(!c.user.emailVerified){document.getElementById('verify-modal').style.display='flex';signOut(auth);}else closeModal();}).catch(e=>alert(e.message)); };
     window.emailRegister = () => { const e=document.getElementById('r-email').value, p=document.getElementById('r-pass').value; createUserWithEmailAndPassword(auth, e, p).then(async(c)=>{await sendEmailVerification(c.user);document.getElementById('auth-modal').style.display='none';document.getElementById('verify-modal').style.display='flex';}).catch(e=>alert(e.message)); };
     window.googleLogin = () => signInWithPopup(auth, provider).then(()=>closeModal()).catch(e=>alert(e.message));
-    
-    // --- FUNCIÓN DE LIMPIEZA TOTAL (LOGOUT) ---
-    window.logout = (e) => { 
-        if(e) e.stopPropagation(); 
-        const key = `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`;
-        localStorage.removeItem(key); // Borrar historial local
-        localStorage.removeItem('alexia_last_chat_id');
-        signOut(auth).then(() => {
-            window.location.reload(); // Reinicio limpio
-        });
-    }
-    
+    window.logout = (e) => { if(e) e.stopPropagation(); const key = `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`; localStorage.removeItem(key); localStorage.removeItem('alexia_last_chat_id'); signOut(auth).then(() => { window.location.reload(); }); }
     window.uploadDictionary = async () => { const fileInput = document.getElementById('json-upload'); const statusDiv = document.getElementById('upload-status'); if(fileInput.files.length === 0) return alert("Selecciona archivo"); statusDiv.innerHTML = "Analizando..."; const reader = new FileReader(); reader.onload = async (e) => { try { const words = JSON.parse(e.target.result); let added = 0; const chunkSize = 400; for (let i = 0; i < words.length; i += chunkSize) { const chunk = words.slice(i, i + chunkSize); const batch = writeBatch(db); chunk.forEach(word => { const ref = doc(db, "dictionary", normalize(word.id)); batch.set(ref, word); added++; }); await batch.commit(); statusDiv.innerHTML = `Subiendo... (${added})`; } statusDiv.innerHTML = `✅ Terminado: ${added}`; } catch (err) { statusDiv.innerHTML = "❌ Error JSON"; } }; reader.readAsText(fileInput.files[0]); };
     
     function renderAdminQueue() {
@@ -560,43 +578,70 @@
         content.innerHTML = reviewHTML + missingHTML;
     }
 
-    // --- REPARADOR AUTOMÁTICO DE HISTORIAL (SELF-HEALING) ---
+    // --- REPARADOR DE HISTORIAL V59 (FORZADO) ---
     function renderLocalHistory() {
         const key = getLocalKey(); 
         let chats = [];
         try {
             chats = JSON.parse(localStorage.getItem(key));
-            if (!Array.isArray(chats)) throw new Error("Invalid format");
+            if (!Array.isArray(chats)) throw new Error("Format error");
         } catch(e) {
-            console.warn("Historial corrupto detectado. Iniciando purga...");
-            localStorage.removeItem(key); // Borrar historial dañado
-            localStorage.removeItem('alexia_last_chat_id'); // Borrar estado anterior
+            console.log("Limpiando historial dañado...");
+            localStorage.removeItem(key);
+            localStorage.removeItem('alexia_last_chat_id');
             chats = [];
         }
 
-        const pc = document.getElementById('pinned-container'); const hc = document.getElementById('history-container');
-        pc.innerHTML = ""; hc.innerHTML = ""; let hasPinned = false;
+        const pc = document.getElementById('pinned-container'); 
+        const hc = document.getElementById('history-container'); 
+        pc.innerHTML = ""; hc.innerHTML = ""; 
+        let hasPinned = false;
         
-        if(chats.length === 0) {
-            hc.innerHTML = `<div style="text-align:center; padding:20px; color:#555; font-size:0.85rem;">Historial vacío</div>`;
-        } else {
-            chats.forEach(chat => {
+        if(chats.length === 0) { 
+            hc.innerHTML = `<div style="text-align:center; padding:20px; color:#555; font-size:0.85rem;">Historial vacío</div>`; 
+        } else { 
+            chats.forEach(chat => { 
                 const active = (chat.id === currentChatId) ? 'active' : ''; 
-                // Protección extra contra objetos vacíos
-                const title = chat.title || "Chat sin título";
-                const pinClass = chat.isPinned ? 'pinned' : '';
-                const html = `<div class="chat-item ${active}" onclick="loadLocalChat('${chat.id}')"><div class="chat-title"><i class="far fa-comment-alt" style="opacity:0.7; margin-right:8px;"></i>${title}</div><button class="pin-btn ${pinClass}" onclick="togglePinLocal(event, '${chat.id}')"><i class="fas fa-thumbtack"></i></button></div>`;
-                if (chat.isPinned) { pc.innerHTML += html; hasPinned = true; } else hc.innerHTML += html;
-            });
-        }
+                // PROTECCIÓN EXTRA: Si chat.title es null, poner texto por defecto
+                const title = chat.title || "Conversación nueva"; 
+                const pinClass = chat.isPinned ? 'pinned' : ''; 
+                const html = `<div class="chat-item ${active}" onclick="loadLocalChat('${chat.id}')"><div class="chat-title"><i class="far fa-comment-alt" style="opacity:0.7; margin-right:8px;"></i>${title}</div><button class="pin-btn ${pinClass}" onclick="togglePinLocal(event, '${chat.id}')"><i class="fas fa-thumbtack"></i></button></div>`; 
+                if (chat.isPinned) { pc.innerHTML += html; hasPinned = true; } else hc.innerHTML += html; 
+            }); 
+        } 
         document.getElementById('pinned-section').style.display = hasPinned ? 'block' : 'none';
     }
 
     function saveLocalChat(uMsg, aiMsg) { const key = getLocalKey(); let chats = []; try { chats = JSON.parse(localStorage.getItem(key)) || []; } catch(e){ chats = []; } if (!currentChatId) { currentChatId = Date.now().toString(); chats.unshift({ id: currentChatId, title: uMsg.substring(0, 25) + "...", timestamp: Date.now(), isPinned: false, messages: [{r:'user', t:uMsg}, {r:'ai', t:aiMsg}] }); } else { const idx = chats.findIndex(c => c.id === currentChatId); if (idx > -1) { chats[idx].messages.push({r:'user', t:uMsg}, {r:'ai', t:aiMsg}); chats[idx].timestamp = Date.now(); } } localStorage.setItem(key, JSON.stringify(chats)); localStorage.setItem('alexia_last_chat_id', currentChatId); renderLocalHistory(); }
     
     function getLocalKey() { 
-        const uid = currentUser ? currentUser.uid : 'guest';
+        // Si currentUser es nulo (por error de carga), usa 'guest' para no romper
+        const uid = currentUser ? currentUser.uid : 'guest'; 
         return `alexia_chats_${uid}`; 
+    }
+
+    // --- PROTECCIÓN DE ARRANQUE PARA NO LLAMAR FUNCIONES CON NULL ---
+    function loadLocalChat(id) {
+        if(!id) return;
+        const key = getLocalKey(); 
+        try {
+            const chats = JSON.parse(localStorage.getItem(key)) || []; 
+            const chat = chats.find(c => c.id === id); 
+            if (chat) { 
+                currentChatId = id; 
+                localStorage.setItem('alexia_last_chat_id', currentChatId); 
+                const box = document.getElementById('chat-box'); 
+                box.innerHTML = ""; 
+                chat.messages.forEach(m => appendMsg(m.r, m.t, m.r === 'ai')); 
+                renderLocalHistory(); 
+                if(window.innerWidth < 800) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('active'); } 
+            } else {
+                // Si el ID guardado ya no existe (porque borramos), iniciar nuevo
+                startNewChat();
+            }
+        } catch(e) {
+            startNewChat();
+        }
     }
 
     document.getElementById('chat-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
