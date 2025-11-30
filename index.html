@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V1.0</title>
+    <title>AleXIA V1.1</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -497,50 +497,69 @@ const stopWords = new Set([
 
        // PASO 4: Lógica Constructiva (Armar la oración)
         
-        // CASO A: Tenemos Conector + Definición (La respuesta ideal)
-        if (synthesis.connector && synthesis.concepts.length > 0) {
-            const mainConcept = synthesis.concepts[0];
-            
-            // Limpiamos la definición (quitamos HTML extra)
-            let defClean = mainConcept.def.replace(/<[^>]*>/g, '').trim(); 
-            // Opcional: poner primera letra en minúscula para que fluya
-            // defClean = defClean.charAt(0).toLowerCase() + defClean.slice(1);
+  // --- INICIO LÓGICA CONSTRUCTIVA (CON EXTRAS) ---
+        
+        // Función auxiliar para formatear los extras (País, Tipo, etc.)
+        const formatExtras = (data) => {
+            if (!data) return "";
+            let html = "";
+            if (data.pais) html += ` <span style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px; font-size:0.8rem; margin-left:5px;">🌎 ${data.pais}</span>`;
+            if (data.type) html += `<div style="margin-top:6px; color:#aaa; font-size:0.9rem; padding-left:10px; border-left:2px solid var(--accent);"><em>ℹ️ ${data.type}</em></div>`;
+            return html;
+        };
 
-            // ARMADO: Conector + Espacio + Definición
-            aiResponse = `${synthesis.connector} ${defClean}`;
+        // 1. Unimos todos los conectores encontrados con un espacio
+        // Ej: "Y" + "Tambien" = "Adicionalmente... De igual forma..."
+        const finalConnectorPhrase = synthesis.connectors.join(' ');
+
+        // CASO A: Tenemos Conectores + Definición
+        if (finalConnectorPhrase && synthesis.concepts.length > 0) {
+            const mainConcept = synthesis.concepts[0];
+            let defClean = mainConcept.def.replace(/<[^>]*>/g, '').trim(); 
             
-            // Si hay más conceptos, los agregamos al final
+            // ARMADO: Conectores acumulados + Definición + Extras
+            aiResponse = `${finalConnectorPhrase} ${defClean}`;
+            aiResponse += formatExtras(mainConcept.extra);
+            
             if (synthesis.concepts.length > 1) {
                 aiResponse += `<br><br><small>También encontré:</small><br>`;
                 for(let i=1; i<synthesis.concepts.length; i++) {
-                    aiResponse += `- <b>${synthesis.concepts[i].word}:</b> ${synthesis.concepts[i].def}<br>`;
+                    let subItem = synthesis.concepts[i];
+                    aiResponse += `- <b>${subItem.word}:</b> ${subItem.def}${formatExtras(subItem.extra)}<br>`;
                 }
             }
             logThis = true;
         }
 
-        // CASO B: Solo definiciones (Sin conector)
+        // CASO B: Solo Definiciones (Sin conector)
         else if (synthesis.concepts.length > 0) {
-             if (synthesis.concepts.length === 1 && synthesis.concepts[0].src !== "Memoria") {
-                 aiResponse = `Encontré esto sobre <strong>${synthesis.concepts[0].word}</strong>:<br>${synthesis.concepts[0].def}`;
+             const item = synthesis.concepts[0];
+             if (synthesis.concepts.length === 1 && item.src !== "Memoria") {
+                 aiResponse = `Encontré esto sobre <strong>${item.word}</strong>:<br>${item.def}`;
              } else {
-                 aiResponse = `<strong>Analizando conceptos:</strong><br>` + synthesis.concepts.map(item => `- <b>${item.word}:</b> ${item.def}`).join('<br>');
+                 aiResponse = `<strong>Analizando conceptos:</strong><br>` + 
+                     synthesis.concepts.map(it => `- <b>${it.word}:</b> ${it.def}${formatExtras(it.extra)}`).join('<br>');
              }
              aiResponse += "<br><br>¿Te sirve esta información?"; 
              logThis = true;
         }
 
-        // CASO C: Solo conector (Usuario dijo algo incompleto como "dime" o "es")
-        else if (synthesis.connector) {
-            aiResponse = synthesis.connector + "... (necesito un tema específico para completar la frase)";
+        // CASO C: Solo Conectores (Usuario dijo "Dime" o "Hola y dime")
+        // AQUÍ ESTÁ EL CAMBIO: Ya no dice "necesito un tema", solo responde la frase.
+        else if (finalConnectorPhrase) {
+            aiResponse = finalConnectorPhrase;
             logThis = true;
         }
 
-        // CASO D: Nada encontrado
+        // CASO D: Nada
         else { 
             aiResponse = "No logré encontrar información detallada sobre ese tema."; 
             logThis = true; 
         }
+        // --- FIN LÓGICA CONSTRUCTIVA ---
+
+    
+
         if (logThis && db) {
             const logEntry = { q: truncateLog(originalText), a: truncateLog(aiResponse.replace(/<[^>]*>/g, '')), user: currentUser ? currentUser.email : "Invitado", date: new Date().toISOString() };
             setDoc(doc(db, "alexia_db", "main_brain"), { missingLog: arrayUnion(logEntry) }, { merge: true }).catch(err => console.log(err));
@@ -616,42 +635,56 @@ const stopWords = new Set([
     }
 
    // PASO 3: Nueva lógica de descomposición (Separa Conectores de Conceptos)
-    async function runWordDecomposition(interpretedText, words) {
-        let synthesis = { connector: null, concepts: [] };
+async function runWordDecomposition(interpretedText, words) {
+        // CAMBIO: 'connectors' ahora es un Array [] para guardar varios
+        let synthesis = { connectors: [], concepts: [] };
         
         for (let word of words) {
-            // A. Primero verificamos si es un CONECTOR
-            // Solo buscamos uno si no tenemos ninguno todavía
-            if (!synthesis.connector) {
-                const phrase = await getConnectorPhrase(word);
-                if (phrase) {
-                    synthesis.connector = phrase;
-                    continue; // Si es conector, ya no buscamos definición para esta palabra
-                }
+            // 1. Busquemos si es conector
+            const phrase = await getConnectorPhrase(word);
+
+            if (phrase) {
+                // CAMBIO: En lugar de guardar uno, los empujamos todos a la lista
+                // Así si dice "Y Tambien", guarda las dos frases.
+                synthesis.connectors.push(phrase);
+                continue; // Saltamos buscar definición para esta palabra
             }
 
-            // B. Si no es conector, buscamos DEFINICIÓN (Memoria o Web)
-            let definition = null; let source = "";
+            // 2. Si NO es conector, buscamos DEFINICIÓN (Memoria o Web)
+            let definition = null; 
+            let source = "";
+            let fullData = null;
             
-            // 1. Diccionario propio
+            // Intento A: Diccionario propio
             try { 
                 const dictSnap = await getDoc(doc(db, "dictionary", word)); 
-                if (dictSnap.exists()) { definition = dictSnap.data().def; source = "Memoria"; } 
+                if (dictSnap.exists()) { 
+                    fullData = dictSnap.data();
+                    definition = fullData.def; 
+                    source = "Memoria"; 
+                } 
             } catch(e) {}
             
-            // 2. Wikipedia/Web (si no estaba en memoria)
+            // Intento B: Wikipedia/Web
             if (!definition) { 
                 const extData = await fetchExternalData(word, 'Wikipedia/WEB'); 
                 if (extData) { definition = extData.def; source = "WEB"; } 
             }
             
-            // Si encontramos algo, lo guardamos como concepto
+            // Guardamos el concepto
             if (definition) {
-                synthesis.concepts.push({ word: word, def: definition, src: source });
+                synthesis.concepts.push({ 
+                    word: word, 
+                    def: definition, 
+                    src: source,
+                    extra: fullData 
+                });
             }
         }
         return synthesis;
     }
+
+
 
     function appendMsg(role, text, hasControls = false, customId = null) {
         const box = document.getElementById('chat-box');
