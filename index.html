@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V1.1</title>
+    <title>AleXIA V1.0</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -412,7 +412,7 @@ const stopWords = new Set([
         return null;
     }
 
-    window.sendMessage = async function() {
+   window.sendMessage = async function() {
         if(!db) return alert("Sin conexión a base de datos.");
         const input = document.getElementById('chat-input');
         const originalText = input.value.trim();
@@ -420,7 +420,7 @@ const stopWords = new Set([
 
         document.getElementById('idea-btn').classList.remove('has-ideas');
 
-        // MODO ENSEÑANZA (Sin cambios)
+        // MODO ENSEÑANZA
         if (chatState.mode === 'waiting_correction') {
             const correction = originalText;
             input.value = '';
@@ -442,7 +442,7 @@ const stopWords = new Set([
             chatState = { mode: 'normal' }; return;
         }
         
-        // COMANDOS BÁSICOS (Sin cambios)
+        // IDENTIDAD
         let normInput = removeDuplicates(normalize(originalText));
         if (normInput.match(/quien (te )?(creo|hizo)|quien eres|que eres|como te llamas/i)) {
             input.value = ''; appendMsg('user', originalText);
@@ -455,7 +455,7 @@ const stopWords = new Set([
             await finishResponse(originalText, conversationalReply + "<br><br><small>Extraído de mi memoria</small>", false, false); return;
         }
         
-        // SUGERENCIAS POR LETRA (Sin cambios)
+        // SUGERENCIAS ABC
         const flexibleMatch = normInput.match(/\b([abc])\b/i);
         if (flexibleMatch && normInput.length < 30) {
             const idx = flexibleMatch[1].toUpperCase().charCodeAt(0) - 65;
@@ -466,21 +466,36 @@ const stopWords = new Set([
             }
         }
         
-        // PREPARAR INTERFAZ
+        // --- ANIMACIÓN DE CARGA ESTILO GEMINI ---
         input.value = ''; appendMsg('user', originalText); 
-        const loadingId = 'loading-' + Date.now(); appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> <span id="think-text">Pensando...</span>`, false, loadingId);
+        const loadingId = 'loading-' + Date.now(); 
+        appendMsg('ai', `<i class="fas fa-sparkles fa-pulse" style="color:var(--accent)"></i> <span id="think-${loadingId}">Analizando...</span>`, false, loadingId);
         
-        await new Promise(r => setTimeout(r, 1000));
-        const loadingMsg = document.getElementById(loadingId); if(loadingMsg) loadingMsg.remove();
+        // Ciclo de mensajes de carga
+        const loadingSteps = ["Traduciendo conceptos...", "Consultando base global...", "Sintetizando respuesta...", "Analizando contexto..."];
+        let stepIdx = 0;
+        const loaderInterval = setInterval(() => {
+            const el = document.getElementById(`think-${loadingId}`);
+            if(el) {
+                el.innerText = loadingSteps[stepIdx % loadingSteps.length];
+                stepIdx++;
+            }
+        }, 800); // Cambia texto cada 800ms
+        // ----------------------------------------
+
+        // Pequeña pausa inicial
+        await new Promise(r => setTimeout(r, 800));
 
         const interpretedText = processSynonyms(normInput);
         const words = interpretedText.split(/\s+/).filter(w => !stopWords.has(w) && w.length > 2);
 
-        // INTENCIONES ESPECÍFICAS (Libros, Clima...)
         const specificIntent = checkSpecificIntent(originalText);
-        if (specificIntent) { await processSpecificIntent(specificIntent.query, specificIntent.source); wasVoiceInput = false; return; }
+        if (specificIntent) { 
+            clearInterval(loaderInterval); // Detener animación
+            const loadEl = document.getElementById(loadingId); if(loadEl) loadEl.remove();
+            await processSpecificIntent(specificIntent.query, specificIntent.source); wasVoiceInput = false; return; 
+        }
 
-        // BUSQUEDA EN MEMORIA DE PREGUNTAS EXACTAS (Legacy)
         let bestMatch = null, maxScore = 0;
         brain.memory.forEach(mem => {
             mem.inputs.forEach(key => {
@@ -491,77 +506,73 @@ const stopWords = new Set([
         });
 
         if (maxScore >= 0.8) {
+            clearInterval(loaderInterval); // Detener animación
+            const loadEl = document.getElementById(loadingId); if(loadEl) loadEl.remove();
             const key = normalize(bestMatch.inputs[0]);
             let finalResponse = bestMatch.output + "<br><br><div style='font-size:0.75rem; color:#888; border-top:1px solid #444; padding-top:5px;'><em>Extraído de mi memoria</em></div>";
             await finishResponse(originalText, finalResponse, true, true); wasVoiceInput = false; return;
         }
 
-        // --- INICIO LÓGICA CONSTRUCTIVA (CON FUENTES) ---
+        // LÓGICA PRINCIPAL
         const synthesis = await runWordDecomposition(interpretedText, words);
+        
+        // DETENER ANIMACIÓN AL FINALIZAR
+        clearInterval(loaderInterval);
+        const loadEl = document.getElementById(loadingId); if(loadEl) loadEl.remove();
+
         let aiResponse = ""; 
         let logThis = false;
 
-       // Función interna actualizada para mostrar AUDIO, FONÉTICA y EJEMPLOS
         const formatExtras = (data) => {
             if (!data) return "";
             let html = "";
-            
-            // País y Fonética
             if (data.pais && data.pais !== "Global") html += ` <span style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px; font-size:0.8rem; margin-left:5px;">🌎 ${data.pais}</span>`;
             if (data.phonetic) html += ` <span style="color:#888; font-family:monospace; margin-left:5px;">[${data.phonetic}]</span>`;
+            if (data.audio) html += ` <button onclick="new Audio('${data.audio}').play()" style="background:none; border:1px solid var(--accent); color:var(--accent); border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:0.7rem; margin-left:5px;" title="Escuchar">🔊</button>`;
             
-            // Botón de Audio (si existe)
-            if (data.audio) {
-                html += ` <button onclick="new Audio('${data.audio}').play()" style="background:none; border:1px solid var(--accent); color:var(--accent); border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:0.7rem; margin-left:5px;" title="Escuchar pronunciación (EN)">🔊</button>`;
-            }
-
-            // Tipo de palabra (Sustantivo/Verbo)
+            // TIPO
             if (data.type) html += `<div style="margin-top:6px; color:#aaa; font-size:0.9rem; padding-left:10px; border-left:2px solid var(--accent);"><em>ℹ️ ${data.type}</em></div>`;
             
-            // Ejemplo de uso
-            if (data.example) {
-                html += `<div style="margin-top:4px; color:#ccc; font-size:0.85rem; padding-left:10px; border-left:2px solid #555;">📝 "${data.example}"</div>`;
+            // PALABRA EN INGLÉS (NUEVO)
+            if (data.originalTerm) {
+                // Capitalizamos la primera letra
+                const enWord = data.originalTerm.charAt(0).toUpperCase() + data.originalTerm.slice(1);
+                html += `<div style="margin-top:4px; color:#aaa; font-size:0.85rem; padding-left:10px; border-left:2px solid #555;">🇬🇧 En inglés: <b>${enWord}</b></div>`;
             }
+
+            // EJEMPLO
+            if (data.example) html += `<div style="margin-top:4px; color:#ccc; font-size:0.85rem; padding-left:10px; border-left:2px solid #555;">📝 "${data.example}"</div>`;
             
             return html;
         };
 
-        // --- NUEVO: FUNCIÓN GENERADORA DE FUENTES ---
         const generateFooter = () => {
             let sources = new Set();
-            
-            // 1. Si usamos conectores -> Entrenamiento
-            if (synthesis.connectors && synthesis.connectors.length > 0) {
-                sources.add("mi entrenamiento");
-            }
+            if (synthesis.connectors && synthesis.connectors.length > 0) sources.add("mi entrenamiento");
 
-            // 2. Revisamos cada concepto
             if (synthesis.concepts) {
                 synthesis.concepts.forEach(c => {
-                    if (c.src === "Memoria") sources.add("mi diccionario");
-                    if (c.src === "WEB" || c.src.includes("Wikipedia")) sources.add("Wiki");
+                    if (c.src === "Memoria") sources.add("mi diccionario personal");
+                    // AHORA SÍ DETECTARÁ EL DICCIONARIO GLOBAL
+                    if (c.src === "DiccionarioAPI") sources.add("Diccionario Global");
+                    if (c.src === "Wiki" || c.src.includes("Wikipedia")) sources.add("Wikipedia");
                     if (c.src.includes("Meteo")) sources.add("Web Clima");
                     if (c.src.includes("Biblioteca")) sources.add("Biblioteca Web");
                 });
             }
 
             if (sources.size === 0) return "";
-            
-            // Convertimos el Set a Array y unimos con comas y "y"
             const sourceArray = Array.from(sources);
             let text = sourceArray.join(", ");
             if(sourceArray.length > 1) {
                 const last = sourceArray.pop();
                 text = sourceArray.join(", ") + " y " + last;
             }
-
             return `<br><br><div style="font-size:0.75rem; color:#888; border-top:1px solid #444; padding-top:5px; margin-top:10px;"><em>Extraído de ${text}</em></div>`;
         };
-        // --------------------------------------------
 
         const finalConnectorPhrase = synthesis.connectors.join(' ');
 
-        // CASO A: Conectores + Definición
         if (finalConnectorPhrase && synthesis.concepts.length > 0) {
             const mainConcept = synthesis.concepts[0];
             let defClean = mainConcept.def.replace(/<[^>]*>/g, '').trim(); 
@@ -575,11 +586,9 @@ const stopWords = new Set([
                     aiResponse += `- <b>${subItem.word}:</b> ${subItem.def}${formatExtras(subItem.extra)}<br>`;
                 }
             }
-            aiResponse += generateFooter(); // Agregamos fuentes
+            aiResponse += generateFooter();
             logThis = true;
         }
-
-        // CASO B: Solo Definiciones
         else if (synthesis.concepts.length > 0) {
              const item = synthesis.concepts[0];
              if (synthesis.concepts.length === 1 && item.src !== "Memoria") {
@@ -589,18 +598,14 @@ const stopWords = new Set([
                      synthesis.concepts.map(it => `- <b>${it.word}:</b> ${it.def}${formatExtras(it.extra)}`).join('<br>');
              }
              aiResponse += "<br><br>¿Te sirve esta información?";
-             aiResponse += generateFooter(); // Agregamos fuentes
+             aiResponse += generateFooter();
              logThis = true;
         }
-
-        // CASO C: Solo Conectores
         else if (finalConnectorPhrase) {
             aiResponse = finalConnectorPhrase;
-            aiResponse += generateFooter(); // Agregamos fuentes (dirá solo "mi entrenamiento")
+            aiResponse += generateFooter();
             logThis = true;
         }
-
-        // CASO D: Nada
         else { 
             aiResponse = "No logré encontrar información detallada sobre ese tema."; 
             logThis = true; 
@@ -648,7 +653,7 @@ const stopWords = new Set([
    async function fetchExternalData(term, forceSource = 'Wikipedia/WEB') {
         const encoded = encodeURIComponent(term);
         
-        // 1. CLIMA (Meteo)
+        // 1. CLIMA
         if (forceSource === 'Meteo/WEB') {
             try {
                 const geoResp = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encoded}&count=1&language=es&format=json`);
@@ -662,7 +667,7 @@ const stopWords = new Set([
             } catch(e) {} return null;
         }
 
-        // 2. BIBLIOTECA (Libros)
+        // 2. BIBLIOTECA
         if (forceSource === 'Biblioteca/WEB') {
              try {
                 const searchResp = await fetch(`https://openlibrary.org/search.json?q=${encoded}&limit=1`);
@@ -676,13 +681,13 @@ const stopWords = new Set([
             } catch(e) {} return null;
         }
 
-        // 3. NUEVO: DICCIONARIO API (Inglés -> Traductor -> Español)
+        // 3. DICCIONARIO API (Aquí están los cambios)
         if (forceSource === 'DiccionarioAPI') {
             try {
-                // A) Traducir palabra (ES -> EN)
+                // A) Traducir (ES -> EN)
                 const englishWord = await translateText(term, "es|en");
                 
-                // B) Consultar API Rica en Inglés
+                // B) API en Inglés
                 const resp = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(englishWord)}`);
                 const data = await resp.json();
                 
@@ -691,20 +696,19 @@ const stopWords = new Set([
                     const firstMeaning = entry.meanings[0];
                     const defObj = firstMeaning.definitions[0];
                     
-                    // Datos crudos
                     const rawDef = defObj.definition;
                     const rawExample = defObj.example || ""; 
                     const rawType = firstMeaning.partOfSpeech;
                     const phoneticText = entry.phonetic || ""; 
                     
-                    // Buscar Audio
+                    // Audio
                     let audioUrl = "";
                     if (entry.phonetics) {
                         const audioObj = entry.phonetics.find(p => p.audio && p.audio !== "");
                         if (audioObj) audioUrl = audioObj.audio;
                     }
 
-                    // C) Traducir resultados (EN -> ES)
+                    // C) Traducir de vuelta (EN -> ES)
                     const translatedDef = await translateText(rawDef, "en|es");
                     const translatedType = await translateText(rawType, "en|es");
                     let translatedExample = "";
@@ -714,14 +718,15 @@ const stopWords = new Set([
                     
                     return { 
                         def: translatedDef, 
-                        src: "Diccionario/WEB", 
+                        src: "DiccionarioGlobal", // ETIQUETA CORREGIDA PARA EL FOOTER
                         url: entry.sourceUrls ? entry.sourceUrls[0] : "",
                         extra: { 
                             type: translatedType, 
                             pais: "Global",
                             phonetic: phoneticText,
                             audio: audioUrl,
-                            example: translatedExample
+                            example: translatedExample,
+                            originalTerm: englishWord // GUARDAMOS LA PALABRA EN INGLÉS
                         }
                     };
                 }
@@ -729,7 +734,7 @@ const stopWords = new Set([
             return null;
         }
 
-        // 4. WIKIPEDIA (Respaldo final)
+        // 4. WIKIPEDIA
         try {
             const searchResp = await fetch(`https://es.wikipedia.org/w/api.php?action=opensearch&search=${encoded}&limit=1&namespace=0&format=json&origin=*`);
             const searchData = await searchResp.json();
