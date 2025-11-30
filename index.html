@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V1.0</title>
+    <title>AleXIA V1.1</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -421,23 +421,53 @@ const stopWords = new Set([
         document.getElementById('idea-btn').classList.remove('has-ideas');
 
         // MODO ENSEÑANZA
-        if (chatState.mode === 'waiting_correction') {
+       if (chatState.mode === 'waiting_correction') {
             const correction = originalText;
             input.value = '';
             appendMsg('user', originalText);
             const sendingMsgId = 'sending-' + Date.now();
             appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> Guardando...`, false, sendingMsgId);
+
             try {
                 const qData = String(chatState.lastQuery || "Pregunta no detectada");
                 const aData = String(correction || "Respuesta vacía");
                 const finalUser = String(currentUser ? currentUser.email : "Anónimo");
-                await setDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayUnion({ q: qData, a: aData, user: finalUser, date: new Date().toISOString() }) }, { merge: true });
+                
+                await setDoc(doc(db, "alexia_db", "main_brain"), { 
+                    reviewQueue: arrayUnion({ q: qData, a: aData, user: finalUser, date: new Date().toISOString() }) 
+                }, { merge: true });
+                
                 const sendingEl = document.getElementById(sendingMsgId);
-                if(sendingEl) sendingEl.querySelector('.msg-bubble').innerHTML = `¡Gracias! Respuesta guardada.`;
-                document.querySelectorAll('.feedback-btn.active-teach').forEach(b => { b.classList.remove('active-teach'); b.innerHTML = '<i class="fas fa-graduation-cap"></i> Enseñar'; });
+                
+               if(sendingEl) {
+                    // --- RESPUESTAS ALEATORIAS CON EMOJIS ---
+                    const respuestas = [
+                        "¡Gracias! Respuesta guardada. 💾",
+                        "¡Entendido! Pronto aprenderé esto. 🧠✨",
+                        "Guardado. Mi administrador lo revisará y aprobará pronto. 👨‍💻",
+                        "¡Excelente! Lo tendré en cuenta para mostrárselo a mi entrenador. 📝",
+                        "¡Anotado! Gracias por ayudarme a ser más inteligente. 💡",
+                        "Recibido. Procesaré esta nueva información en breve. 🚀",
+                        "¡Gracias profe! Me encanta aprender cosas nuevas. 🎓",
+                        "¡Hecho! Tu corrección está en camino a mi base de datos. 📤"
+                    ];
+                    
+                    // Elegimos una al azar
+                    const respuestaRandom = respuestas[Math.floor(Math.random() * respuestas.length)];
+                    
+                    sendingEl.querySelector('.msg-bubble').innerHTML = respuestaRandom;
+                }
+
+                document.querySelectorAll('.feedback-btn.active-teach').forEach(b => { 
+                    b.classList.remove('active-teach'); 
+                    b.innerHTML = '<i class="fas fa-graduation-cap"></i> Enseñar'; 
+                });
             } catch (e) {
                 const sendingEl = document.getElementById(sendingMsgId);
-                if(sendingEl) { sendingEl.querySelector('.msg-bubble').innerHTML = `❌ Error: ${e.message}`; sendingEl.querySelector('.msg-bubble').style.color = "var(--danger)"; }
+                if(sendingEl) { 
+                    sendingEl.querySelector('.msg-bubble').innerHTML = `❌ Error: ${e.message}`; 
+                    sendingEl.querySelector('.msg-bubble').style.color = "var(--danger)"; 
+                }
             }
             chatState = { mode: 'normal' }; return;
         }
@@ -597,7 +627,18 @@ const stopWords = new Set([
                  aiResponse = `<strong>Analizando conceptos:</strong><br>` + 
                      synthesis.concepts.map(it => `- <b>${it.word}:</b> ${it.def}${formatExtras(it.extra)}`).join('<br>');
              }
-             aiResponse += "<br><br>¿Te sirve esta información?";
+            // --- FRASES DE CIERRE ALEATORIAS ---
+             const cierres = [
+                "<br><br>¿Te sirve esta información? 🤔",
+                "<br><br>Espero haberte ayudado. ✨",
+                "<br><br>¿Era esto lo que buscabas? 🧐",
+                "<br><br>Dime si necesitas saber más detalles. 👍",
+                "<br><br>¿Qué te parece este dato? 💡",
+                "<br><br>Ojalá esto aclare tu duda. 🌟"
+             ];
+             
+             // Elegimos una y la agregamos
+             aiResponse += cierres[Math.floor(Math.random() * cierres.length)];
              aiResponse += generateFooter();
              logThis = true;
         }
@@ -606,8 +647,20 @@ const stopWords = new Set([
             aiResponse += generateFooter();
             logThis = true;
         }
+       // CASO D: Nada (Respuestas aleatorias de "No sé")
         else { 
-            aiResponse = "No logré encontrar información detallada sobre ese tema."; 
+            const noSeRespuestas = [
+                "Espera 🥺 No logré encontrar información. 🙏 ¿Podrías enseñarme? Soy aprendiz, presiona el botón 'Enseñar'.",
+                "¡Ups! 🤯 Me has atrapado, no sé la respuesta. Pero me encantaría aprenderla si me ayudas. 🎓",
+                "Lo siento 😔, busqué en todos lados pero no encontré nada. ¿Me dices la respuesta usando el botón 'Enseñar'?",
+                "Aún soy pequeña y no sé todo del mundo. 🐣 ¿Me ayudas a crecer enseñándome esto?",
+                "Mis circuitos están en blanco con este tema. 🤖❓ ¡Necesito tu ayuda humana para aprender!",
+                "No encontré nada en mi memoria ni en la web. 🕵️‍♀️ ¿Me das una pista o la respuesta correcta?"
+            ];
+            
+            // Elegimos una al azar
+            aiResponse = noSeRespuestas[Math.floor(Math.random() * noSeRespuestas.length)];
+            
             logThis = true; 
         }
 
@@ -771,7 +824,7 @@ async function runWordDecomposition(interpretedText, words) {
             let source = "";
             let fullData = null;
             
-            // 2. TU MEMORIA (Prioridad 1)
+            // 2. DICCIONARIO PERSONAL (Colección 'dictionary') - Prioridad 1
             try { 
                 const dictSnap = await getDoc(doc(db, "dictionary", word)); 
                 if (dictSnap.exists()) { 
@@ -780,8 +833,24 @@ async function runWordDecomposition(interpretedText, words) {
                     source = "Memoria"; 
                 } 
             } catch(e) {}
+
+            // 3. MEMORIA DE ENTRENAMIENTO (main_brain) - Prioridad 2 (NUEVO)
+            // Si no estaba en el diccionario, buscamos si existe como keyword en tu entrenamiento
+            if (!definition && brain && brain.memory) {
+                // Buscamos si alguna entrada de memoria tiene esta palabra exacta como input
+                const memoryMatch = brain.memory.find(mem => 
+                    mem.inputs.some(input => normalize(input) === normalize(word))
+                );
+                
+                if (memoryMatch) {
+                    definition = memoryMatch.output;
+                    source = "Memoria"; // Lo marcamos también como memoria local
+                    // Simulamos datos extra para que se vea bonito
+                    fullData = { type: "Entrenamiento", pais: "Local" };
+                }
+            }
             
-            // 3. API DICCIONARIO GLOBAL (Prioridad 2) - AQUÍ CONECTAMOS LA API
+            // 4. API DICCIONARIO GLOBAL (Prioridad 3)
             if (!definition) {
                 const apiData = await fetchExternalData(word, 'DiccionarioAPI');
                 if (apiData) {
@@ -791,14 +860,15 @@ async function runWordDecomposition(interpretedText, words) {
                 }
             }
 
-            // 4. WIKIPEDIA (Prioridad 3)
+            // 5. WIKIPEDIA (Prioridad 4)
             if (!definition) { 
                 const extData = await fetchExternalData(word, 'Wikipedia/WEB'); 
                 if (extData) { definition = extData.def; source = "Wiki"; } 
             }
             
             // Guardar resultado
-            if (definition) {
+           // Guardar resultado (Solo si hay texto real)
+            if (definition && definition.trim() !== "") {
                 synthesis.concepts.push({ 
                     word: word, 
                     def: definition, 
