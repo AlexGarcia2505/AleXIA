@@ -1,27 +1,17 @@
-// alexia_logic.js - CEREBRO MAESTRO (VERSION 4.0 - FINAL FIX)
-// Este archivo es autónomo, contiene la configuración y garantiza la exposición de funciones.
+// alexia_logic.js - CEREBRO MAESTRO (VERSION 4.1 - ARREGLO DE INICIALIZACIÓN)
+// Este archivo ahora obtiene la configuración de Firebase desde window.FIREBASE_CONFIG.
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
 import { getFirestore, doc, onSnapshot, setDoc, updateDoc, arrayUnion, arrayRemove, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
 // =========================================================================
-// I. CONFIGURACIÓN E INICIALIZACIÓN GLOBAL (AUTÓNOMA)
+// I. INICIALIZACIÓN DE FIREBASE
 // =========================================================================
-
-// TU CONFIGURACIÓN DE FIREBASE
-const firebaseConfig = {
-    apiKey: "AIzaSyAeNVoB1ZasZSauIf6G7GbIa4bbJJ3_5cw",
-    authDomain: "alexia-1c4f2.firebaseapp.com",
-    projectId: "alexia-1c4f2",
-    storageBucket: "alexia-1c4f2.firebasestorage.app",
-    messagingSenderId: "483778313354",
-    appId: "1:483778313354:web:c28c9da35d5674b174c173"
-};
-
 let app, db, auth, provider;
 try {
-    app = initializeApp(firebaseConfig);
+    // Usa la configuración expuesta en el HTML
+    app = initializeApp(window.FIREBASE_CONFIG); 
     db = getFirestore(app);
     auth = getAuth(app);
     provider = new GoogleAuthProvider();
@@ -29,6 +19,7 @@ try {
     if(dot) { dot.classList.add('online'); dot.classList.remove('offline'); }
 } catch(e) { 
     console.error("Firebase Init Error:", e);
+    // Si falla, los botones de Firebase no funcionarán, pero la UI sí.
 }
 
 // Variables de Estado
@@ -42,7 +33,7 @@ let synth = window.speechSynthesis;
 let wasVoiceInput = false;
 
 // Constantes
-const ADMIN_EMAIL = "eljacksonyt@gmail.com";
+const ADMIN_EMAIL = window.ADMIN_EMAIL;
 const slangMap = { "andas": "estas", "onda": "pasa", "hubo": "paso", "pex": "pasa", "pedo": "problema", "chido": "bueno", "padre": "bueno", "gwey": "amigo", "wey": "amigo", "camara": "adios", "simon": "si", "nelson": "no", "chale": "que mal", "neto": "verdad", "neta": "verdad", "jalo": "acepto", "sobres": "esta bien" };
 const stopWords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'de', 'del', 'al', 'a', 'en', 'por', 'para', 'con', 'sin', 'que', 'como', 'cual', 'quien', 'es', 'son', 'fue', 'era', 'me', 'te', 'se', 'lo', 'mi', 'tu', 'su', 'nos', 'yo', 'tu', 'el', 'ella', 'dime', 'sobre', 'acerca', 'significa', 'busco', 'esta', 'está', 'cómo', 'hay', 'eres', 'soy', 'somos', 'todo', 'bien', 'tal', 'gracias']);
 const randomTopics = ["Universo", "Inteligencia Artificial", "Historia de México", "Biología", "Arte Moderno", "Filosofía", "Tecnología", "Dinosaurios", "Psicología", "Música Clásica"];
@@ -60,8 +51,6 @@ window.emergencyReset = (e) => { if(e) e.stopPropagation(); if(confirm("⚠️ �
 window.openLogin = () => { if(!currentUser) document.getElementById('auth-modal').style.display = 'flex'; }
 window.closeModal = () => document.getElementById('auth-modal').style.display = 'none';
 window.closeVerify = () => document.getElementById('verify-modal').style.display = 'none';
-
-// Funciones principales de la UI que deben ser públicas
 window.startNewChat = () => {
     currentChatId = null; 
     localStorage.removeItem('alexia_last_chat_id'); 
@@ -98,6 +87,7 @@ window.appendMsg = (role, text, hasControls = false, customId = null) => {
     if (role === 'ai' && hasControls) {
         const safeText = text.replace(/'/g, "").replace(/"/g, "").replace(/\n/g, " ");
         const btnId = `btn-${customId}`;
+        // window.speakText debe ser definido antes de que esto se ejecute (se define más abajo)
         controlsHTML = `<button id="${btnId}" class="tts-btn" onclick="window.speakText('${safeText}', '${btnId}')"><i class="fas fa-volume-up"></i></button>`;
     }
     const icon = role === 'ai' ? `<div class="msg-icon"><i class="fas fa-robot"></i></div>` : '';
@@ -133,6 +123,7 @@ window.rateAnswer = (type, query, btnElement) => {
     }
 }
 window.generateSuggestions = () => {
+    const randomTopics = ["Universo", "Inteligencia Artificial", "Historia de México", "Biología", "Arte Moderno", "Filosofía", "Tecnología", "Dinosaurios", "Psicología", "Música Clásica"];
     activeSuggestions = [];
     const randomTopic = randomTopics[Math.floor(Math.random() * randomTopics.length)];
     activeSuggestions.push({ label: `Wiki: **${randomTopic}**`, query: `informacion de ${randomTopic}` });
@@ -287,32 +278,61 @@ window.loadLocalChat = (id) => {
         if(window.innerWidth < 800) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('active'); }
     }
 }
-
-window.updateUserUI = (u) => {
-    const btnLogin = document.getElementById('top-login-btn');
-    const headerProfile = document.getElementById('header-user-profile');
-    const headerAvatar = document.getElementById('header-avatar');
-    const ddName = document.getElementById('dd-name');
-    const ddEmail = document.getElementById('dd-email');
-    const adminLink = document.getElementById('admin-link-container');
-    
-    if(u) {
-        if(btnLogin) btnLogin.style.display = 'none';
-        if(headerProfile) headerProfile.style.display = 'block';
-        if(headerAvatar) headerAvatar.innerHTML = u.name[0].toUpperCase();
-        if(ddName) ddName.innerText = u.name;
-        if(ddEmail) ddEmail.innerText = u.email;
-        if(adminLink) adminLink.style.display = (u.role === 'admin') ? 'block' : 'none';
-    } else {
-        if(btnLogin) btnLogin.style.display = 'block';
-        if(headerProfile) headerProfile.style.display = 'none';
-    }
-}
-
+window.speakText = (text, btnId) => {
+    if (synth.speaking) { synth.cancel(); if (window.activeSpeakingBtnId === btnId) { document.querySelectorAll('.tts-btn').forEach(b => { b.classList.remove('speaking'); b.innerHTML = '<i class="fas fa-volume-up"></i>'; }); window.activeSpeakingBtnId = null; return; } }
+    const cleanText = text.replace(/<[^>]*>/g, '').replace(/http\S+/g, 'enlace');
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = 'es-MX'; utterance.rate = 1.0;
+    utterance.onstart = () => { const btn = document.getElementById(btnId); if(btn) { btn.classList.add('speaking'); btn.innerHTML = '<i class="fas fa-stop"></i>'; window.activeSpeakingBtnId = btnId; } };
+    utterance.onend = () => { document.querySelectorAll('.tts-btn').forEach(b => { b.classList.remove('speaking'); b.innerHTML = '<i class="fas fa-volume-up"></i>'; }); window.activeSpeakingBtnId = null; };
+    synth.speak(utterance);
+};
 
 
 // =========================================================================
-// FUNCIÓN PRINCIPAL DE ENVÍO
+// IV. AUTENTICACIÓN Y CONEXIÓN
+// =========================================================================
+
+// Inicialización de Voz
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.lang = 'es-MX'; recognition.continuous = false; recognition.interimResults = false;
+    recognition.onstart = () => { isVoiceActive = true; document.getElementById('mic-btn').classList.add('listening'); document.getElementById('chat-input').placeholder = "Escuchando..."; };
+    recognition.onend = () => { isVoiceActive = false; document.getElementById('mic-btn').classList.remove('listening'); document.getElementById('chat-input').placeholder = "Pregunta algo..."; };
+    recognition.onresult = (event) => { document.getElementById('chat-input').value = event.results[0][0].transcript; wasVoiceInput = true; window.sendMessage(); };
+}
+
+// Autenticación (Se mantiene al final del archivo por la lógica asíncrona)
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        if (!user.emailVerified) return;
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+        let role = "user";
+        if(user.email === ADMIN_EMAIL) role = "admin";
+        else if (userSnap.exists()) role = userSnap.data().role || "user";
+        if (!userSnap.exists()) await setDoc(userRef, { email: user.email, role: role, createdAt: new Date().toISOString() });
+        currentUser = { uid: user.uid, name: user.displayName || user.email.split('@')[0], role: role, email: user.email };
+        window.updateUserUI(currentUser);
+        window.renderLocalHistory();
+        window.closeModal(); 
+    } else { 
+        currentUser = null; 
+        window.updateUserUI(null); 
+        currentChatId = null; 
+        window.renderLocalHistory(); 
+    }
+    const lastChatId = localStorage.getItem('alexia_last_chat_id');
+    if (lastChatId) window.loadLocalChat(lastChatId);
+});
+
+// Conexión a Base de Datos en Tiempo Real
+if(db) onSnapshot(doc(db, "alexia_db", "main_brain"), (snap) => { if(snap.exists()) brain = snap.data(); });
+
+
+// =========================================================================
+// V. FUNCIÓN PRINCIPAL DE ENVÍO
 // =========================================================================
 
 window.sendMessage = async function() {
@@ -413,14 +433,6 @@ window.sendMessage = async function() {
     await window.finishResponse(originalText, finalResponse, true, true);
     wasVoiceInput = false;
 }
-
-// Inicialización de Voz (continuación)
-if (document.getElementById('mic-btn')) {
-    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-        document.getElementById('mic-btn').style.display = 'none';
-    }
-}
-
 
 // Iniciar Enter listener
 const inputField = document.getElementById('chat-input');
