@@ -310,8 +310,12 @@
     const globalCities = ["Cancún", "Ciudad de México", "Madrid", "Tokio", "Nueva York", "Buenos Aires", "Londres", "París", "Monterrey", "Guadalajara", "Bogotá", "Lima", "Berlín", "Roma"];
 
     const slangMap = { "andas": "estas", "onda": "pasa", "hubo": "paso", "pex": "pasa", "pedo": "problema", "chido": "bueno", "padre": "bueno", "gwey": "amigo", "wey": "amigo", "camara": "adios", "simon": "si", "nelson": "no", "chale": "que mal", "neto": "verdad", "neta": "verdad", "jalo": "acepto", "sobres": "esta bien" };
-    const stopWords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'de', 'del', 'al', 'a', 'en', 'por', 'para', 'con', 'sin', 'que', 'como', 'cual', 'quien', 'es', 'son', 'fue', 'era', 'me', 'te', 'se', 'lo', 'mi', 'tu', 'su', 'nos', 'yo', 'tu', 'el', 'ella', 'dime', 'sobre', 'acerca', 'significa', 'busco', 'esta', 'está', 'cómo', 'hay', 'eres', 'soy', 'somos', 'todo', 'bien', 'tal', 'gracias']);
-    
+    // NUEVA LISTA OPTIMIZADA: Solo borra el "ruido" extremo
+const stopWords = new Set([
+    'el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 
+    'lo', 'al', 'del', 'y', 'o', 'a', 'e', 'u', 'de', 'en', 'con', 
+    'mi', 'tu', 'su', 'me', 'te', 'se', 'nos' 
+]);
     window.toggleUserMenu = (e) => { e.stopPropagation(); document.getElementById('user-dropdown').classList.toggle('show'); }
     window.onclick = (e) => { 
         if (!e.target.matches('.header-profile') && !e.target.matches('.header-profile *')) { 
@@ -376,7 +380,20 @@
     function processSynonyms(text) { return text.split(" ").map(w => { const cw = normalize(w); return slangMap[cw] || cw; }).join(" "); }
     function removeDuplicates(text) { const words = text.split(/\s+/); return [...new Set(words)].join(" "); }
     function truncateLog(text) { if (!text) return ""; let limit = text.split('\n')[0]; if (limit.length > 100) limit = limit.substring(0, 100) + "..."; return limit; }
-
+// PASO 2: Función para buscar frase conectora en la nueva colección
+    async function getConnectorPhrase(word) {
+        if(!word) return null;
+        try {
+            const cleanId = normalize(word);
+            // OJO: Aquí debe decir exactamente el nombre de tu colección nueva
+            const docRef = doc(db, "preguntaspalbraclave", cleanId);
+            const snap = await getDoc(docRef);
+            if (snap.exists()) {
+                return snap.data().def;
+            }
+        } catch (e) { console.error("Error buscando conector:", e); }
+        return null;
+    }
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         recognition = new SpeechRecognition();
@@ -478,11 +495,52 @@
         const synthesis = await runWordDecomposition(interpretedText, words);
         let aiResponse = ""; let logThis = false;
 
-        if (synthesis.length > 0) {
-            aiResponse = synthesis.length === 1 && synthesis[0].src !== "Memoria" ? `Encontré esto sobre <strong>${synthesis[0].word}</strong>:<br>${synthesis[0].def}` : `<strong>Analizando conceptos:</strong><br>` + synthesis.map(item => `- <b>${item.word}:</b> ${item.def}`).join('<br>');
-            aiResponse += "<br><br>¿Te sirve esta información?"; logThis = true;
-        } else { aiResponse = "No logré encontrar información detallada."; logThis = true; }
+       // PASO 4: Lógica Constructiva (Armar la oración)
+        
+        // CASO A: Tenemos Conector + Definición (La respuesta ideal)
+        if (synthesis.connector && synthesis.concepts.length > 0) {
+            const mainConcept = synthesis.concepts[0];
+            
+            // Limpiamos la definición (quitamos HTML extra)
+            let defClean = mainConcept.def.replace(/<[^>]*>/g, '').trim(); 
+            // Opcional: poner primera letra en minúscula para que fluya
+            // defClean = defClean.charAt(0).toLowerCase() + defClean.slice(1);
 
+            // ARMADO: Conector + Espacio + Definición
+            aiResponse = `${synthesis.connector} ${defClean}`;
+            
+            // Si hay más conceptos, los agregamos al final
+            if (synthesis.concepts.length > 1) {
+                aiResponse += `<br><br><small>También encontré:</small><br>`;
+                for(let i=1; i<synthesis.concepts.length; i++) {
+                    aiResponse += `- <b>${synthesis.concepts[i].word}:</b> ${synthesis.concepts[i].def}<br>`;
+                }
+            }
+            logThis = true;
+        }
+
+        // CASO B: Solo definiciones (Sin conector)
+        else if (synthesis.concepts.length > 0) {
+             if (synthesis.concepts.length === 1 && synthesis.concepts[0].src !== "Memoria") {
+                 aiResponse = `Encontré esto sobre <strong>${synthesis.concepts[0].word}</strong>:<br>${synthesis.concepts[0].def}`;
+             } else {
+                 aiResponse = `<strong>Analizando conceptos:</strong><br>` + synthesis.concepts.map(item => `- <b>${item.word}:</b> ${item.def}`).join('<br>');
+             }
+             aiResponse += "<br><br>¿Te sirve esta información?"; 
+             logThis = true;
+        }
+
+        // CASO C: Solo conector (Usuario dijo algo incompleto como "dime" o "es")
+        else if (synthesis.connector) {
+            aiResponse = synthesis.connector + "... (necesito un tema específico para completar la frase)";
+            logThis = true;
+        }
+
+        // CASO D: Nada encontrado
+        else { 
+            aiResponse = "No logré encontrar información detallada sobre ese tema."; 
+            logThis = true; 
+        }
         if (logThis && db) {
             const logEntry = { q: truncateLog(originalText), a: truncateLog(aiResponse.replace(/<[^>]*>/g, '')), user: currentUser ? currentUser.email : "Invitado", date: new Date().toISOString() };
             setDoc(doc(db, "alexia_db", "main_brain"), { missingLog: arrayUnion(logEntry) }, { merge: true }).catch(err => console.log(err));
@@ -557,13 +615,40 @@
         } catch(e) {} return null;
     }
 
+   // PASO 3: Nueva lógica de descomposición (Separa Conectores de Conceptos)
     async function runWordDecomposition(interpretedText, words) {
-        let synthesis = [];
+        let synthesis = { connector: null, concepts: [] };
+        
         for (let word of words) {
+            // A. Primero verificamos si es un CONECTOR
+            // Solo buscamos uno si no tenemos ninguno todavía
+            if (!synthesis.connector) {
+                const phrase = await getConnectorPhrase(word);
+                if (phrase) {
+                    synthesis.connector = phrase;
+                    continue; // Si es conector, ya no buscamos definición para esta palabra
+                }
+            }
+
+            // B. Si no es conector, buscamos DEFINICIÓN (Memoria o Web)
             let definition = null; let source = "";
-            try { const dictSnap = await getDoc(doc(db, "dictionary", word)); if (dictSnap.exists()) { definition = dictSnap.data().def; source = "Memoria"; } } catch(e) {}
-            if (!definition) { const extData = await fetchExternalData(word, 'Wikipedia/WEB'); if (extData) { definition = extData.def; source = "WEB"; } }
-            if (definition) synthesis.push({ word: word, def: definition, src: source });
+            
+            // 1. Diccionario propio
+            try { 
+                const dictSnap = await getDoc(doc(db, "dictionary", word)); 
+                if (dictSnap.exists()) { definition = dictSnap.data().def; source = "Memoria"; } 
+            } catch(e) {}
+            
+            // 2. Wikipedia/Web (si no estaba en memoria)
+            if (!definition) { 
+                const extData = await fetchExternalData(word, 'Wikipedia/WEB'); 
+                if (extData) { definition = extData.def; source = "WEB"; } 
+            }
+            
+            // Si encontramos algo, lo guardamos como concepto
+            if (definition) {
+                synthesis.concepts.push({ word: word, def: definition, src: source });
+            }
         }
         return synthesis;
     }
