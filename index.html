@@ -434,6 +434,43 @@ const stopWords = new Set([
         const originalText = input.value.trim();
         if(!originalText) return;
 
+// --- PEGA ESTE BLOQUE AQUÍ (FILTRO DE TOXICIDAD) ---
+    if (toxicityModel) {
+        // Mostramos animación sutil de que está "leyendo"
+        const btnSend = document.querySelector('.send-btn');
+        const oldIcon = btnSend.innerHTML;
+        btnSend.innerHTML = '<i class="fas fa-shield-alt fa-pulse"></i>'; // Icono de escudo
+
+        try {
+            const predictions = await toxicityModel.classify([originalText]);
+            // Verificamos si alguna categoría dio positivo (match: true)
+            const isToxic = predictions.some(p => p.results[0].match === true);
+
+            if (isToxic) {
+                input.value = ''; // Borrar input
+                appendMsg('user', originalText); // Mostrar lo que dijo el usuario
+                
+                // Respuesta de regaño
+                const warnings = [
+                    "⚠️ Detecto lenguaje ofensivo. Por favor, mantengamos el respeto.",
+                    "🚫 Mis protocolos me impiden responder a ese tipo de lenguaje.",
+                    "Oye, no es necesario ser grosero. Hablemos bien. 🤝"
+                ];
+                const warnMsg = warnings[Math.floor(Math.random() * warnings.length)];
+                
+                // Usamos appendMsg directo para no guardar esto en historial de aprendizaje
+                appendMsg('ai', `<span style="color:#ff897d;">${warnMsg}</span>`, false, 'warn-'+Date.now());
+                
+                btnSend.innerHTML = oldIcon; // Restaurar botón
+                return; // <--- ESTO DETIENE A ALEXIA, YA NO HACE NADA MÁS
+            }
+        } catch (err) {
+            console.error("Error al verificar toxicidad:", err);
+        }
+        btnSend.innerHTML = oldIcon; // Restaurar botón
+    }
+    // ----------------------------------------------------
+
         document.getElementById('idea-btn').classList.remove('has-ideas');
 
         // MODO ENSEÑANZA
