@@ -448,14 +448,16 @@
         input.value = ''; appendMsg('user', originalText); 
         const loadingId = 'loading-' + Date.now(); appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> <span id="think-text">Pensando...</span>`, false, loadingId);
         
-        await new Promise(r => setTimeout(r, 1000));
+        // Simular un retraso para que el mensaje de carga se vea
+        await new Promise(r => setTimeout(r, 500));
         const loadingMsg = document.getElementById(loadingId); if(loadingMsg) loadingMsg.remove();
 
         const interpretedText = processSynonyms(normInput);
-        const words = interpretedText.split(/\s+/).filter(w => !stopWords.has(w) && w.length > 2);
 
-        // *** INICIO DE LA INTEGRACIÓN DE alexia_logic.js (Lógica Mejorada) ***
-        // 1. Verificar si el módulo de lógica externa está cargado.
+        // =============================================================
+        // PASO 1: LÓGICA DE INTENCIÓN ESPECÍFICA (La más rápida)
+        // =============================================================
+        // Integración de alexia_logic.js (Lógica Mejorada)
         if (window.alexiaLogic && typeof window.alexiaLogic.detectIntent === 'function') {
             const externalIntent = window.alexiaLogic.detectIntent(originalText);
             
@@ -479,7 +481,6 @@
                             const bibleData = await window.alexiaLogic.fetchBible(externalIntent.query);
                             resultText = bibleData ? bibleData.def : `No pude encontrar el versículo: "${externalIntent.query}".`;
                             break;
-                        // Los intentos 'clima' y 'libro' (y otros no implementados) se pasan a la lógica siguiente.
                         default:
                             break; 
                     }
@@ -488,23 +489,24 @@
                     resultText = `Ocurrió un error al consultar la fuente de ${externalIntent.action}.`;
                 }
 
-                // Eliminar mensaje de carga y mostrar el resultado
                 const loadingMsg_ext = document.getElementById(loadingId_ext);
                 if(loadingMsg_ext) loadingMsg_ext.remove();
                 
                 if (resultText) {
                     await finishResponse(originalText, resultText, true, true);
                     wasVoiceInput = false;
-                    return; // Detener el procesamiento, la lógica externa manejó la solicitud.
+                    return;
                 }
             }
         }
-        // *** FIN DE LA INTEGRACIÓN ***
-
-
+        
+        // Lógica de intención específica (tu función existente para Meteo/Biblioteca)
         const specificIntent = checkSpecificIntent(originalText);
         if (specificIntent) { await processSpecificIntent(specificIntent.query, specificIntent.source); wasVoiceInput = false; return; }
 
+        // =============================================================
+        // PASO 2: LÓGICA DE MEMORIA (Memoria a corto plazo)
+        // =============================================================
         let bestMatch = null, maxScore = 0;
         brain.memory.forEach(mem => {
             mem.inputs.forEach(key => {
@@ -520,21 +522,73 @@
             await finishResponse(originalText, finalResponse, true, true); wasVoiceInput = false; return;
         }
 
-        const synthesis = await runWordDecomposition(interpretedText, words);
-        let aiResponse = ""; let logThis = false;
+        // =============================================================
+        // PASO 3: LLAMADA AL MODELO DE LENGUAJE GRANDE (El nuevo "cerebro")
+        // = ============================================================
+        
+        const loadingId_llm = 'loading-llm-' + Date.now();
+        appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> <span id="think-text">Conectando con el Cerebro de AleXIA...</span>`, false, loadingId_llm);
 
-        if (synthesis.length > 0) {
-            aiResponse = synthesis.length === 1 && synthesis[0].src !== "Memoria" ? `Encontré esto sobre <strong>${synthesis[0].word}</strong>:<br>${synthesis[0].def}` : `<strong>Analizando conceptos:</strong><br>` + synthesis.map(item => `- <b>${item.word}:</b> ${item.def}`).join('<br>');
-            aiResponse += "<br><br>¿Te sirve esta información?"; logThis = true;
-        } else { aiResponse = "No logré encontrar información detallada."; logThis = true; }
-
-        if (logThis && db) {
-            const logEntry = { q: truncateLog(originalText), a: truncateLog(aiResponse.replace(/<[^>]*>/g, '')), user: currentUser ? currentUser.email : "Invitado", date: new Date().toISOString() };
-            setDoc(doc(db, "alexia_db", "main_brain"), { missingLog: arrayUnion(logEntry) }, { merge: true }).catch(err => console.log(err));
+        let finalResponse;
+        try {
+            // Llama a la nueva función
+            finalResponse = await fetchLLMResponse(originalText);
+        } catch(e) {
+            console.error("LLM Error:", e);
+            finalResponse = "Lo siento, el módulo de inteligencia artificial no está disponible. Error: " + e.message;
         }
 
-        await finishResponse(originalText, aiResponse, true, true); wasVoiceInput = false;
+        const loadingMsg_llm = document.getElementById(loadingId_llm);
+        if(loadingMsg_llm) loadingMsg_llm.remove();
+
+        if (finalResponse && finalResponse.length > 10) {
+            // El LLM siempre da una respuesta inteligente. No necesitamos loggear como "missing".
+            await finishResponse(originalText, finalResponse, true, true);
+        } else {
+             // Si el LLM no responde, volvemos al estado inicial y loggeamos la falta de respuesta
+             const logEntry = { q: truncateLog(originalText), a: "LLM no respondió/error", user: currentUser ? currentUser.email : "Invitado", date: new Date().toISOString() };
+             setDoc(doc(db, "alexia_db", "main_brain"), { missingLog: arrayUnion(logEntry) }, { merge: true }).catch(err => console.log(err));
+             await finishResponse(originalText, "No logré encontrar o generar una respuesta útil. ¿Podrías intentar una pregunta diferente?", true, true);
+        }
+        
+        wasVoiceInput = false;
     };
+
+    // =========================================================================
+    // NUEVA FUNCIÓN: CONCEPTO DE CEREBRO LLM
+    // =========================================================================
+    async function fetchLLMResponse(query) {
+        // *** IMPLEMENTACIÓN REAL DEL LLM ***
+        // Aquí debes reemplazar este código con la llamada API a tu modelo de lenguaje.
+        // Ejemplo para un endpoint genérico (p.ej., OpenAI, Google Gemini, u otro servicio backend):
+
+        /*
+        const response = await fetch('TU_ENDPOINT_API_DE_LLM', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer TU_API_KEY', // Si es necesario
+            },
+            body: JSON.stringify({
+                prompt: `Responde a la siguiente pregunta de forma conversacional en español. Sé conciso: ${query}`,
+                max_tokens: 200,
+            }),
+        });
+        const data = await response.json();
+        return data.choices[0].text.trim(); // Ajusta según la estructura de la respuesta de tu API
+        */
+
+        // Actualmente es un placeholder para que el código compile y no se quede en bucle.
+        return new Promise(resolve => {
+            setTimeout(() => {
+                resolve(`¡Hola! Soy AleXIA. Esta es la parte donde debería usar un modelo de lenguaje avanzado para generar una respuesta inteligente a tu pregunta: "${query}". ¡Por favor, configura mi API de Cerebro!`);
+            }, 1500);
+        });
+    }
+    // =========================================================================
+    // FIN DE LLM
+    // =========================================================================
+
 
     function checkSpecificIntent(originalText) {
         const normText = normalize(originalText);
