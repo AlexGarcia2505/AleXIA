@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V75 - Cerebro Final</title>
+    <title>AleXIA V80 - Master</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -18,7 +18,7 @@
         }
         body { font-family: 'Outfit', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; height: 100dvh; display: flex; overflow: hidden; }
         
-        /* ESTILOS DE UI (Idénticos a tu versión anterior) */
+        /* SIDEBAR */
         .sidebar { width: 280px; background: var(--bg-sidebar); height: 100%; display: flex; flex-direction: column; position: absolute; z-index: 50; left: 0; top: 0; bottom: 0; transform: translateX(-100%); border-right: 1px solid #333; transition: transform 0.3s ease; flex-shrink: 0; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
         .sidebar.open { transform: translateX(0); }
         .overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index: 40; }
@@ -26,17 +26,14 @@
         .sidebar-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
         .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #555; display: inline-block; margin-left: 5px; transition: 0.3s; }
         .status-dot.online { background: var(--success); box-shadow: 0 0 8px var(--success); }
-        .status-dot.offline { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
         .new-chat-btn { background: #282a2c; color: var(--text-muted); border: none; padding: 10px; width: 90%; margin: 0 auto; display:flex; align-items:center; gap:10px; border-radius: 20px; cursor: pointer; transition: 0.2s; }
         .new-chat-btn:hover { background: #333; color: white; }
         .history-list { flex: 1; overflow-y: auto; padding: 10px; margin-top: 10px; }
         .chat-item { padding: 10px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: #e3e3e3; transition: background 0.2s; font-size: 0.9rem; border-radius: 8px; margin: 2px 10px; }
         .chat-item:hover { background-color: #282a2c; }
         .chat-item.active { background-color: #3c4043; font-weight: 500; }
-        .chat-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
-        .pin-btn { background: none; border: none; color: #555; cursor: pointer; font-size: 0.9rem; padding: 5px; transition: 0.2s; }
-        .pin-btn:hover { color: var(--accent); transform: scale(1.1); }
-        .pin-btn.pinned { color: var(--accent); opacity: 1; transform: rotate(-45deg); }
+        
+        /* MAIN CONTENT */
         .main-content { flex: 1; display: flex; flex-direction: column; position: relative; height: 100%; width: 100%; }
         .top-bar { padding: 15px; display: flex; align-items: center; gap: 15px; position: absolute; top: 0; left: 0; right: 0; z-index: 10; background: rgba(19, 19, 20, 0.9); backdrop-filter: blur(5px); }
         .menu-btn { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; display: block; }
@@ -45,11 +42,11 @@
         .profile-dropdown { display: none; position: absolute; top: 50px; right: 10px; background: #282a2c; border: 1px solid #444; border-radius: 12px; width: 250px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); z-index: 100; overflow: hidden; animation: fadeIn 0.2s; }
         .profile-dropdown.show { display: block; }
         .dropdown-header { padding: 15px; border-bottom: 1px solid #333; background: rgba(255,255,255,0.02); }
-        .dd-name { font-weight: bold; color: white; font-size: 1rem; margin-bottom: 5px; }
-        .dd-email { font-size: 0.8rem; color: #aaa; word-break: break-all; }
         .dropdown-item { width: 100%; padding: 12px 15px; background: none; border: none; color: #eee; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; transition: 0.2s; }
         .dropdown-item:hover { background: rgba(255,255,255,0.1); }
         .dropdown-item.danger { color: var(--danger); }
+
+        /* CHAT */
         #chat-box { flex: 1; overflow-y: auto; padding: 80px 20px 140px 20px; display: flex; flex-direction: column; gap: 20px; max-width: 800px; margin: 0 auto; width: 100%; box-sizing: border-box; scroll-behavior: smooth; }
         .msg-row { display: flex; gap: 15px; animation: fadeIn 0.3s; margin-bottom: 20px; width: 100%; }
         .msg-row.user-row { justify-content: flex-end; }
@@ -58,39 +55,25 @@
         .user-row .msg-bubble { background: var(--user-msg); padding: 10px 18px; border-radius: 20px 20px 4px 20px; }
         .ai-row .msg-bubble { background: transparent; padding: 0 10px; position: relative; display: block; flex: 1; min-width: 0; }
         .rich-content { max-height: 24rem; overflow-y: auto; padding-right: 5px; margin-bottom: 15px; display: block; text-align: left; }
-        .rich-content::-webkit-scrollbar { width: 6px; }
-        .rich-content::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
-        .rich-content::-webkit-scrollbar-track { background: transparent; }
-        .rich-content p { display: block; margin-bottom: 15px; text-align: left; clear: both; }
-        .rich-source { display: block; width: 100%; margin-top: 10px; padding-top: 15px; border-top: 1px solid #333; font-size: 0.9rem; color: var(--accent); clear: both; }
-        .rich-source a { color: var(--accent); text-decoration: none; display: flex; align-items: center; gap: 10px; padding: 5px 0; }
-        .suggestion-prompt { margin-top: 25px; font-weight: 500; color: var(--accent); display: block; margin-bottom: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
-        .suggestion-item { display: block; margin-top: 12px; padding: 8px 12px; border-radius: 8px; background: rgba(255,255,255,0.03); font-size: 0.95rem; cursor: pointer; transition: all 0.2s; line-height: 1.5; border: 1px solid transparent; white-space: normal; }
-        .suggestion-item:hover { background: rgba(168, 199, 250, 0.1); border-color: var(--accent); color: white; }
         .feedback-area { margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
         .feedback-btn { background: rgba(255,255,255,0.05); border: 1px solid #444; color: #ccc; padding: 5px 12px; border-radius: 15px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; transition: 0.2s; }
-        .feedback-btn:hover { background: rgba(255,255,255,0.1); color: white; }
-        .feedback-btn.active-teach { background: var(--accent); color: #000; border-color: var(--accent); font-weight: bold; box-shadow: 0 0 10px var(--accent-glow); }
+        .feedback-btn.active-teach { background: var(--accent); color: #000; border-color: var(--accent); font-weight: bold; }
         .tts-btn { float: right; margin-left: 15px; margin-bottom: 5px; background: rgba(255,255,255,0.08); border: 1px solid #444; color: var(--accent); width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 0.8rem; transition: 0.2s; }
-        .tts-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.1); border-color: white; }
-        .tts-btn.speaking { color: var(--danger); border-color: var(--danger); animation: pulse 1s infinite; background: rgba(255, 137, 125, 0.1); }
+        .tts-btn.speaking { color: var(--danger); border-color: var(--danger); animation: pulse 1s infinite; }
+
+        /* INPUT */
         .input-container { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px 20px 10px 20px; background: var(--bg-body); display: flex; flex-direction: column; align-items: center; z-index: 20; border-top: 1px solid #222; }
         .input-wrapper { background: var(--bg-input); width: 100%; max-width: 800px; border-radius: 30px; display: flex; align-items: center; padding: 5px 10px 5px 15px; border: 1px solid #444; position: relative; }
         .chat-input { flex: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; font-size: 16px; }
         .action-btn { background: transparent; color: #aaa; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background-color 0.2s; margin-left: 5px; }
         .action-btn:hover { background: rgba(255,255,255,0.1); color: white; }
-        .send-btn { background: #e3e3e3; color: #000; transition: background-color 0.1s ease; }
-        .send-btn:active { background: var(--accent); color: #000; }
-        .idea-btn { color: #aaa; transition: 0.3s; }
-        .idea-btn:hover { color: #ffd700; background: rgba(255, 215, 0, 0.1); }
-        .idea-btn.has-ideas { color: #ffd700; animation: pulseIdea 2s infinite; }
         .mic-btn.listening { color: var(--danger); background: rgba(255, 68, 68, 0.1); animation: pulseRed 1.5s infinite; }
         .footer-info { font-size: 0.7rem; color: #555; text-align: center; margin-bottom: 5px; margin-top: 5px; }
         .suggestions-popup { display: none; position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 350px; background: #1e1f20; border: 1px solid #444; border-radius: 16px; box-shadow: 0 5px 20px rgba(0,0,0,0.6); padding: 10px; z-index: 150; animation: slideUp 0.2s; }
         .suggestions-popup.show { display: block; }
         .sug-item { display: block; padding: 12px; margin-bottom: 5px; background: rgba(255,255,255,0.03); border-radius: 10px; cursor: pointer; font-size: 0.9rem; color: #ddd; border: 1px solid transparent; transition: 0.2s; }
-        .sug-item:hover { background: rgba(168, 199, 250, 0.1); border-color: var(--accent); color: white; }
-        .sug-item strong { color: var(--accent); }
+        
+        /* MODALS */
         .modal { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.85); z-index: 200; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .card { background: #1e1f20; padding: 30px; border-radius: 24px; width: 90%; max-width: 380px; text-align: center; border: 1px solid #444; }
         .tab-btn { background: none; border: none; color: #777; padding: 10px; cursor: pointer; font-weight: bold; border-bottom: 2px solid transparent; width: 50%; }
@@ -99,13 +82,11 @@
         .btn-full { width: 100%; padding: 12px; border-radius: 20px; border: none; cursor: pointer; font-weight: bold; margin-top: 10px; }
         .btn-primary { background: var(--accent); color: #001d35; }
         .btn-google { background: white; color: #1f1f1f; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .btn-login { background: var(--accent); color: #000; border: none; padding: 6px 14px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
         .admin-section { margin-bottom: 20px; }
-        .admin-section h4 { color: var(--accent); border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 10px; }
         .log-item { background: #27272a; padding: 10px; margin-bottom: 8px; border-radius: 8px; border-left: 3px solid #555; text-align: left; }
         .log-item.review { border-left-color: var(--accent); }
-        .log-item.missing { border-left-color: var(--danger); }
         .log-input { width: 100%; background: #111; border: 1px solid #444; color: #ddd; padding: 8px; border-radius: 4px; margin-top: 5px; font-family: inherit; }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: 0; } }
         @keyframes slideUp { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
@@ -194,7 +175,7 @@
             <button onclick="window.closeDash()" style="background:none; border:none; color:white; font-size:1.2rem;"><i class="fas fa-times"></i></button>
         </div>
         <div style="background:#27272a; padding:10px; border-radius:8px; margin-bottom:15px; text-align:left;">
-            <h4 style="margin:0; color:var(--accent); font-size:0.9rem;">📚 Cargar Diccionario</h4>
+            <h4 style="margin:0; color:var(--accent); font-size:0.9rem;">📚 Cargar Diccionario (Batch)</h4>
             <input type="file" id="json-upload" accept=".json" style="margin-top:5px; width:100%; font-size:0.8rem;">
             <button onclick="window.uploadDictionary()" style="background:var(--accent); color:#000; border:none; padding:4px 10px; border-radius:5px; margin-top:5px; cursor:pointer; font-weight:bold; font-size:0.8rem;">Procesar (Lotes)</button>
             <div id="upload-status" style="margin-top:5px; font-size:0.8rem; color:var(--success);"></div>
@@ -246,7 +227,7 @@
     const stopWords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'de', 'del', 'al', 'a', 'en', 'por', 'para', 'con', 'sin', 'que', 'como', 'cual', 'quien', 'es', 'son', 'fue', 'era', 'me', 'te', 'se', 'lo', 'mi', 'tu', 'su', 'nos', 'yo', 'tu', 'el', 'ella', 'dime', 'sobre', 'acerca', 'significa', 'busco', 'esta', 'está', 'cómo', 'hay', 'eres', 'soy', 'somos', 'todo', 'bien', 'tal', 'gracias']);
     const randomTopics = ["Universo", "Inteligencia Artificial", "Historia de México", "Biología", "Arte Moderno", "Filosofía", "Tecnología", "Dinosaurios", "Psicología", "Música Clásica"];
 
-    // 3. EXPOSICIÓN GLOBAL DE FUNCIONES (CRUCIAL PARA EL HTML)
+    // 3. EXPOSICIÓN GLOBAL
     window.normalize = (str) => String(str||'').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[¿?¡!.,]/g, "").trim();
     
     // UI Helpers
@@ -269,21 +250,56 @@
     window.googleLogin = () => signInWithPopup(auth, provider).then(()=>window.closeModal()).catch(e=>alert(e.message));
     window.logout = (e) => { if(e) e.stopPropagation(); const key = `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`; localStorage.removeItem(key); localStorage.removeItem('alexia_last_chat_id'); signOut(auth).then(() => { window.location.reload(); }); }
     
-    // Chat UI Functions
-    window.startNewChat = () => {
-        currentChatId = null; 
-        localStorage.removeItem('alexia_last_chat_id'); 
-        chatState = { mode: 'normal' }; 
-        document.getElementById('chat-box').innerHTML = `<div style="text-align:center; margin-top:80px; opacity:0.7; animation:fadeIn 1s;"><div style="width:80px; height:80px; background:linear-gradient(135deg, var(--accent), #ec4899); border-radius:50%; margin:0 auto 25px auto; display:flex; align-items:center; justify-content:center; box-shadow:0 0 40px var(--accent-glow);"><i class="fas fa-robot" style="font-size:40px; color:white;"></i></div><h2 style="font-weight:500;">¿Qué tienes en mente?</h2></div>`; 
-        window.renderLocalHistory(); 
-        if(window.innerWidth < 800) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('active'); }
-    }
-    
-    window.openDash = () => { document.getElementById('admin-dash').style.display = 'flex'; /* renderAdminQueue placeholder */ }
+    // Admin Functions
+    window.openDash = () => { document.getElementById('admin-dash').style.display = 'flex'; renderAdminQueue(); }
     window.closeDash = () => document.getElementById('admin-dash').style.display = 'none';
-    window.uploadDictionary = async () => { alert("Lógica de carga no implementada."); };
 
-    // 4. LÓGICA INTERNA DE AYUDA
+    function renderAdminQueue() {
+        const content = document.getElementById('dash-content'); content.innerHTML = "";
+        
+        let reviewHTML = `<div class="admin-section"><h4>📝 Enseñanzas Pendientes</h4>`;
+        if(!brain.reviewQueue || brain.reviewQueue.length === 0) reviewHTML += "<p style='color:#777; font-size:0.8rem;'>No hay enseñanzas pendientes.</p>";
+        else { brain.reviewQueue.forEach((item, idx) => { reviewHTML += `<div class="log-item review"><b>Pregunta: ${item.q}</b><br><input type="text" id="edit-a-${idx}" value="${item.a}" class="log-input"><div style="margin-top:5px;"><button onclick="window.dashAct('app', ${idx})" style="background:var(--success); border:none; padding:4px 8px; border-radius:4px; margin-right:5px;">Aprobar</button><button onclick="window.dashAct('rej', ${idx})" style="background:var(--danger); border:none; padding:4px 8px; border-radius:4px;">Rechazar</button></div></div>`; }); }
+        reviewHTML += "</div>";
+
+        let missingHTML = `<div class="admin-section"><h4>🔍 Preguntas Sin Respuesta</h4>`;
+        if(!brain.missingLog || brain.missingLog.length === 0) missingHTML += "<p style='color:#777; font-size:0.8rem;'>Historial limpio.</p>";
+        else { const list = brain.missingLog.slice(-10).reverse(); list.forEach((item, i) => { const realIdx = brain.missingLog.length - 1 - i; missingHTML += `<div class="log-item missing"><div style="font-weight:bold; color:#ccc;">${item.q}</div><div style="font-size:0.8rem; color:#777; margin-bottom:5px;">IA dijo: ${item.a}</div><input type="text" id="teach-a-${realIdx}" placeholder="Escribe la respuesta correcta..." class="log-input"><div style="margin-top:5px;"><button onclick="window.promoteToMemory(${realIdx})" style="background:var(--accent); color:#000; border:none; padding:4px 8px; border-radius:4px; margin-right:5px;">Guardar en Memoria</button><button onclick="window.deleteLog(${realIdx})" style="background:transparent; border:1px solid #555; color:#777; padding:4px 8px; border-radius:4px;">Ignorar</button></div></div>`; }); }
+        missingHTML += "</div>";
+        content.innerHTML = reviewHTML + missingHTML;
+    }
+
+    window.dashAct = async (act, idx) => { const item = brain.reviewQueue[idx]; if(act === 'app') { const editedA = document.getElementById(`edit-a-${idx}`).value; await updateDoc(doc(db, "alexia_db", "main_brain"), { memory: arrayUnion({ inputs: [window.normalize(item.q)], output: editedA }), reviewQueue: arrayRemove(item) }); } else { await updateDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayRemove(item) }); } };
+    window.promoteToMemory = async (idx) => { const item = brain.missingLog[idx]; const newAnswer = document.getElementById(`teach-a-${idx}`).value; if(!newAnswer) return alert("Escribe una respuesta primero."); await updateDoc(doc(db, "alexia_db", "main_brain"), { memory: arrayUnion({ inputs: [window.normalize(item.q)], output: newAnswer }), missingLog: arrayRemove(item) }); document.getElementById(`teach-a-${idx}`).parentNode.parentNode.style.opacity = '0.5'; };
+    window.deleteLog = async (idx) => { const item = brain.missingLog[idx]; await updateDoc(doc(db, "alexia_db", "main_brain"), { missingLog: arrayRemove(item) }); };
+
+    window.uploadDictionary = async () => { 
+        const fileInput = document.getElementById('json-upload'); 
+        const statusDiv = document.getElementById('upload-status'); 
+        if(fileInput.files.length === 0) return alert("Selecciona un archivo JSON."); 
+        statusDiv.innerHTML = "Analizando archivo..."; 
+        const reader = new FileReader(); 
+        reader.onload = async (e) => { 
+            try { 
+                const words = JSON.parse(e.target.result); 
+                if(!Array.isArray(words)) throw new Error("El JSON debe ser una lista []");
+                let added = 0; 
+                const batchLimit = 400; // Safe limit < 500
+                for (let i = 0; i < words.length; i += batchLimit) { 
+                    const chunk = words.slice(i, i + batchLimit); 
+                    const batch = writeBatch(db); 
+                    chunk.forEach(word => { if(word.id && word.def) { const ref = doc(db, "dictionary", window.normalize(word.id)); batch.set(ref, { def: word.def, id: word.id, type: word.type || "General", src: "Inyección Manual" }); added++; } }); 
+                    await batch.commit(); 
+                    statusDiv.innerHTML = `Subiendo... (${added} procesados)`; 
+                } 
+                statusDiv.innerHTML = `✅ ¡Éxito! Se inyectaron ${added} conocimientos.`; 
+                setTimeout(() => { statusDiv.innerHTML = ""; }, 5000);
+            } catch (err) { statusDiv.innerHTML = "❌ Error: " + err.message; } 
+        }; 
+        reader.readAsText(fileInput.files[0]); 
+    };
+
+    // LÓGICA CHAT
     const processSynonyms = (text) => text.split(" ").map(w => { const cw = window.normalize(w); return slangMap[cw] || cw; }).join(" ");
     const removeDuplicates = (text) => [...new Set(text.split(/\s+/))].join(" ");
     const truncateLog = (text) => { if (!text) return ""; let limit = text.split('\n')[0]; if (limit.length > 100) limit = limit.substring(0, 100) + "..."; return limit; }
@@ -341,94 +357,14 @@
         }
     }
 
-    window.generateSuggestions = () => {
-        activeSuggestions = [];
-        const randomTopic = randomTopics[Math.floor(Math.random() * randomTopics.length)];
-        activeSuggestions.push({ label: `Wiki: **${randomTopic}**`, query: `informacion de ${randomTopic}` });
-        sessionStorage.setItem('alexia_active_suggestions', JSON.stringify(activeSuggestions));
-        const ideaBtn = document.getElementById('idea-btn');
-        if(ideaBtn) ideaBtn.classList.add('has-ideas');
-        const content = document.getElementById('suggestions-content');
-        if(content) {
-            content.innerHTML = "";
-            activeSuggestions.forEach(s => { content.innerHTML += `<div class="sug-item" onclick="window.useSuggestion('${s.query}')">${s.label}</div>`; });
-        }
-    }
-    window.useSuggestion = (query) => { 
-        document.getElementById('suggestions-popup').classList.remove('show'); 
-        document.getElementById('chat-input').value = query; 
-        window.sendMessage(); 
-    }
+    window.generateSuggestions = () => { activeSuggestions = []; const randomTopic = randomTopics[Math.floor(Math.random() * randomTopics.length)]; activeSuggestions.push({ label: `Wiki: **${randomTopic}**`, query: `informacion de ${randomTopic}` }); sessionStorage.setItem('alexia_active_suggestions', JSON.stringify(activeSuggestions)); const ideaBtn = document.getElementById('idea-btn'); if(ideaBtn) ideaBtn.classList.add('has-ideas'); const content = document.getElementById('suggestions-content'); if(content) { content.innerHTML = ""; activeSuggestions.forEach(s => { content.innerHTML += `<div class="sug-item" onclick="window.useSuggestion('${s.query}')">${s.label}</div>`; }); } }
+    window.useSuggestion = (query) => { document.getElementById('suggestions-popup').classList.remove('show'); document.getElementById('chat-input').value = query; window.sendMessage(); }
+    window.startNewChat = () => { currentChatId = null; localStorage.removeItem('alexia_last_chat_id'); chatState = { mode: 'normal' }; document.getElementById('chat-box').innerHTML = `<div style="text-align:center; margin-top:80px; opacity:0.7; animation:fadeIn 1s;"><div style="width:80px; height:80px; background:linear-gradient(135deg, var(--accent), #ec4899); border-radius:50%; margin:0 auto 25px auto; display:flex; align-items:center; justify-content:center; box-shadow:0 0 40px var(--accent-glow);"><i class="fas fa-robot" style="font-size:40px; color:white;"></i></div><h2 style="font-weight:500;">¿Qué tienes en mente?</h2></div>`; window.renderLocalHistory(); if(window.innerWidth < 800) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('active'); } }
+    window.saveLocalChat = (uMsg, aiMsg) => { const key = `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`; let chats = JSON.parse(localStorage.getItem(key) || '[]') || []; if (!currentChatId) { currentChatId = Date.now().toString(); chats.unshift({ id: currentChatId, title: uMsg.substring(0, 25) + "...", timestamp: Date.now(), isPinned: false, messages: [{r:'user', t:uMsg}, {r:'ai', t:aiMsg}] }); } else { const idx = chats.findIndex(c => c.id === currentChatId); if (idx > -1) { chats[idx].messages.push({r:'user', t:uMsg}, {r:'ai', t:aiMsg}); chats[idx].timestamp = Date.now(); } } localStorage.setItem(key, JSON.stringify(chats)); localStorage.setItem('alexia_last_chat_id', currentChatId); window.renderLocalHistory(); }
+    window.renderLocalHistory = () => { const key = `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`; let chats = []; try { chats = JSON.parse(localStorage.getItem(key) || '[]') || []; } catch(e) { chats = []; } const pc = document.getElementById('pinned-container'); const hc = document.getElementById('history-container'); if(!pc || !hc) return; pc.innerHTML = ""; hc.innerHTML = ""; let hasPinned = false; if(chats.length === 0) { hc.innerHTML = `<div style="text-align:center; padding:20px; color:#555; font-size:0.85rem;">Historial vacío</div>`; } else { chats.forEach(chat => { const active = (chat.id === currentChatId) ? 'active' : ''; const html = `<div class="chat-item ${active}" onclick="window.loadLocalChat('${chat.id}')"><div class="chat-title"><i class="far fa-comment-alt" style="opacity:0.7; margin-right:8px;"></i>${chat.title}</div></div>`; if (chat.isPinned) { pc.innerHTML += html; hasPinned = true; } else hc.innerHTML += html; }); } const ps = document.getElementById('pinned-section'); if(ps) ps.style.display = hasPinned ? 'block' : 'none'; }
+    window.loadLocalChat = (id) => { const key = `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`; const chats = JSON.parse(localStorage.getItem(key) || '[]') || []; const chat = chats.find(c => c.id === id); if (chat) { currentChatId = id; localStorage.setItem('alexia_last_chat_id', currentChatId); const box = document.getElementById('chat-box'); box.innerHTML = ""; chat.messages.forEach(m => window.appendMsg(m.r, m.t, m.r === 'ai')); window.renderLocalHistory(); if(window.innerWidth < 800) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('active'); } } }
+    window.updateUserUI = (u) => { const btnLogin = document.getElementById('top-login-btn'); const headerProfile = document.getElementById('header-user-profile'); const headerAvatar = document.getElementById('header-avatar'); const ddName = document.getElementById('dd-name'); const ddEmail = document.getElementById('dd-email'); const adminLink = document.getElementById('admin-link-container'); if(u) { if(btnLogin) btnLogin.style.display = 'none'; if(headerProfile) headerProfile.style.display = 'block'; if(headerAvatar) headerAvatar.innerHTML = u.name[0].toUpperCase(); if(ddName) ddName.innerText = u.name; if(ddEmail) ddEmail.innerText = u.email; if(adminLink) adminLink.style.display = (u.role === 'admin') ? 'block' : 'none'; } else { if(btnLogin) btnLogin.style.display = 'block'; if(headerProfile) headerProfile.style.display = 'none'; } }
 
-    window.saveLocalChat = (uMsg, aiMsg) => {
-        const key = `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`;
-        let chats = JSON.parse(localStorage.getItem(key) || '[]') || []; 
-        if (!currentChatId) { 
-            currentChatId = Date.now().toString(); 
-            chats.unshift({ id: currentChatId, title: uMsg.substring(0, 25) + "...", timestamp: Date.now(), isPinned: false, messages: [{r:'user', t:uMsg}, {r:'ai', t:aiMsg}] }); 
-        } else { 
-            const idx = chats.findIndex(c => c.id === currentChatId); 
-            if (idx > -1) { chats[idx].messages.push({r:'user', t:uMsg}, {r:'ai', t:aiMsg}); chats[idx].timestamp = Date.now(); } 
-        } 
-        localStorage.setItem(key, JSON.stringify(chats)); 
-        localStorage.setItem('alexia_last_chat_id', currentChatId); 
-        window.renderLocalHistory(); 
-    }
-
-    window.renderLocalHistory = () => {
-        const key = `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`;
-        let chats = []; try { chats = JSON.parse(localStorage.getItem(key) || '[]') || []; } catch(e) { chats = []; }
-        const pc = document.getElementById('pinned-container'); const hc = document.getElementById('history-container'); 
-        if(!pc || !hc) return;
-        pc.innerHTML = ""; hc.innerHTML = ""; let hasPinned = false;
-        if(chats.length === 0) { hc.innerHTML = `<div style="text-align:center; padding:20px; color:#555; font-size:0.85rem;">Historial vacío</div>`; } else { 
-            chats.forEach(chat => { 
-                const active = (chat.id === currentChatId) ? 'active' : ''; 
-                const html = `<div class="chat-item ${active}" onclick="window.loadLocalChat('${chat.id}')"><div class="chat-title"><i class="far fa-comment-alt" style="opacity:0.7; margin-right:8px;"></i>${chat.title}</div></div>`; 
-                if (chat.isPinned) { pc.innerHTML += html; hasPinned = true; } else hc.innerHTML += html; 
-            }); 
-        } 
-        const ps = document.getElementById('pinned-section');
-        if(ps) ps.style.display = hasPinned ? 'block' : 'none';
-    }
-
-    window.loadLocalChat = (id) => {
-        const key = `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`;
-        const chats = JSON.parse(localStorage.getItem(key) || '[]') || []; 
-        const chat = chats.find(c => c.id === id); 
-        if (chat) { 
-            currentChatId = id; 
-            localStorage.setItem('alexia_last_chat_id', currentChatId); 
-            const box = document.getElementById('chat-box'); 
-            box.innerHTML = ""; 
-            chat.messages.forEach(m => window.appendMsg(m.r, m.t, m.r === 'ai')); 
-            window.renderLocalHistory(); 
-            if(window.innerWidth < 800) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('active'); }
-        }
-    }
-
-    window.updateUserUI = (u) => {
-        const btnLogin = document.getElementById('top-login-btn');
-        const headerProfile = document.getElementById('header-user-profile');
-        const headerAvatar = document.getElementById('header-avatar');
-        const ddName = document.getElementById('dd-name');
-        const ddEmail = document.getElementById('dd-email');
-        const adminLink = document.getElementById('admin-link-container');
-        
-        if(u) {
-            if(btnLogin) btnLogin.style.display = 'none';
-            if(headerProfile) headerProfile.style.display = 'block';
-            if(headerAvatar) headerAvatar.innerHTML = u.name[0].toUpperCase();
-            if(ddName) ddName.innerText = u.name;
-            if(ddEmail) ddEmail.innerText = u.email;
-            if(adminLink) adminLink.style.display = (u.role === 'admin') ? 'block' : 'none';
-        } else {
-            if(btnLogin) btnLogin.style.display = 'block';
-            if(headerProfile) headerProfile.style.display = 'none';
-        }
-    }
-
-    // 5. APIS EXTERNAS
     const fetchBible = async (query) => { try { const res = await fetch(`https://bible-api.com/${encodeURIComponent(query)}?translation=rv1960`); if (!res.ok) return null; const j = await res.json(); if (j.text) return { def: j.text.replace(/\n/g, '<br>'), src: j.reference }; } catch (e) { return null; } return null; }
     const fetchDictionaryEs = async (word) => { try { const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/es/${window.normalize(word)}`); if (!res.ok) return null; const j = await res.json(); if (!Array.isArray(j) || j.length === 0) return null; let defs = j[0].meanings.flatMap(m => (m.definitions || []).slice(0, 2).map(d => d.definition)); if (defs.length === 0) return null; return { def: defs.slice(0, 3).join('; '), src: 'DictionaryAPI' }; } catch (e) { return null; } }
     const fetchMeteo = async (city) => { try { const geoResp = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=es&format=json`); const geoData = await geoResp.json(); if (geoData.results && geoData.results.length > 0) { const place = geoData.results[0]; const weatherResp = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&current_weather=true`); const weatherData = await weatherResp.json(); if (weatherData.current_weather) return { def: `En <b>${place.name}</b>: <b>${weatherData.current_weather.temperature}°C</b>. Viento: ${weatherData.current_weather.windspeed} km/h.`, src: "Open-Meteo" }; } } catch (e) { } return null; }
@@ -437,7 +373,6 @@
     const fetchRestCountries = async (country) => { try { const res = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(country)}?fields=capital,languages,population,flags`); const j = await res.json(); if (j && j.length > 0) { const c = j[0]; const lang = Object.values(c.languages).join(', '); return { def: `<b>Capital:</b> ${c.capital[0]}. <b>Población:</b> ${c.population.toLocaleString()}. <b>Idiomas:</b> ${lang}.`, src: 'REST Countries' }; } } catch (e) { return null; } return null; }
     const sintesisPorPalabraClave = async (words) => { let synthesis = []; for (let word of words) { let definition = null; let source = ""; try { const dictSnap = await getDoc(doc(db, "dictionary", word)); if (dictSnap.exists()) { definition = dictSnap.data().def; source = "Memoria/DB"; } } catch(e) {} if (!definition) { const wikiData = await fetchWikipedia(word); if (wikiData) { definition = wikiData.def; source = "WEB/Wiki"; } } if (definition) synthesis.push({ word: word, def: definition, src: source }); } return synthesis; }
 
-    // 5.5 MOTOR DE CHARLA (SMALL TALK ENGINE)
     const conversationalResponses = {
         "hola": ["¡Hola! ¿En qué puedo ayudarte hoy?", "¡Hola! Qué gusto verte de nuevo.", "¡Saludos! Estoy lista para aprender."],
         "buenos dias": ["¡Buenos días! Espero que tengas una jornada excelente.", "¡Muy buenos días!"],
@@ -468,23 +403,45 @@
 
     const detecting = (texto) => {
         const t = window.normalize(texto);
-        if (/(\d?\s?[a-zA-Záéíóú]+\s\d{1,3}:\d{1,3}(?:-\d{1,3})?)/i.test(t)) return { intent: "biblia", query: RegExp.$1.trim() }; 
+        
+        // 1. LISTA DE LIBROS SAGRADOS
+        const bibleBooks = [
+            "genesis", "exodo", "levitico", "numeros", "deuteronomio", "josue", "jueces", "rut", 
+            "1 samuel", "2 samuel", "1 reyes", "2 reyes", "1 cronicas", "2 cronicas", "esdras", 
+            "nehemias", "ester", "job", "salmos", "proverbios", "eclesiastes", "cantares", "isaias", 
+            "jeremias", "lamentaciones", "ezequiel", "daniel", "oseas", "joel", "amos", "abdias", 
+            "jonas", "miqueas", "nahum", "habacuc", "sofonias", "hageo", "zacarias", "malaquias", 
+            "mateo", "marcos", "lucas", "juan", "hechos", "romanos", "1 corintios", "2 corintios", 
+            "galatas", "efesios", "filipenses", "colosenses", "1 tesalonicenses", "2 tesalonicenses", 
+            "1 timoteo", "2 timoteo", "tito", "filemon", "hebreos", "santiago", "1 pedro", "2 pedro", 
+            "1 juan", "2 juan", "3 juan", "judas", "apocalipsis"
+        ];
+
+        const bookMatch = bibleBooks.find(book => t.includes(book));
+        if (bookMatch) {
+            const verseMatch = t.match(new RegExp(`(${bookMatch}\\s?\\d{1,3}(?::\\d{1,3})?(?:-\\d{1,3})?)`, 'i'));
+            if (verseMatch) return { intent: "biblia", query: verseMatch[0] };
+        }
+        if (/(?:biblia|versiculo|cita)/i.test(t) && /\d/.test(t)) {
+             const generalMatch = t.match(/(\w+\s\d{1,3}:\d{1,3})/);
+             if(generalMatch) return { intent: "biblia", query: generalMatch[0] };
+        }
+
         if (/(?:significado|define|que significa|que es|definicion|definir)\s+(.+)/i.test(t)) return { intent: "diccionario", query: RegExp.$1.trim() };
         if (/(?:clima|tiempo)\s+(?:en|de)\s+(.+)/i.test(t)) return { intent: "clima", query: RegExp.$1.trim() };
         if (/(?:libro|obra|autor|novela)\s+(?:de|sobre)?\s*(.+)/i.test(t)) return { intent: "libros", query: RegExp.$1.trim() };
         if (/(?:quien es|que es|como funciona|cuando fue|donde esta|dime sobre|informacion de|biografia de)\s+(.+)/i.test(t)) return { intent: "wikipedia", query: RegExp.$1.trim() };
         if (/(?:capital de|poblacion de|idioma de|país|de dónde es)\s+(.+)/i.test(t)) return { intent: "pais", query: RegExp.$1.trim() };
+        
         return { intent: "general", query: texto };
     }
 
-    // 6. MAIN CHAT LOGIC (ACTUALIZADA)
     window.sendMessage = async function() {
         if(!db) return alert("Cargando cerebro... espera unos segundos.");
         const input = document.getElementById('chat-input');
         const originalText = input.value.trim();
         if(!originalText) return;
 
-        // 1. MODO ENSEÑANZA (Prioridad Máxima)
         if (chatState.mode === 'waiting_correction') {
             const correction = originalText;
             input.value = '';
@@ -501,25 +458,23 @@
             chatState = { mode: 'normal' }; return;
         }
 
-        // 2. LIMPIEZA Y PREPARACIÓN
         const normInput = removeDuplicates(window.normalize(originalText));
         input.value = ''; 
         window.appendMsg('user', originalText);
 
-        // 3. CAPA DE CHARLA CASUAL (NUEVO)
+        // SMALL TALK
         const simpleReply = getConversationalReply(normInput);
         if (simpleReply) {
             await window.finishResponse(originalText, simpleReply, false, false);
-            return; // Termina aquí si fue una charla simple
+            return;
         }
 
-        // Si no fue charla, mostramos "Pensando..." y activamos el Neuro-Router
         const loadingId = 'loading-' + Date.now(); 
         window.appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> <span id="think-text">Analizando...</span>`, false, loadingId);
         await new Promise(r => setTimeout(r, 600));
         const loadingMsg = document.getElementById(loadingId); if(loadingMsg) loadingMsg.remove();
 
-        // 4. NEURO-ROUTER
+        // NEURO ROUTER
         const intention = detecting(originalText);
         let responseData = null;
 
@@ -535,7 +490,6 @@
             }
         }
         
-        // 5. MEMORIA DE FIREBASE
         if (!responseData) {
             let bestMatch = null, maxScore = 0;
             const interpretedText = processSynonyms(normInput);
@@ -553,7 +507,6 @@
             }
         }
 
-        // 6. FALLBACK: SÍNTESIS
         if (!responseData) {
             const interpretedWords = originalText.split(/\s+/).filter(w => !stopWords.has(window.normalize(w)) && w.length > 2);
             const synthesisResult = await sintesisPorPalabraClave(interpretedWords);
@@ -566,7 +519,6 @@
             }
         }
 
-        // 7. RESPUESTA FINAL
         let finalResponse = "Lo siento, AleXIA no tiene información sobre eso. ¿Podrías intentar una pregunta más específica o enseñarme usando el botón de birrete?";
         if (responseData) {
             const url = responseData.url || (intention.intent === 'wikipedia' ? responseData.url : null);
@@ -580,7 +532,6 @@
         wasVoiceInput = false;
     }
 
-    // Inicialización de Voz
     if (document.getElementById('mic-btn')) {
         if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
             document.getElementById('mic-btn').style.display = 'none';
@@ -594,11 +545,9 @@
         }
     }
 
-    // Iniciar Enter listener
     const inputField = document.getElementById('chat-input');
     if(inputField) inputField.addEventListener('keypress', (e) => { if(e.key === 'Enter') window.sendMessage(); });
 
-    // Autenticación Listener
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             if (!user.emailVerified) return;
@@ -625,6 +574,3 @@
     if(db) onSnapshot(doc(db, "alexia_db", "main_brain"), (snap) => { if(snap.exists()) brain = snap.data(); });
 
 </script>
-
-</body>
-</html>
