@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V1.5 (Context Aware)</title>
+    <title>AleXIA V1.6 (Smart Clean)</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -175,7 +175,7 @@
 <div class="main-content">
     <div class="top-bar">
         <button class="menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-        <span style="font-weight:500;">AleXIA V1.5</span>
+        <span style="font-weight:500;">AleXIA V1.6</span>
         <div style="flex:1"></div>
         
         <button id="top-login-btn" onclick="openLogin()" class="btn-login">Entrar</button>
@@ -275,11 +275,8 @@
 
     let currentUser = null;
     let brain = { memory: [], reviewQueue: [], missingLog: [] };
-    
-    // VARIABLE GLOBAL PARA EL SISTEMA DE REBOTE (A/B/C)
     let lastSearchTerm = null;
 
-    // --- CARGAR CEREBRO DE TOXICIDAD ---
     let toxicityModel = null;
     if(window.toxicity) {
         window.toxicity.load(0.85).then(model => {
@@ -368,7 +365,6 @@
     };
     function resetSpeakerIcons() { document.querySelectorAll('.tts-btn').forEach(b => { b.classList.remove('speaking'); b.innerHTML = '<i class="fas fa-volume-up"></i>'; }); }
 
-    // --- FUNCIONES DE LIMPIEZA Y FUZZY SEARCH ---
     function levenshteinDistance(a, b) {
         const matrix = [];
         for (let i = 0; i <= b.length; i++) matrix[i] = [i];
@@ -436,20 +432,17 @@
         return null;
     }
 
-    // --- BÚSQUEDA INTELIGENTE CON PRIORIDADES ---
     async function searchInAllSources(phrase) {
         const cleanPhrase = cleanString(phrase);
         const wordCount = phrase.trim().split(/\s+/).length;
         if(!cleanPhrase) return null;
 
-        // Si es largo -> Wiki primero
         if (wordCount >= 3) {
             const wikiData = await fetchExternalData(phrase, 'Wikipedia/WEB');
             if(wikiData) return wikiData;
             const memData = findInMemoryFuzzy(phrase);
             if(memData) return memData;
         } else {
-            // Si es corto -> Diccionario primero
             try {
                 const docRef = doc(db, "dictionary", cleanPhrase);
                 const snap = await getDoc(docRef);
@@ -481,7 +474,9 @@
         if (lastSearchTerm) {
             if (normInput === 'a') {
                 input.value = ''; appendMsg('user', "A (Diccionario)");
-                await processSpecificIntent(lastSearchTerm, 'DiccionarioAPI'); return;
+                // LÓGICA CORREGIDA: Tomar solo la última palabra si hay un artículo (ej: "un maestro" -> "maestro")
+                let cleanTerm = lastSearchTerm.trim().split(/\s+/).pop();
+                await processSpecificIntent(cleanTerm, 'DiccionarioAPI'); return;
             }
             if (normInput === 'b') {
                 input.value = ''; appendMsg('user', "B (Wikipedia)");
@@ -493,7 +488,6 @@
             }
         }
 
-        // --- FILTRO DE TOXICIDAD ---
         if (typeof toxicityModel !== 'undefined' && toxicityModel) {
             const btnSend = document.querySelector('.send-btn');
             const oldIcon = btnSend.innerHTML;
@@ -573,19 +567,14 @@
 
         await new Promise(r => setTimeout(r, 800));
 
-        // INTENCIONES ESPECÍFICAS (CON TRADUCTOR Y DEFINICIÓN)
         const specificIntent = checkSpecificIntent(originalText);
         if (specificIntent) { 
             clearInterval(loaderInterval); 
             const loadEl = document.getElementById(loadingId); if(loadEl) loadEl.remove();
-            // Guardamos término para el rebote
             lastSearchTerm = specificIntent.query;
             await processSpecificIntent(specificIntent.query, specificIntent.source); wasVoiceInput = false; return; 
         }
 
-        // =================================================================================
-        // 🔥 ESCANEO DE CEBOLLA
-        // =================================================================================
         const interpretedText = processSynonyms(normInputFull); 
         let phraseWords = originalText.trim().split(/\s+/); 
         let foundFullConcept = null;
@@ -599,7 +588,7 @@
             if (result) {
                 foundFullConcept = result;
                 foundFullConcept.word = subPhrase; 
-                lastSearchTerm = subPhrase; // Guardar para rebote
+                lastSearchTerm = subPhrase; 
                 if (i > 0) skippedConnector = phraseWords.slice(0, i).join(" ");
                 break; 
             }
@@ -632,8 +621,14 @@
              if (connectorDef) sources += " y mis palabras clave";
 
              aiResponse += `<br><br><div style="font-size:0.75rem; color:#888; border-top:1px solid #444; padding-top:5px;"><em>Extraído de ${sources}</em></div>`;
-             // AGREGAR MENU DE REBOTE
-             aiResponse += `<br><div style="font-size:0.8rem; color:#aaa; margin-top:10px;">¿No es lo que buscabas? Responde: <b>A</b> (Diccionario), <b>B</b> (Wikipedia), <b>C</b> (Libros)</div>`;
+             
+             // MENÚ DE REBOTE MEJORADO
+             aiResponse += `<br><div style="font-size:0.8rem; color:#888; margin-top:10px; border-top:1px solid #333; padding-top:8px;">
+                ¿Buscas otra cosa? Escribe:<br>
+                <span style="color:var(--text-main); font-weight:bold;">A</span> Diccionario <span style="color:var(--accent); margin:0 5px;">|</span>
+                <span style="color:var(--text-main); font-weight:bold;">B</span> Wiki <span style="color:var(--accent); margin:0 5px;">|</span>
+                <span style="color:var(--text-main); font-weight:bold;">C</span> Libros
+             </div>`;
 
              if (db) {
                 setDoc(doc(db, "alexia_db", "main_brain"), { missingLog: arrayUnion({ q: truncateLog(originalText), a: truncateLog(aiResponse.replace(/<[^>]*>/g, '')), user: currentUser?currentUser.email:"Invitado", date: new Date().toISOString() }) }, { merge: true });
@@ -736,14 +731,13 @@
     function checkSpecificIntent(originalText) {
         const normText = cleanString(originalText); 
         
-        // 1. TRADUCCIÓN (NUEVO: PRIORIDAD SUPREMA)
         if (normText.includes("ingles") || normText.includes("traduc") || normText.includes("como se dice")) {
-            // Limpieza agresiva para sacar la palabra clave
             let query = originalText.replace(/como se dice|en ingles|en inglés|traduce|traducir|el|la|los|las|un|una/gi, "").trim();
+            // CORRECCIÓN: TOMAR SOLO LA ÚLTIMA PALABRA PARA TRADUCCIÓN
+            query = query.split(/\s+/).pop();
             return { action: 'execute_search', source: 'DiccionarioAPI', query: query };
         }
 
-        // 2. DEFINICIÓN ESTRICTA (NUEVO)
         if (normText.startsWith("define") || normText.includes("significado de") || normText.includes("concepto de")) {
              let query = originalText.replace(/define|significado de|concepto de|el|la|los|las/gi, "").trim();
              return { action: 'execute_search', source: 'DiccionarioAPI', query: query };
@@ -761,7 +755,6 @@
         else if (source.includes('Meteo')) cleanQuery = query.replace(/^clima (en )?/i, '');
         else if (source.includes('Wikipedia')) cleanQuery = query.replace(/^articulo (de )?/i, '');
         
-        // Guardamos para rebote
         lastSearchTerm = cleanQuery;
 
         const searchData = await fetchExternalData(cleanQuery, source);
@@ -770,8 +763,13 @@
             aiResponse += formatExtras(searchData.extra);
             aiResponse += `<div class="rich-source"><a href="${searchData.url}" target="_blank"><i class="fas fa-external-link-alt"></i> Fuente (${source})</a></div>`;
             
-            // AGREGAR MENU DE REBOTE
-            aiResponse += `<br><div style="font-size:0.8rem; color:#aaa; margin-top:10px;">¿No es lo que buscabas? Responde: <b>A</b> (Diccionario), <b>B</b> (Wikipedia), <b>C</b> (Libros)</div>`;
+            // MENU DE REBOTE MEJORADO
+            aiResponse += `<br><div style="font-size:0.8rem; color:#888; margin-top:10px; border-top:1px solid #333; padding-top:8px;">
+                ¿Buscas otra cosa? Escribe:<br>
+                <span style="color:var(--text-main); font-weight:bold;">A</span> Diccionario <span style="color:var(--accent); margin:0 5px;">|</span>
+                <span style="color:var(--text-main); font-weight:bold;">B</span> Wiki <span style="color:var(--accent); margin:0 5px;">|</span>
+                <span style="color:var(--text-main); font-weight:bold;">C</span> Libros
+             </div>`;
 
             await finishResponse(query, aiResponse, true, true); 
         } else { await finishResponse(query, `No pude encontrar "${cleanQuery}" en ${source}.`, true, true); }
