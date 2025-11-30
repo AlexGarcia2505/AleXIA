@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V70 - Final Fix</title>
+    <title>AleXIA V70 - Integrated</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -18,27 +18,17 @@
         }
         body { font-family: 'Outfit', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; height: 100dvh; display: flex; overflow: hidden; }
         
-        /* SIDEBAR - AHORA ES IGUAL PARA MÓVIL Y ESCRITORIO (TOGGLEABLE) */
         .sidebar {
             width: 280px; background: var(--bg-sidebar); height: 100%; display: flex; flex-direction: column;
             position: absolute; z-index: 50; left: 0; top: 0; bottom: 0;
-            transform: translateX(-100%); 
-            border-right: 1px solid #333; transition: transform 0.3s ease;
-            flex-shrink: 0;
-            box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+            transform: translateX(-100%); border-right: 1px solid #333; transition: transform 0.3s ease;
+            flex-shrink: 0; box-shadow: 5px 0 15px rgba(0,0,0,0.5);
         }
-        /* Clase para abrir el menú */
         .sidebar.open { transform: translateX(0); }
-
-        /* Overlay para cerrar al dar clic fuera (funciona en ambos) */
         .overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index: 40; }
         .overlay.active { display: block; }
         
-        /* Ajuste Desktop: Si quieres que empiece abierto, descomenta la siguiente linea en JS, pero por CSS lo dejamos flexible */
-        @media(min-width: 800px) {
-            /* Ya no forzamos transform: translateX(0) aquí para permitir cerrar */
-            /* La sidebar se comportará igual que en móvil, permitiendo abrir/cerrar */
-        }
+        @media(min-width: 800px) { }
 
         .sidebar-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
         .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #555; display: inline-block; margin-left: 5px; transition: 0.3s; }
@@ -58,17 +48,10 @@
         .pin-btn:hover { color: var(--accent); transform: scale(1.1); }
         .pin-btn.pinned { color: var(--accent); opacity: 1; transform: rotate(-45deg); }
 
-        .user-panel { padding: 15px; border-top: 1px solid #333; display: flex; align-items: center; gap: 10px; cursor: pointer; }
-        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: #000; display: flex; justify-content: center; align-items: center; font-weight: bold; }
-
-        /* MAIN CONTENT */
         .main-content { flex: 1; display: flex; flex-direction: column; position: relative; height: 100%; width: 100%; }
-        
-        /* TOP BAR: Siempre muestra el botón de menú */
         .top-bar { padding: 15px; display: flex; align-items: center; gap: 15px; position: absolute; top: 0; left: 0; right: 0; z-index: 10; background: rgba(19, 19, 20, 0.9); backdrop-filter: blur(5px); }
-        .menu-btn { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; display: block; /* Siempre visible */ }
+        .menu-btn { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; display: block; }
 
-        /* CABECERA Y PERFIL */
         .header-profile { cursor: pointer; margin-left: 10px; display: none; position: relative; }
         .user-avatar.small { width: 35px; height: 35px; font-size: 1rem; border: 2px solid rgba(255,255,255,0.2); display: flex; justify-content: center; align-items: center; border-radius: 50%; background: var(--accent); color: #000; font-weight: bold; }
         
@@ -86,7 +69,6 @@
         .dropdown-item:hover { background: rgba(255,255,255,0.1); }
         .dropdown-item.danger { color: var(--danger); }
         
-        /* CHAT AREA */
         #chat-box { flex: 1; overflow-y: auto; padding: 80px 20px 140px 20px; display: flex; flex-direction: column; gap: 20px; max-width: 800px; margin: 0 auto; width: 100%; box-sizing: border-box; scroll-behavior: smooth; }
         .msg-row { display: flex; gap: 15px; animation: fadeIn 0.3s; margin-bottom: 20px; width: 100%; }
         .msg-row.user-row { justify-content: flex-end; }
@@ -98,8 +80,6 @@
         .rich-content { max-height: 24rem; overflow-y: auto; padding-right: 5px; margin-bottom: 15px; display: block; text-align: left; }
         .rich-content::-webkit-scrollbar { width: 6px; }
         .rich-content::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
-        .rich-content::-webkit-scrollbar-track { background: transparent; }
-        .rich-content p { display: block; margin-bottom: 15px; text-align: left; clear: both; }
         .rich-source { display: block; width: 100%; margin-top: 10px; padding-top: 15px; border-top: 1px solid #333; font-size: 0.9rem; color: var(--accent); clear: both; }
         .rich-source a { color: var(--accent); text-decoration: none; display: flex; align-items: center; gap: 10px; padding: 5px 0; }
 
@@ -112,25 +92,16 @@
         .feedback-btn:hover { background: rgba(255,255,255,0.1); color: white; }
         .feedback-btn.active-teach { background: var(--accent); color: #000; border-color: var(--accent); font-weight: bold; box-shadow: 0 0 10px var(--accent-glow); }
 
-        /* AUDIO BUTTON */
-        .tts-btn { 
-            float: right; margin-left: 15px; margin-bottom: 5px; 
-            background: rgba(255,255,255,0.08); border: 1px solid #444; color: var(--accent); 
-            width: 30px; height: 30px; border-radius: 50%; cursor: pointer; 
-            display: flex; justify-content: center; align-items: center; font-size: 0.8rem; 
-            transition: 0.2s; 
-        }
+        .tts-btn { float: right; margin-left: 15px; margin-bottom: 5px; background: rgba(255,255,255,0.08); border: 1px solid #444; color: var(--accent); width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 0.8rem; transition: 0.2s; }
         .tts-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.1); border-color: white; }
         .tts-btn.speaking { color: var(--danger); border-color: var(--danger); animation: pulse 1s infinite; background: rgba(255, 137, 125, 0.1); }
 
-        /* INPUT & BOTONES */
         .input-container { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px 20px 10px 20px; background: var(--bg-body); display: flex; flex-direction: column; align-items: center; z-index: 20; border-top: 1px solid #222; }
         .input-wrapper { background: var(--bg-input); width: 100%; max-width: 800px; border-radius: 30px; display: flex; align-items: center; padding: 5px 10px 5px 15px; border: 1px solid #444; position: relative; }
         .chat-input { flex: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; font-size: 16px; }
         
         .action-btn { background: transparent; color: #aaa; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background-color 0.2s; margin-left: 5px; }
         .action-btn:hover { background: rgba(255,255,255,0.1); color: white; }
-        
         .send-btn { background: #e3e3e3; color: #000; transition: background-color 0.1s ease; }
         .send-btn:active { background: var(--accent); color: #000; }
         
@@ -196,7 +167,7 @@
 <div class="main-content">
     <div class="top-bar">
         <button class="menu-btn" onclick="window.toggleSidebar()"><i class="fas fa-bars"></i></button>
-        <span style="font-weight:500;">AleXv2</span>
+        <span style="font-weight:500;">AleXIA</span>
         <div style="flex:1"></div>
         
         <button id="top-login-btn" onclick="window.openLogin()" class="btn-login">Entrar</button>
@@ -261,9 +232,13 @@
     </div>
 </div>
 
-<script>
-    // INYECTAMOS CONFIGURACIÓN BÁSICA DE FIREBASE PARA EL MÓDULO
-    window.FIREBASE_CONFIG = {
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import { getFirestore, doc, onSnapshot, setDoc, updateDoc, arrayUnion, arrayRemove, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+    // 1. CONFIGURACIÓN FIREBASE
+    const firebaseConfig = {
         apiKey: "AIzaSyAeNVoB1ZasZSauIf6G7GbIa4bbJJ3_5cw",
         authDomain: "alexia-1c4f2.firebaseapp.com",
         projectId: "alexia-1c4f2",
@@ -271,10 +246,380 @@
         messagingSenderId: "483778313354",
         appId: "1:483778313354:web:c28c9da35d5674b174c173"
     };
-    window.ADMIN_EMAIL = "eljacksonyt@gmail.com";
-</script>
 
-<script type="module" src="alexia_logic.js"></script>
+    let app, db, auth, provider;
+    try {
+        app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        auth = getAuth(app);
+        provider = new GoogleAuthProvider();
+        const dot = document.getElementById('connection-dot');
+        if(dot) { dot.classList.add('online'); dot.classList.remove('offline'); }
+    } catch(e) { 
+        console.error("Firebase Init Error:", e);
+    }
+
+    // 2. VARIABLES DE ESTADO
+    let currentUser = null;
+    let brain = { memory: [], reviewQueue: [], missingLog: [] };
+    let currentChatId = null;
+    let chatState = { mode: 'normal', lastQuery: '' }; 
+    let activeSuggestions = JSON.parse(sessionStorage.getItem('alexia_active_suggestions') || '[]') || []; 
+    let isVoiceActive = false;
+    let recognition;
+    let synth = window.speechSynthesis;
+    let wasVoiceInput = false;
+
+    const ADMIN_EMAIL = "eljacksonyt@gmail.com";
+    const slangMap = { "andas": "estas", "onda": "pasa", "hubo": "paso", "pex": "pasa", "pedo": "problema", "chido": "bueno", "padre": "bueno", "gwey": "amigo", "wey": "amigo", "camara": "adios", "simon": "si", "nelson": "no", "chale": "que mal", "neto": "verdad", "neta": "verdad", "jalo": "acepto", "sobres": "esta bien" };
+    const stopWords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'de', 'del', 'al', 'a', 'en', 'por', 'para', 'con', 'sin', 'que', 'como', 'cual', 'quien', 'es', 'son', 'fue', 'era', 'me', 'te', 'se', 'lo', 'mi', 'tu', 'su', 'nos', 'yo', 'tu', 'el', 'ella', 'dime', 'sobre', 'acerca', 'significa', 'busco', 'esta', 'está', 'cómo', 'hay', 'eres', 'soy', 'somos', 'todo', 'bien', 'tal', 'gracias']);
+    const randomTopics = ["Universo", "Inteligencia Artificial", "Historia de México", "Biología", "Arte Moderno", "Filosofía", "Tecnología", "Dinosaurios", "Psicología", "Música Clásica"];
+
+    // 3. EXPOSICIÓN GLOBAL DE FUNCIONES (CRUCIAL PARA EL HTML)
+    window.normalize = (str) => String(str||'').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[¿?¡!.,]/g, "").trim();
+    
+    // UI Helpers
+    window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('active'); }
+    window.toggleUserMenu = (e) => { e.stopPropagation(); document.getElementById('user-dropdown').classList.toggle('show'); }
+    window.toggleSuggestions = () => { document.getElementById('suggestions-popup').classList.toggle('show'); }
+    window.toggleVoice = () => { if(isVoiceActive) recognition.stop(); else recognition.start(); }
+    window.emergencyReset = (e) => { if(e) e.stopPropagation(); if(confirm("⚠️ ¿Restablecer aplicación?")) { localStorage.clear(); sessionStorage.clear(); window.location.reload(); } };
+    window.openLogin = () => { if(!currentUser) document.getElementById('auth-modal').style.display = 'flex'; }
+    window.closeModal = () => document.getElementById('auth-modal').style.display = 'none';
+    window.closeVerify = () => document.getElementById('verify-modal').style.display = 'none';
+    
+    // Auth Functions
+    window.showAuth = (type) => { 
+        if(type === 'login') { document.getElementById('section-login').style.display = 'block'; document.getElementById('section-register').style.display = 'none'; document.getElementById('tab-login').classList.add('active'); document.getElementById('tab-register').classList.remove('active'); } 
+        else { document.getElementById('section-login').style.display = 'none'; document.getElementById('section-register').style.display = 'block'; document.getElementById('tab-login').classList.remove('active'); document.getElementById('tab-register').classList.add('active'); } 
+    }
+    window.emailLogin = () => { const e=document.getElementById('l-email').value, p=document.getElementById('l-pass').value; signInWithEmailAndPassword(auth, e, p).then((c)=>{if(!c.user.emailVerified){document.getElementById('verify-modal').style.display='flex';signOut(auth);}else window.closeModal();}).catch(e=>alert(e.message)); };
+    window.emailRegister = () => { const e=document.getElementById('r-email').value, p=document.getElementById('r-pass').value; createUserWithEmailAndPassword(auth, e, p).then(async(c)=>{await sendEmailVerification(c.user);document.getElementById('auth-modal').style.display='none';document.getElementById('verify-modal').style.display='flex';}).catch(e=>alert(e.message)); };
+    window.googleLogin = () => signInWithPopup(auth, provider).then(()=>window.closeModal()).catch(e=>alert(e.message));
+    window.logout = (e) => { if(e) e.stopPropagation(); const key = `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`; localStorage.removeItem(key); localStorage.removeItem('alexia_last_chat_id'); signOut(auth).then(() => { window.location.reload(); }); }
+    
+    // Chat UI Functions
+    window.startNewChat = () => {
+        currentChatId = null; 
+        localStorage.removeItem('alexia_last_chat_id'); 
+        chatState = { mode: 'normal' }; 
+        document.getElementById('chat-box').innerHTML = `<div style="text-align:center; margin-top:80px; opacity:0.7; animation:fadeIn 1s;"><div style="width:80px; height:80px; background:linear-gradient(135deg, var(--accent), #ec4899); border-radius:50%; margin:0 auto 25px auto; display:flex; align-items:center; justify-content:center; box-shadow:0 0 40px var(--accent-glow);"><i class="fas fa-robot" style="font-size:40px; color:white;"></i></div><h2 style="font-weight:500;">¿Qué tienes en mente?</h2></div>`; 
+        window.renderLocalHistory(); 
+        if(window.innerWidth < 800) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('active'); }
+    }
+    
+    window.openDash = () => { document.getElementById('admin-dash').style.display = 'flex'; /* renderAdminQueue placeholder */ }
+    window.closeDash = () => document.getElementById('admin-dash').style.display = 'none';
+    window.uploadDictionary = async () => { alert("Lógica de carga no implementada."); };
+
+    // 4. LÓGICA INTERNA DE AYUDA
+    const processSynonyms = (text) => text.split(" ").map(w => { const cw = window.normalize(w); return slangMap[cw] || cw; }).join(" ");
+    const removeDuplicates = (text) => [...new Set(text.split(/\s+/))].join(" ");
+    const truncateLog = (text) => { if (!text) return ""; let limit = text.split('\n')[0]; if (limit.length > 100) limit = limit.substring(0, 100) + "..."; return limit; }
+
+    window.speakText = (text, btnId) => {
+        if (synth.speaking) { synth.cancel(); if (window.activeSpeakingBtnId === btnId) { document.querySelectorAll('.tts-btn').forEach(b => { b.classList.remove('speaking'); b.innerHTML = '<i class="fas fa-volume-up"></i>'; }); window.activeSpeakingBtnId = null; return; } }
+        const cleanText = text.replace(/<[^>]*>/g, '').replace(/http\S+/g, 'enlace');
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = 'es-MX'; utterance.rate = 1.0;
+        utterance.onstart = () => { const btn = document.getElementById(btnId); if(btn) { btn.classList.add('speaking'); btn.innerHTML = '<i class="fas fa-stop"></i>'; window.activeSpeakingBtnId = btnId; } };
+        utterance.onend = () => { document.querySelectorAll('.tts-btn').forEach(b => { b.classList.remove('speaking'); b.innerHTML = '<i class="fas fa-volume-up"></i>'; }); window.activeSpeakingBtnId = null; };
+        synth.speak(utterance);
+    };
+
+    window.appendMsg = (role, text, hasControls = false, customId = null) => {
+        const box = document.getElementById('chat-box');
+        const row = document.createElement('div'); row.className = `msg-row ${role}-row`; if (customId) row.id = customId;
+        let controlsHTML = '';
+        if (role === 'ai' && hasControls) {
+            const safeText = text.replace(/'/g, "").replace(/"/g, "").replace(/\n/g, " ");
+            const btnId = `btn-${customId}`;
+            controlsHTML = `<button id="${btnId}" class="tts-btn" onclick="window.speakText('${safeText}', '${btnId}')"><i class="fas fa-volume-up"></i></button>`;
+        }
+        const icon = role === 'ai' ? `<div class="msg-icon"><i class="fas fa-robot"></i></div>` : '';
+        row.innerHTML = `${icon}<div class="msg-bubble">${controlsHTML}${text}</div>`;
+        if(box.querySelector('h2')) box.innerHTML = '';
+        box.appendChild(row);
+        setTimeout(() => { row.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
+    }
+
+    window.finishResponse = async (userTxt, aiTxt, shouldSuggest, showFeedback = false) => {
+        const msgId = 'ai-msg-' + Date.now();
+        let feedbackHTML = "";
+        const safeUserTxt = userTxt.replace(/'/g, "\\'").replace(/"/g, '"').replace(/\n/g, ' ');
+        if (showFeedback) {
+            feedbackHTML = `<div class="feedback-area"><button class="feedback-btn" onclick="window.rateAnswer('good', '${safeUserTxt}', this)"><i class="fas fa-thumbs-up"></i> Útil</button><button class="feedback-btn bad" onclick="window.rateAnswer('bad', '${safeUserTxt}', this)"><i class="fas fa-graduation-cap"></i> Enseñar</button></div>`;
+        }
+        window.appendMsg('ai', aiTxt + feedbackHTML, true, msgId); 
+        window.saveLocalChat(userTxt, aiTxt + feedbackHTML);
+        if (shouldSuggest) window.generateSuggestions();
+    }
+
+    window.rateAnswer = (type, query, btnElement) => {
+        if (type === 'good') { alert("¡Me alegra haber ayudado! 😊"); } else {
+            if (chatState.mode === 'waiting_correction') {
+                chatState = { mode: 'normal', lastQuery: '' };
+                btnElement.classList.remove('active-teach'); btnElement.innerHTML = `<i class="fas fa-graduation-cap"></i> Enseñar`;
+                window.appendMsg('ai', "Modo enseñanza cancelado.");
+            } else {
+                chatState = { mode: 'waiting_correction', lastQuery: query };
+                document.querySelectorAll('.feedback-btn.active-teach').forEach(b => b.classList.remove('active-teach'));
+                btnElement.classList.add('active-teach'); btnElement.innerHTML = `<i class="fas fa-times"></i> Cancelar`;
+                window.appendMsg('ai', "Entendido. 😔 ¿Qué respuesta debería haberte dado?");
+            }
+        }
+    }
+
+    window.generateSuggestions = () => {
+        activeSuggestions = [];
+        const randomTopic = randomTopics[Math.floor(Math.random() * randomTopics.length)];
+        activeSuggestions.push({ label: `Wiki: **${randomTopic}**`, query: `informacion de ${randomTopic}` });
+        sessionStorage.setItem('alexia_active_suggestions', JSON.stringify(activeSuggestions));
+        const ideaBtn = document.getElementById('idea-btn');
+        if(ideaBtn) ideaBtn.classList.add('has-ideas');
+        const content = document.getElementById('suggestions-content');
+        if(content) {
+            content.innerHTML = "";
+            activeSuggestions.forEach(s => { content.innerHTML += `<div class="sug-item" onclick="window.useSuggestion('${s.query}')">${s.label}</div>`; });
+        }
+    }
+    window.useSuggestion = (query) => { 
+        document.getElementById('suggestions-popup').classList.remove('show'); 
+        document.getElementById('chat-input').value = query; 
+        window.sendMessage(); 
+    }
+
+    window.saveLocalChat = (uMsg, aiMsg) => {
+        const key = `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`;
+        let chats = JSON.parse(localStorage.getItem(key) || '[]') || []; 
+        if (!currentChatId) { 
+            currentChatId = Date.now().toString(); 
+            chats.unshift({ id: currentChatId, title: uMsg.substring(0, 25) + "...", timestamp: Date.now(), isPinned: false, messages: [{r:'user', t:uMsg}, {r:'ai', t:aiMsg}] }); 
+        } else { 
+            const idx = chats.findIndex(c => c.id === currentChatId); 
+            if (idx > -1) { chats[idx].messages.push({r:'user', t:uMsg}, {r:'ai', t:aiMsg}); chats[idx].timestamp = Date.now(); } 
+        } 
+        localStorage.setItem(key, JSON.stringify(chats)); 
+        localStorage.setItem('alexia_last_chat_id', currentChatId); 
+        window.renderLocalHistory(); 
+    }
+
+    window.renderLocalHistory = () => {
+        const key = `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`;
+        let chats = []; try { chats = JSON.parse(localStorage.getItem(key) || '[]') || []; } catch(e) { chats = []; }
+        const pc = document.getElementById('pinned-container'); const hc = document.getElementById('history-container'); 
+        if(!pc || !hc) return;
+        pc.innerHTML = ""; hc.innerHTML = ""; let hasPinned = false;
+        if(chats.length === 0) { hc.innerHTML = `<div style="text-align:center; padding:20px; color:#555; font-size:0.85rem;">Historial vacío</div>`; } else { 
+            chats.forEach(chat => { 
+                const active = (chat.id === currentChatId) ? 'active' : ''; 
+                const html = `<div class="chat-item ${active}" onclick="window.loadLocalChat('${chat.id}')"><div class="chat-title"><i class="far fa-comment-alt" style="opacity:0.7; margin-right:8px;"></i>${chat.title}</div></div>`; 
+                if (chat.isPinned) { pc.innerHTML += html; hasPinned = true; } else hc.innerHTML += html; 
+            }); 
+        } 
+        const ps = document.getElementById('pinned-section');
+        if(ps) ps.style.display = hasPinned ? 'block' : 'none';
+    }
+
+    window.loadLocalChat = (id) => {
+        const key = `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`;
+        const chats = JSON.parse(localStorage.getItem(key) || '[]') || []; 
+        const chat = chats.find(c => c.id === id); 
+        if (chat) { 
+            currentChatId = id; 
+            localStorage.setItem('alexia_last_chat_id', currentChatId); 
+            const box = document.getElementById('chat-box'); 
+            box.innerHTML = ""; 
+            chat.messages.forEach(m => window.appendMsg(m.r, m.t, m.r === 'ai')); 
+            window.renderLocalHistory(); 
+            if(window.innerWidth < 800) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('active'); }
+        }
+    }
+
+    window.updateUserUI = (u) => {
+        const btnLogin = document.getElementById('top-login-btn');
+        const headerProfile = document.getElementById('header-user-profile');
+        const headerAvatar = document.getElementById('header-avatar');
+        const ddName = document.getElementById('dd-name');
+        const ddEmail = document.getElementById('dd-email');
+        const adminLink = document.getElementById('admin-link-container');
+        
+        if(u) {
+            if(btnLogin) btnLogin.style.display = 'none';
+            if(headerProfile) headerProfile.style.display = 'block';
+            if(headerAvatar) headerAvatar.innerHTML = u.name[0].toUpperCase();
+            if(ddName) ddName.innerText = u.name;
+            if(ddEmail) ddEmail.innerText = u.email;
+            if(adminLink) adminLink.style.display = (u.role === 'admin') ? 'block' : 'none';
+        } else {
+            if(btnLogin) btnLogin.style.display = 'block';
+            if(headerProfile) headerProfile.style.display = 'none';
+        }
+    }
+
+    // 5. APIS EXTERNAS
+    const fetchBible = async (query) => { try { const res = await fetch(`https://bible-api.com/${encodeURIComponent(query)}?translation=rv1960`); if (!res.ok) return null; const j = await res.json(); if (j.text) return { def: j.text.replace(/\n/g, '<br>'), src: j.reference }; } catch (e) { return null; } return null; }
+    const fetchDictionaryEs = async (word) => { try { const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/es/${window.normalize(word)}`); if (!res.ok) return null; const j = await res.json(); if (!Array.isArray(j) || j.length === 0) return null; let defs = j[0].meanings.flatMap(m => (m.definitions || []).slice(0, 2).map(d => d.definition)); if (defs.length === 0) return null; return { def: defs.slice(0, 3).join('; '), src: 'DictionaryAPI' }; } catch (e) { return null; } }
+    const fetchMeteo = async (city) => { try { const geoResp = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=es&format=json`); const geoData = await geoResp.json(); if (geoData.results && geoData.results.length > 0) { const place = geoData.results[0]; const weatherResp = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&current_weather=true`); const weatherData = await weatherResp.json(); if (weatherData.current_weather) return { def: `En <b>${place.name}</b>: <b>${weatherData.current_weather.temperature}°C</b>. Viento: ${weatherData.current_weather.windspeed} km/h.`, src: "Open-Meteo" }; } } catch (e) { } return null; }
+    const fetchWikipedia = async (term) => { try { const enc = encodeURIComponent(term); const search = await fetch(`https://es.wikipedia.org/w/api.php?action=opensearch&search=${enc}&limit=1&format=json&origin=*`); if (!search.ok) return null; const sjson = await search.json(); if (!sjson[1] || sjson[1].length === 0) return null; const title = encodeURIComponent(sjson[1][0]); const contentResp = await fetch(`https://es.wikipedia.org/w/api.php?action=query&prop=extracts&titles=${title}&explaintext=1&exintro=1&format=json&origin=*`); if (!contentResp.ok) return null; const cjson = await contentResp.json(); const pages = cjson.query && cjson.query.pages; const pid = pages && Object.keys(pages)[0]; if (pid === "-1") return null; const text = pages[pid].extract || ""; return { def: text.split('. ').slice(0, 4).join('. ') + '...', src: 'Wikipedia', url: `https://es.wikipedia.org/?curid=${pid}` }; } catch (e) { return null; } }
+    const fetchOpenLibrary = async (query) => { try { const searchResp = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=1`); const searchData = await searchResp.json(); if (searchData.docs && searchData.docs.length > 0) { const book = searchData.docs[0]; return { def: `<b>Título:</b> ${book.title}. <b>Autor:</b> ${book.author_name?book.author_name[0]:'?'}.`, src: "OpenLibrary", url: `https://openlibrary.org${book.key}` }; } } catch(e) {} return null; }
+    const fetchRestCountries = async (country) => { try { const res = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(country)}?fields=capital,languages,population,flags`); const j = await res.json(); if (j && j.length > 0) { const c = j[0]; const lang = Object.values(c.languages).join(', '); return { def: `<b>Capital:</b> ${c.capital[0]}. <b>Población:</b> ${c.population.toLocaleString()}. <b>Idiomas:</b> ${lang}.`, src: 'REST Countries' }; } } catch (e) { return null; } return null; }
+    const sintesisPorPalabraClave = async (words) => { let synthesis = []; for (let word of words) { let definition = null; let source = ""; try { const dictSnap = await getDoc(doc(db, "dictionary", word)); if (dictSnap.exists()) { definition = dictSnap.data().def; source = "Memoria/DB"; } } catch(e) {} if (!definition) { const wikiData = await fetchWikipedia(word); if (wikiData) { definition = wikiData.def; source = "WEB/Wiki"; } } if (definition) synthesis.push({ word: word, def: definition, src: source }); } return synthesis; }
+
+    const detecting = (texto) => {
+        const t = window.normalize(texto);
+        if (/(?:biblia|versiculo|cita)\s*.*?(\w+\s\d{1,3}:\d{1,3}(?:\-\d{1,3})?)/i.test(t)) return { intent: "biblia", query: RegExp.$1.trim() }; 
+        if (/(?:significado|define|que significa|que es|definicion|definir)\s+(.+)/i.test(t)) return { intent: "diccionario", query: RegExp.$1.trim() };
+        if (/(?:clima|tiempo)\s+(?:en|de)\s+(.+)/i.test(t)) return { intent: "clima", query: RegExp.$1.trim() };
+        if (/(?:libro|obra|autor|novela)\s+(?:de|sobre)?\s*(.+)/i.test(t)) return { intent: "libros", query: RegExp.$1.trim() };
+        if (/(?:quien es|que es|como funciona|cuando fue|donde esta|dime sobre|informacion de|biografia de)\s+(.+)/i.test(t)) return { intent: "wikipedia", query: RegExp.$1.trim() };
+        if (/(?:capital de|poblacion de|idioma de|país|de dónde es)\s+(.+)/i.test(t)) return { intent: "pais", query: RegExp.$1.trim() };
+        return { intent: "general", query: texto };
+    }
+
+    // 6. MAIN CHAT LOGIC
+    window.sendMessage = async function() {
+        if(!db) return alert("Cargando cerebro... espera unos segundos.");
+        const input = document.getElementById('chat-input');
+        const originalText = input.value.trim();
+        if(!originalText) return;
+
+        // Teaching Mode
+        if (chatState.mode === 'waiting_correction') {
+            const correction = originalText;
+            input.value = '';
+            window.appendMsg('user', originalText);
+            const sendingMsgId = 'sending-' + Date.now();
+            window.appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> Guardando enseñanza...`, false, sendingMsgId);
+            try {
+                const qData = String(chatState.lastQuery || "Pregunta no detectada");
+                await setDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayUnion({ q: qData, a: correction, user: currentUser ? currentUser.email : "Anónimo", date: new Date().toISOString() }) }, { merge: true });
+                const sendingEl = document.getElementById(sendingMsgId);
+                if(sendingEl) sendingEl.querySelector('.msg-bubble').innerHTML = `¡Gracias! Respuesta guardada para revisión.`;
+                document.querySelectorAll('.feedback-btn.active-teach').forEach(b => { b.classList.remove('active-teach'); b.innerHTML = '<i class="fas fa-graduation-cap"></i> Enseñar'; });
+            } catch (e) { console.error(e); }
+            chatState = { mode: 'normal' }; return;
+        }
+
+        // Hardcoded Commands
+        const normInput = removeDuplicates(window.normalize(originalText));
+        if (normInput.match(/quien (te )?(creo|hizo)|quien eres|que eres|como te llamas/i)) {
+            input.value = ''; window.appendMsg('user', originalText);
+            await window.finishResponse(originalText, "Soy <b>AleXIA</b>, creada por <b>Alexis García</b>.", false, false); return;
+        }
+
+        input.value = ''; window.appendMsg('user', originalText); 
+        const loadingId = 'loading-' + Date.now(); window.appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> <span id="think-text">Ruteando consulta...</span>`, false, loadingId);
+        
+        await new Promise(r => setTimeout(r, 600));
+        const loadingMsg = document.getElementById(loadingId); if(loadingMsg) loadingMsg.remove();
+
+        // 1. NEURO-ROUTER
+        const intention = detecting(originalText);
+        let responseData = null;
+
+        if (intention.intent !== 'general') {
+            const query = intention.query || originalText;
+            switch (intention.intent) {
+                case 'biblia': responseData = await fetchBible(query); break;
+                case 'diccionario': responseData = await fetchDictionaryEs(query); break;
+                case 'clima': responseData = await fetchMeteo(query); break;
+                case 'libros': responseData = await fetchOpenLibrary(query); break;
+                case 'pais': responseData = await fetchRestCountries(query); break;
+                case 'wikipedia': responseData = await fetchWikipedia(query); break;
+            }
+        }
+        
+        // 2. MEMORIA DE FIREBASE
+        if (!responseData) {
+            let bestMatch = null, maxScore = 0;
+            const interpretedText = processSynonyms(normInput);
+            if(brain.memory) {
+                brain.memory.forEach(mem => {
+                    mem.inputs.forEach(key => {
+                        const memKey = processSynonyms(key); 
+                        if (memKey === interpretedText) { maxScore = 1.0; bestMatch = mem; } 
+                        else if (memKey.includes(interpretedText) && interpretedText.length > 3) { if (0.8 > maxScore) { maxScore = 0.8; bestMatch = mem; } }
+                    });
+                });
+            }
+            if (maxScore >= 0.8) {
+                responseData = { def: bestMatch.output, src: "Memoria" };
+            }
+        }
+
+        // 3. FALLBACK: SÍNTESIS
+        if (!responseData) {
+            const interpretedWords = originalText.split(/\s+/).filter(w => !stopWords.has(window.normalize(w)) && w.length > 2);
+            const synthesisResult = await sintesisPorPalabraClave(interpretedWords);
+            
+            if (synthesisResult.length > 0) {
+                let aiResponse = synthesisResult.length === 1 ? `Encontré esto sobre <strong>${synthesisResult[0].word}</strong>:<br>${synthesisResult[0].def}` : `<strong>Analizando conceptos:</strong><br>` + synthesisResult.map(item => `- <b>${item.word}:</b> ${item.def}`).join('<br>');
+                aiResponse += "<br><br>¿Te sirve esta información?";
+                await window.finishResponse(originalText, aiResponse, true, true);
+                return;
+            }
+        }
+
+        // 4. RESPUESTA FINAL
+        let finalResponse = "Lo siento, AleXIA no tiene información sobre eso. ¿Podrías intentar una pregunta más específica o enseñarme usando el botón de birrete?";
+        if (responseData) {
+            const url = responseData.url || (intention.intent === 'wikipedia' ? responseData.url : null);
+            const template = `¡Claro! Encontré información sobre tu consulta (${intention.intent.toUpperCase()}):<br><br><div class="rich-content">${responseData.def}</div>${url ? `<div class="rich-source"><a href="${url}" target="_blank"><i class="fas fa-external-link-alt"></i> Fuente: ${responseData.src}</a></div>` : ''}`;
+            finalResponse = template;
+        } else {
+            if(db) setDoc(doc(db, "alexia_db", "main_brain"), { missingLog: arrayUnion({ q: truncateLog(originalText), a: "Sin respuesta", date: new Date().toISOString() }) }, { merge: true }).catch(e=>{});
+        }
+
+        await window.finishResponse(originalText, finalResponse, true, true);
+        wasVoiceInput = false;
+    }
+
+    // Inicialización de Voz
+    if (document.getElementById('mic-btn')) {
+        if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+            document.getElementById('mic-btn').style.display = 'none';
+        } else {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'es-MX'; recognition.continuous = false; recognition.interimResults = false;
+            recognition.onstart = () => { isVoiceActive = true; document.getElementById('mic-btn').classList.add('listening'); document.getElementById('chat-input').placeholder = "Escuchando..."; };
+            recognition.onend = () => { isVoiceActive = false; document.getElementById('mic-btn').classList.remove('listening'); document.getElementById('chat-input').placeholder = "Pregunta algo..."; };
+            recognition.onresult = (event) => { document.getElementById('chat-input').value = event.results[0][0].transcript; wasVoiceInput = true; window.sendMessage(); };
+        }
+    }
+
+    // Iniciar Enter listener
+    const inputField = document.getElementById('chat-input');
+    if(inputField) inputField.addEventListener('keypress', (e) => { if(e.key === 'Enter') window.sendMessage(); });
+
+    // Autenticación Listener
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            if (!user.emailVerified) return;
+            const userRef = doc(db, "users", user.uid);
+            const userSnap = await getDoc(userRef);
+            let role = "user";
+            if(user.email === ADMIN_EMAIL) role = "admin";
+            else if (userSnap.exists()) role = userSnap.data().role || "user";
+            if (!userSnap.exists()) await setDoc(userRef, { email: user.email, role: role, createdAt: new Date().toISOString() });
+            currentUser = { uid: user.uid, name: user.displayName || user.email.split('@')[0], role: role, email: user.email };
+            window.updateUserUI(currentUser);
+            window.renderLocalHistory();
+            window.closeModal(); 
+        } else { 
+            currentUser = null; 
+            window.updateUserUI(null); 
+            currentChatId = null; 
+            window.renderLocalHistory(); 
+        }
+        const lastChatId = localStorage.getItem('alexia_last_chat_id');
+        if (lastChatId) window.loadLocalChat(lastChatId);
+    });
+
+    if(db) onSnapshot(doc(db, "alexia_db", "main_brain"), (snap) => { if(snap.exists()) brain = snap.data(); });
+
+</script>
 
 </body>
 </html>
