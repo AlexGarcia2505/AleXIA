@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V1.0</title>
+    <title>AleXIA V1.1</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -501,11 +501,28 @@ const stopWords = new Set([
         let aiResponse = ""; 
         let logThis = false;
 
+       // Función interna actualizada para mostrar AUDIO, FONÉTICA y EJEMPLOS
         const formatExtras = (data) => {
             if (!data) return "";
             let html = "";
-            if (data.pais) html += ` <span style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px; font-size:0.8rem; margin-left:5px;">🌎 ${data.pais}</span>`;
+            
+            // País y Fonética
+            if (data.pais && data.pais !== "Global") html += ` <span style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px; font-size:0.8rem; margin-left:5px;">🌎 ${data.pais}</span>`;
+            if (data.phonetic) html += ` <span style="color:#888; font-family:monospace; margin-left:5px;">[${data.phonetic}]</span>`;
+            
+            // Botón de Audio (si existe)
+            if (data.audio) {
+                html += ` <button onclick="new Audio('${data.audio}').play()" style="background:none; border:1px solid var(--accent); color:var(--accent); border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:0.7rem; margin-left:5px;" title="Escuchar pronunciación (EN)">🔊</button>`;
+            }
+
+            // Tipo de palabra (Sustantivo/Verbo)
             if (data.type) html += `<div style="margin-top:6px; color:#aaa; font-size:0.9rem; padding-left:10px; border-left:2px solid var(--accent);"><em>ℹ️ ${data.type}</em></div>`;
+            
+            // Ejemplo de uso
+            if (data.example) {
+                html += `<div style="margin-top:4px; color:#ccc; font-size:0.85rem; padding-left:10px; border-left:2px solid #555;">📝 "${data.example}"</div>`;
+            }
+            
             return html;
         };
 
@@ -616,9 +633,22 @@ const stopWords = new Set([
             await finishResponse(query, aiResponse, true, true); 
         } else { await finishResponse(query, `No pude conectar con ${source}.`, true, true); }
     }
-
-    async function fetchExternalData(term, forceSource = 'Wikipedia/WEB') {
+// --- NUEVA FUNCIÓN: TRADUCTOR ---
+    async function translateText(text, langPair) {
+        // Ejemplo langPair: "es|en" (Español a Inglés)
+        try {
+            const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`);
+            const data = await res.json();
+            return data.responseData.translatedText;
+        } catch (e) {
+            console.error("Error traduciendo:", e);
+            return text; // Si falla, devuelve texto original
+        }
+    }
+   async function fetchExternalData(term, forceSource = 'Wikipedia/WEB') {
         const encoded = encodeURIComponent(term);
+        
+        // 1. CLIMA (Meteo)
         if (forceSource === 'Meteo/WEB') {
             try {
                 const geoResp = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encoded}&count=1&language=es&format=json`);
@@ -631,6 +661,8 @@ const stopWords = new Set([
                 }
             } catch(e) {} return null;
         }
+
+        // 2. BIBLIOTECA (Libros)
         if (forceSource === 'Biblioteca/WEB') {
              try {
                 const searchResp = await fetch(`https://openlibrary.org/search.json?q=${encoded}&limit=1`);
@@ -643,6 +675,61 @@ const stopWords = new Set([
                 }
             } catch(e) {} return null;
         }
+
+        // 3. NUEVO: DICCIONARIO API (Inglés -> Traductor -> Español)
+        if (forceSource === 'DiccionarioAPI') {
+            try {
+                // A) Traducir palabra (ES -> EN)
+                const englishWord = await translateText(term, "es|en");
+                
+                // B) Consultar API Rica en Inglés
+                const resp = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(englishWord)}`);
+                const data = await resp.json();
+                
+                if (Array.isArray(data) && data.length > 0) {
+                    const entry = data[0];
+                    const firstMeaning = entry.meanings[0];
+                    const defObj = firstMeaning.definitions[0];
+                    
+                    // Datos crudos
+                    const rawDef = defObj.definition;
+                    const rawExample = defObj.example || ""; 
+                    const rawType = firstMeaning.partOfSpeech;
+                    const phoneticText = entry.phonetic || ""; 
+                    
+                    // Buscar Audio
+                    let audioUrl = "";
+                    if (entry.phonetics) {
+                        const audioObj = entry.phonetics.find(p => p.audio && p.audio !== "");
+                        if (audioObj) audioUrl = audioObj.audio;
+                    }
+
+                    // C) Traducir resultados (EN -> ES)
+                    const translatedDef = await translateText(rawDef, "en|es");
+                    const translatedType = await translateText(rawType, "en|es");
+                    let translatedExample = "";
+                    if (rawExample) {
+                        translatedExample = await translateText(rawExample, "en|es");
+                    }
+                    
+                    return { 
+                        def: translatedDef, 
+                        src: "Diccionario/WEB", 
+                        url: entry.sourceUrls ? entry.sourceUrls[0] : "",
+                        extra: { 
+                            type: translatedType, 
+                            pais: "Global",
+                            phonetic: phoneticText,
+                            audio: audioUrl,
+                            example: translatedExample
+                        }
+                    };
+                }
+            } catch(e) {}
+            return null;
+        }
+
+        // 4. WIKIPEDIA (Respaldo final)
         try {
             const searchResp = await fetch(`https://es.wikipedia.org/w/api.php?action=opensearch&search=${encoded}&limit=1&namespace=0&format=json&origin=*`);
             const searchData = await searchResp.json();
@@ -665,26 +752,21 @@ const stopWords = new Set([
 
    // PASO 3: Nueva lógica de descomposición (Separa Conectores de Conceptos)
 async function runWordDecomposition(interpretedText, words) {
-        // CAMBIO: 'connectors' ahora es un Array [] para guardar varios
         let synthesis = { connectors: [], concepts: [] };
         
         for (let word of words) {
-            // 1. Busquemos si es conector
+            // 1. CONECTORES (Gramática)
             const phrase = await getConnectorPhrase(word);
-
             if (phrase) {
-                // CAMBIO: En lugar de guardar uno, los empujamos todos a la lista
-                // Así si dice "Y Tambien", guarda las dos frases.
                 synthesis.connectors.push(phrase);
-                continue; // Saltamos buscar definición para esta palabra
+                continue; 
             }
 
-            // 2. Si NO es conector, buscamos DEFINICIÓN (Memoria o Web)
             let definition = null; 
             let source = "";
             let fullData = null;
             
-            // Intento A: Diccionario propio
+            // 2. TU MEMORIA (Prioridad 1)
             try { 
                 const dictSnap = await getDoc(doc(db, "dictionary", word)); 
                 if (dictSnap.exists()) { 
@@ -694,13 +776,23 @@ async function runWordDecomposition(interpretedText, words) {
                 } 
             } catch(e) {}
             
-            // Intento B: Wikipedia/Web
+            // 3. API DICCIONARIO GLOBAL (Prioridad 2) - AQUÍ CONECTAMOS LA API
+            if (!definition) {
+                const apiData = await fetchExternalData(word, 'DiccionarioAPI');
+                if (apiData) {
+                    definition = apiData.def;
+                    source = "DiccionarioAPI"; 
+                    fullData = apiData.extra; 
+                }
+            }
+
+            // 4. WIKIPEDIA (Prioridad 3)
             if (!definition) { 
                 const extData = await fetchExternalData(word, 'Wikipedia/WEB'); 
-                if (extData) { definition = extData.def; source = "WEB"; } 
+                if (extData) { definition = extData.def; source = "Wiki"; } 
             }
             
-            // Guardamos el concepto
+            // Guardar resultado
             if (definition) {
                 synthesis.concepts.push({ 
                     word: word, 
