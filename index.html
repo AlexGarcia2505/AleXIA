@@ -155,7 +155,8 @@
         .btn-full { width: 100%; padding: 12px; border-radius: 20px; border: none; cursor: pointer; font-weight: bold; margin-top: 10px; }
         .btn-primary { background: var(--accent); color: #001d35; }
         .btn-google { background: white; color: #1f1f1f; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .btn-login { background: var(--accent); color: #000; border: none; padding: 6px 14px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
+      
+		.btn-login { background: var(--accent); color: #000; border: none; padding: 6px 14px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
 
         .admin-section { margin-bottom: 20px; }
         .admin-section h4 { color: var(--accent); border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 10px; }
@@ -170,6 +171,8 @@
         @keyframes pulseIdea { 0% { text-shadow: 0 0 5px #ffd700; } 50% { text-shadow: 0 0 20px #ffd700; transform: scale(1.1); } 100% { text-shadow: 0 0 5px #ffd700; } }
         @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(255, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); } }
     </style>
+	<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/toxicity"></script>
 </head>
 <body>
 
@@ -296,7 +299,20 @@
 
     let currentUser = null;
     let brain = { memory: [], reviewQueue: [], missingLog: [] };
-    const ADMIN_EMAIL = "eljacksonyt@gmail.com";
+   
+	// --- AGREGA ESTO AQUÍ ---
+let toxicityModel = null;
+// Cargar modelo de toxicidad (umbral 0.85 para estar seguros)
+// Usamos window.toxicity porque viene de los scripts del head
+if(window.toxicity) {
+    window.toxicity.load(0.85).then(model => {
+        toxicityModel = model;
+        console.log("✅ Modelo de Toxicidad: ACTIVO");
+    });
+}
+// ------------------------
+
+	const ADMIN_EMAIL = "eljacksonyt@gmail.com";
     let currentChatId = null;
     let chatState = { mode: 'normal', lastQuery: '' }; 
     let activeSuggestions = JSON.parse(localStorage.getItem('alexia_active_suggestions')) || []; 
