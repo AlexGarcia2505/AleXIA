@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V90 - Master Brain</title>
+    <title>AleXIA</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -21,7 +21,6 @@
         .new-chat-btn { background: #282a2c; color: var(--text-muted); border: none; padding: 10px; width: 90%; margin: 0 auto; display:flex; align-items:center; gap:10px; border-radius: 20px; cursor: pointer; transition: 0.2s; } .new-chat-btn:hover { background: #333; color: white; }
         .history-list { flex: 1; overflow-y: auto; padding: 10px; margin-top: 10px; }
         .chat-item { padding: 10px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: #e3e3e3; transition: background 0.2s; font-size: 0.9rem; border-radius: 8px; margin: 2px 10px; } .chat-item:hover { background-color: #282a2c; } .chat-item.active { background-color: #3c4043; font-weight: 500; }
-        .pin-btn { background: none; border: none; color: #555; cursor: pointer; font-size: 0.9rem; padding: 5px; } .pin-btn:hover { color: var(--accent); } .pin-btn.pinned { color: var(--accent); opacity: 1; transform: rotate(-45deg); }
         .main-content { flex: 1; display: flex; flex-direction: column; position: relative; height: 100%; width: 100%; }
         .top-bar { padding: 15px; display: flex; align-items: center; gap: 15px; position: absolute; top: 0; left: 0; right: 0; z-index: 10; background: rgba(19, 19, 20, 0.9); backdrop-filter: blur(5px); }
         .menu-btn { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; }
@@ -43,7 +42,8 @@
         .action-btn { background: transparent; color: #aaa; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background-color 0.2s; margin-left: 5px; } .action-btn:hover { background: rgba(255,255,255,0.1); color: white; }
         .send-btn { background: #e3e3e3; color: #000; } .send-btn:active { background: var(--accent); }
         .mic-btn.listening { color: var(--danger); animation: pulseRed 1.5s infinite; }
-        .suggestions-popup { display: none; position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 350px; background: #1e1f20; border: 1px solid #444; border-radius: 16px; padding: 10px; z-index: 150; } .suggestions-popup.show { display: block; }
+        .footer-info { font-size: 0.7rem; color: #555; text-align: center; margin-bottom: 5px; margin-top: 5px; }
+        .suggestions-popup { display: none; position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 350px; background: #1e1f20; border: 1px solid #444; border-radius: 16px; box-shadow: 0 5px 20px rgba(0,0,0,0.6); padding: 10px; z-index: 150; animation: slideUp 0.2s; } .suggestions-popup.show { display: block; }
         .sug-item { display: block; padding: 12px; margin-bottom: 5px; background: rgba(255,255,255,0.03); border-radius: 10px; cursor: pointer; font-size: 0.9rem; color: #ddd; } .sug-item:hover { background: rgba(168, 199, 250, 0.1); border-color: var(--accent); color: white; }
         .modal { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.85); z-index: 200; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .card { background: #1e1f20; padding: 30px; border-radius: 24px; width: 90%; max-width: 600px; text-align: center; border: 1px solid #444; max-height: 85vh; display: flex; flex-direction: column; }
@@ -53,13 +53,27 @@
         .log-item { background: #27272a; padding: 10px; margin-bottom: 8px; border-radius: 8px; border-left: 3px solid #555; text-align: left; }
         .log-item.review { border-left-color: var(--accent); } .log-item.missing { border-left-color: var(--danger); }
         .tts-btn { float: right; margin-left: 15px; margin-bottom: 5px; background: rgba(255,255,255,0.08); border: 1px solid #444; color: var(--accent); width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 0.8rem; } .tts-btn.speaking { color: var(--danger); animation: pulse 1s infinite; }
-        
+        .pin-btn.pinned { color: var(--accent); opacity: 1; transform: rotate(-45deg); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: 0; } }
         @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(255, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); } }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
+
+<script>
+    // Funciones de Interfaz Básica (Inmortal)
+    window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('active'); };
+    window.toggleUserMenu = (e) => { e.stopPropagation(); document.getElementById('user-dropdown').classList.toggle('show'); };
+    window.toggleSuggestions = () => { document.getElementById('suggestions-popup').classList.toggle('show'); };
+    window.openLogin = () => { document.getElementById('auth-modal').style.display = 'flex'; };
+    window.closeModal = () => { document.getElementById('auth-modal').style.display = 'none'; };
+    window.closeVerify = () => { document.getElementById('verify-modal').style.display = 'none'; };
+    window.closeDash = () => { document.getElementById('admin-dash').style.display = 'none'; };
+    window.showAuth = (t) => { document.getElementById('section-login').style.display = t==='login'?'block':'none'; document.getElementById('section-register').style.display = t==='register'?'block':'none'; };
+    // Placeholders seguros
+    window.startNewChat = () => location.reload();
+    window.sendMessage = () => alert("Cargando cerebro...");
+</script>
 
 <div class="overlay" id="overlay" onclick="window.toggleSidebar()"></div>
 
@@ -67,16 +81,16 @@
     <div class="sidebar-header">
         <span style="font-weight:bold; font-size:1.1rem; display:flex; align-items:center; gap:10px;">
             <i class="fas fa-brain" style="color:var(--accent)"></i> AleXIA
-            <button onclick="window.emergencyReset(event)" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:0.9rem;" title="REPARAR APP"><i class="fas fa-trash-alt"></i></button>
+            <button onclick="localStorage.clear();location.reload()" style="background:none; border:none; color:var(--danger); cursor:pointer;" title="Resetear"><i class="fas fa-trash-alt"></i></button>
         </span>
         <div id="connection-dot" class="status-dot offline"></div>
-        <button onclick="window.toggleSidebar()" style="background:none; border:none; color:white; cursor:pointer; margin-left:auto; font-size:1.2rem;" class="toggle-btn"><i class="fas fa-times"></i></button>
+        <button onclick="window.toggleSidebar()" style="background:none; border:none; color:white; cursor:pointer; margin-left:auto; font-size:1.2rem;"><i class="fas fa-times"></i></button>
     </div>
     <button class="new-chat-btn" onclick="window.startNewChat()"><i class="fas fa-plus"></i> Nuevo chat</button>
     <div class="history-list">
-        <div id="pinned-section" style="display:none; margin-bottom:15px;"><small style="padding:0 15px; color:#666; font-size:0.7rem; text-transform:uppercase; font-weight:bold;">Fijados</small><div id="pinned-container"></div></div>
-        <small style="padding:0 15px; color:#666; font-size:0.7rem; text-transform:uppercase; font-weight:bold;">Recientes</small>
-        <div id="history-container"><div style="text-align:center; padding:20px; color:#555; font-size:0.85rem;">Historial vacío</div></div>
+        <div id="pinned-section" style="display:none; margin-bottom:15px;"><small style="padding:0 15px; color:#666; font-size:0.7rem; font-weight:bold;">FIJADOS</small><div id="pinned-container"></div></div>
+        <small style="padding:0 15px; color:#666; font-size:0.7rem; font-weight:bold;">RECIENTES</small>
+        <div id="history-container"><div style="text-align:center; padding:20px; color:#555;">Historial vacío</div></div>
     </div>
 </div>
 
@@ -89,7 +103,7 @@
         <div id="header-user-profile" class="header-profile" onclick="window.toggleUserMenu(event)" style="display:none;">
             <div id="header-avatar" class="user-avatar small">U</div>
             <div id="user-dropdown" class="profile-dropdown">
-                <div class="dropdown-header"><div id="dd-name" class="dd-name">Usuario</div><div id="dd-email" class="dd-email">correo@ejemplo.com</div></div>
+                <div class="dropdown-header"><div id="dd-name" class="dd-name">Usuario</div><div id="dd-email" class="dd-email">correo</div></div>
                 <div id="admin-link-container" style="display:none;"><button onclick="window.openDash()" class="dropdown-item"><i class="fas fa-chalkboard-teacher"></i> Panel Docente</button></div>
                 <button onclick="window.logout(event)" class="dropdown-item danger"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
             </div>
@@ -115,19 +129,20 @@
             <button class="action-btn mic-btn" id="mic-btn" onclick="window.toggleVoice()"><i class="fas fa-microphone"></i></button>
             <button class="action-btn send-btn" onclick="window.sendMessage()"><i class="fas fa-arrow-up"></i></button>
         </div>
-        <div class="footer-info">AleXIA V90 - Master Brain</div>
+        <div class="footer-info">AleXIA puede cometer errores. Verifica la información importante.</div>
     </div>
 </div>
 
-<div id="auth-modal" class="modal"><div class="card" style="max-width:380px;"><h2 style="margin:0;">Únete a AleXIA</h2><div style="display:flex; margin:20px 0;"><button class="tab-btn active" onclick="window.showAuth('login')" id="tab-login">Entrar</button><button class="tab-btn" onclick="window.showAuth('register')" id="tab-register">Registrarse</button></div><form id="section-login" onsubmit="window.emailLogin(); return false;"><input type="email" id="l-email" class="field" placeholder="Correo" required><input type="password" id="l-pass" class="field" placeholder="Contraseña" required><button type="submit" class="btn-full">Entrar</button></form><form id="section-register" style="display:none;" onsubmit="window.emailRegister(); return false;"><input type="email" id="r-email" class="field" placeholder="Correo" required><input type="password" id="r-pass" class="field" placeholder="Contraseña" required><button type="submit" class="btn-full">Crear Cuenta</button></form><button class="btn-full" style="background:white; color:#333; margin-top:10px;" onclick="window.googleLogin()"><i class="fab fa-google"></i> Google</button><button onclick="window.closeModal()" style="background:none; border:none; color:#777; margin-top:15px; cursor:pointer;">Cerrar</button></div></div>
+<div id="auth-modal" class="modal"><div class="card"><div style="text-align:center; margin-bottom:15px;"><h2 style="margin:0;">Únete a AleXIA</h2></div><div style="display:flex; margin:20px 0;"><button class="tab-btn active" onclick="window.showAuth('login')" id="tab-login">Entrar</button><button class="tab-btn" onclick="window.showAuth('register')" id="tab-register">Registrarse</button></div><form id="section-login" onsubmit="window.emailLogin(); return false;"><input type="email" id="l-email" class="field" placeholder="Correo" required><input type="password" id="l-pass" class="field" placeholder="Contraseña" required><button type="submit" class="btn-full">Entrar</button></form><form id="section-register" style="display:none;" onsubmit="window.emailRegister(); return false;"><input type="email" id="r-email" class="field" placeholder="Correo" required><input type="password" id="r-pass" class="field" placeholder="Contraseña" required><button type="submit" class="btn-full">Crear Cuenta</button></form><button class="btn-full" style="background:white; color:#333; margin-top:10px;" onclick="window.googleLogin()"><i class="fab fa-google"></i> Google</button><button onclick="window.closeModal()" style="background:none; border:none; color:#777; margin-top:15px; cursor:pointer;">Cerrar</button></div></div>
+<div id="verify-modal" class="modal"><div class="card"><i class="fas fa-envelope" style="font-size:3rem; color:var(--accent); margin-bottom:15px;"></i><h3>Verifica tu Correo</h3><button class="btn-full" onclick="window.closeVerify()">Entendido</button></div></div>
 
 <div id="admin-dash" class="modal">
     <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h3><i class="fas fa-chalkboard-teacher"></i> Panel Docente</h3><button onclick="window.closeDash()" style="background:none; border:none; color:white; font-size:1.2rem;"><i class="fas fa-times"></i></button></div>
         <div style="background:#27272a; padding:10px; border-radius:8px; margin-bottom:15px; text-align:left;">
-            <h4 style="margin:0; color:var(--accent); font-size:0.9rem;">📚 Entrenar Cerebro (JSON)</h4>
+            <h4 style="margin:0; color:var(--accent); font-size:0.9rem;">📚 Entrenar (JSON)</h4>
             <input type="file" id="json-upload" accept=".json" style="margin-top:5px; width:100%; font-size:0.8rem;">
-            <button onclick="window.uploadDictionary()" style="background:var(--accent); color:#000; border:none; padding:4px 10px; border-radius:5px; margin-top:5px; cursor:pointer; font-weight:bold; font-size:0.8rem;">Procesar Lote</button>
+            <button onclick="window.uploadDictionary()" style="background:var(--accent); color:#000; border:none; padding:4px 10px; border-radius:5px; margin-top:5px; cursor:pointer; font-weight:bold; font-size:0.8rem;">Procesar</button>
             <div id="upload-status" style="margin-top:5px; font-size:0.8rem; color:var(--success);"></div>
         </div>
         <div id="dash-content" style="flex:1; overflow-y:auto; text-align:left; padding-right:5px;"></div>
@@ -155,30 +170,31 @@
 
     // 2. UTILIDADES
     window.normalize = (str) => String(str||'').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[¿?¡!.,]/g, "").trim();
-    window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('active'); }
-    window.toggleUserMenu = (e) => { e.stopPropagation(); document.getElementById('user-dropdown').classList.toggle('show'); }
-    window.toggleSuggestions = () => { document.getElementById('suggestions-popup').classList.toggle('show'); }
-    window.emergencyReset = (e) => { if(e) e.stopPropagation(); if(confirm("¿Resetear?")) { localStorage.clear(); sessionStorage.clear(); window.location.reload(); } };
+    window.toggleVoice = () => { if(isVoiceActive) recognition.stop(); else recognition.start(); }
     
-    // 3. ADMIN & ENTRENAMIENTO
+    // 3. LOGICA UI REEMPLAZADA (Sobreescribe placeholders)
+    window.startNewChat = () => { currentChatId = null; localStorage.removeItem('alexia_last_chat_id'); chatState = { mode: 'normal' }; document.getElementById('chat-box').innerHTML = `<div style="text-align:center; margin-top:80px; opacity:0.7; animation:fadeIn 1s;"><div style="width:80px; height:80px; background:linear-gradient(135deg, var(--accent), #ec4899); border-radius:50%; margin:0 auto 25px auto; display:flex; align-items:center; justify-content:center; box-shadow:0 0 40px var(--accent-glow);"><i class="fas fa-robot" style="font-size:40px; color:white;"></i></div><h2 style="font-weight:500;">¿Qué tienes en mente?</h2></div>`; window.renderLocalHistory(); if(window.innerWidth < 800) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('active'); } }
+    
     window.openDash = () => { document.getElementById('admin-dash').style.display = 'flex'; renderAdminQueue(); }
-    window.closeDash = () => document.getElementById('admin-dash').style.display = 'none';
-    
+    window.emailLogin = () => signInWithEmailAndPassword(auth, document.getElementById('l-email').value, document.getElementById('l-pass').value).catch(e=>alert(e.message));
+    window.emailRegister = () => createUserWithEmailAndPassword(auth, document.getElementById('r-email').value, document.getElementById('r-pass').value).then(c=>sendEmailVerification(c.user)).catch(e=>alert(e.message));
+    window.googleLogin = () => signInWithPopup(auth, provider).catch(e=>alert(e.message));
+    window.logout = () => signOut(auth).then(()=>window.location.reload());
+
+    // 4. ADMIN & ENTRENAMIENTO
     function renderAdminQueue() {
         const content = document.getElementById('dash-content'); content.innerHTML = "";
         let html = `<div class="admin-section"><h4>📝 Pendientes</h4>`;
-        if(!brain.reviewQueue?.length) html += "<p>Nada pendiente.</p>";
+        if(!brain.reviewQueue?.length) html += "<p>Nada.</p>";
         else brain.reviewQueue.forEach((item, idx) => { html += `<div class="log-item review"><b>${item.q}</b><br><input id="edit-${idx}" value="${item.a}" class="log-input"><button onclick="window.dashAct('app',${idx})">Aprobar</button> <button onclick="window.dashAct('rej',${idx})">Borrar</button></div>`; });
         html += "</div><div class="admin-section"><h4>🔍 Sin Respuesta</h4>";
         if(!brain.missingLog?.length) html += "<p>Limpio.</p>";
         else brain.missingLog.slice(-10).reverse().forEach((item, i) => { const realIdx = brain.missingLog.length - 1 - i; html += `<div class="log-item missing"><b>${item.q}</b><input id="teach-${realIdx}" placeholder="Respuesta..." class="log-input"><button onclick="window.promoteToMemory(${realIdx})">Guardar</button> <button onclick="window.deleteLog(${realIdx})">X</button></div>`; });
         content.innerHTML = html + "</div>";
     }
-
     window.dashAct = async (act, idx) => { const item = brain.reviewQueue[idx]; if(act === 'app') { const val = document.getElementById(`edit-${idx}`).value; await updateDoc(doc(db, "alexia_db", "main_brain"), { memory: arrayUnion({ inputs: [window.normalize(item.q)], output: val }), reviewQueue: arrayRemove(item) }); } else { await updateDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayRemove(item) }); } };
     window.promoteToMemory = async (idx) => { const item = brain.missingLog[idx]; const val = document.getElementById(`teach-${idx}`).value; if(!val) return; await updateDoc(doc(db, "alexia_db", "main_brain"), { memory: arrayUnion({ inputs: [window.normalize(item.q)], output: val }), missingLog: arrayRemove(item) }); };
     window.deleteLog = async (idx) => { await updateDoc(doc(db, "alexia_db", "main_brain"), { missingLog: arrayRemove(brain.missingLog[idx]) }); };
-
     window.uploadDictionary = async () => { 
         const file = document.getElementById('json-upload').files[0]; 
         if(!file) return alert("Elige archivo.");
@@ -186,47 +202,34 @@
         reader.onload = async (e) => {
             try {
                 const data = JSON.parse(e.target.result);
-                if(!Array.isArray(data)) throw new Error("Formato incorrecto (debe ser lista [])");
+                if(!Array.isArray(data)) throw new Error("Debe ser lista []");
                 let count = 0; const batchLimit = 400;
                 for(let i=0; i<data.length; i+=batchLimit) {
                     const batch = writeBatch(db);
-                    data.slice(i, i+batchLimit).forEach(wd => {
-                        if(wd.id && wd.def) batch.set(doc(db, "dictionary", window.normalize(wd.id)), { id: wd.id, def: wd.def, type: wd.type||"General" });
-                        count++;
-                    });
-                    await batch.commit();
-                    document.getElementById('upload-status').innerText = `Subiendo... ${count}`;
+                    data.slice(i, i+batchLimit).forEach(wd => { if(wd.id && wd.def) { batch.set(doc(db, "dictionary", window.normalize(wd.id)), { id: wd.id, def: wd.def, type: wd.type||"General" }); count++; } });
+                    await batch.commit(); document.getElementById('upload-status').innerText = `Subiendo... ${count}`;
                 }
-                document.getElementById('upload-status').innerText = `✅ Completado: ${count} entradas.`;
+                document.getElementById('upload-status').innerText = `✅ Completado: ${count}`;
             } catch(err) { alert("Error JSON: " + err.message); }
-        };
-        reader.readAsText(file);
+        }; reader.readAsText(file);
     };
 
-    // 4. AUTH
-    window.openLogin = () => document.getElementById('auth-modal').style.display = 'flex';
-    window.closeModal = () => document.getElementById('auth-modal').style.display = 'none';
-    window.showAuth = (t) => { document.getElementById('section-login').style.display = t==='login'?'block':'none'; document.getElementById('section-register').style.display = t==='register'?'block':'none'; };
-    window.emailLogin = () => signInWithEmailAndPassword(auth, document.getElementById('l-email').value, document.getElementById('l-pass').value).catch(e=>alert(e.message));
-    window.emailRegister = () => createUserWithEmailAndPassword(auth, document.getElementById('r-email').value, document.getElementById('r-pass').value).then(c=>sendEmailVerification(c.user)).catch(e=>alert(e.message));
-    window.googleLogin = () => signInWithPopup(auth, provider).catch(e=>alert(e.message));
-    window.logout = () => signOut(auth).then(()=>window.location.reload());
-
-    // 5. CEREBRO (INTELIGENCIA)
+    // 5. CEREBRO
     const bibleBooks = ["genesis","exodo","levitico","numeros","deuteronomio","josue","jueces","rut","1 samuel","2 samuel","1 reyes","2 reyes","1 cronicas","2 cronicas","esdras","nehemias","ester","job","salmos","proverbios","eclesiastes","cantares","isaias","jeremias","lamentaciones","ezequiel","daniel","oseas","joel","amos","abdias","jonas","miqueas","nahum","habacuc","sofonias","hageo","zacarias","malaquias","mateo","marcos","lucas","juan","hechos","romanos","1 corintios","2 corintios","galatas","efesios","filipenses","colosenses","1 tesalonicenses","2 tesalonicenses","1 timoteo","2 timoteo","tito","filemon","hebreos","santiago","1 pedro","2 pedro","1 juan","2 juan","3 juan","judas","apocalipsis"];
+    const conversationalResponses = { "hola":["¡Hola!","Saludos."], "gracias":["¡De nada!","Un placer."], "adios":["¡Hasta luego!"], "que tal":["Todo bien.","¡Genial!"], "ayuda":["Prueba: 'Clima en Madrid', 'Mateo 5'."] };
 
     const detecting = (txt) => {
         const t = window.normalize(txt);
-        // Corrección Biblia: Detectar Libro + Numero (Ej: Mateo 10, Juan 3:16)
+        // Biblia: Libro + Numero (Ej: Mateo 10)
         const book = bibleBooks.find(b => t.includes(b));
-        if (book && /\d/.test(t)) {
-            // Si hay libro y numero, es biblia seguro.
+        if (book) {
             const match = t.match(new RegExp(`(${book}\\s?\\d{1,3}(?::\\d{1,3})?(?:-\\d{1,3})?)`, 'i'));
             if(match) return { intent: "biblia", query: match[0] };
         }
-        if (/(?:significado|define|que es)\s+(.+)/i.test(t)) return { intent: "diccionario", query: RegExp.$1.trim() };
+        if (/(?:biblia|versiculo)/i.test(t) && /\d/.test(t)) { const m = t.match(/(\w+\s\d{1,3}:\d{1,3})/); if(m) return { intent: "biblia", query: m[0] }; }
+        if (/(?:significado|define|que es)/i.test(t)) return { intent: "diccionario", query: RegExp.$1.trim() };
         if (/(?:clima|tiempo)\s+(?:en|de)\s+(.+)/i.test(t)) return { intent: "clima", query: RegExp.$1.trim() };
-        if (/(?:quien es|biografia|historia)\s+(.+)/i.test(t)) return { intent: "wikipedia", query: RegExp.$1.trim() };
+        if (/(?:quien es|biografia)/i.test(t)) return { intent: "wikipedia", query: RegExp.$1.trim() };
         return { intent: "general", query: txt };
     };
 
@@ -236,7 +239,17 @@
         if(!txt) return;
         input.value = ''; window.appendMsg('user', txt);
         
-        // Neuro-Router
+        if (chatState.mode === 'waiting_correction') {
+            await setDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayUnion({ q: chatState.lastQuery, a: txt, user: currentUser?.email||"Anon", date: new Date().toISOString() }) }, { merge: true });
+            window.appendMsg('ai', "¡Gracias! Lo revisaré."); chatState = { mode: 'normal' }; return;
+        }
+
+        // Small Talk
+        const norm = window.normalize(txt);
+        for(let k in conversationalResponses) if(norm.startsWith(k)) { window.finishResponse(txt, conversationalResponses[k][0], false); return; }
+
+        window.appendMsg('ai', '<i class="fas fa-spinner fa-spin"></i> Pensando...', false, 'loading');
+        
         const intentData = detecting(txt);
         let res = null;
         
@@ -251,57 +264,61 @@
             try { const s = await fetch(`https://es.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(intentData.query)}&limit=1&format=json&origin=*`); const j = await s.json(); if(j[1][0]) { const r = await fetch(`https://es.wikipedia.org/w/api.php?action=query&prop=extracts&titles=${encodeURIComponent(j[1][0])}&explaintext=1&exintro=1&format=json&origin=*`); const d = await r.json(); const p = Object.values(d.query.pages)[0]; if(p.extract) res = p.extract.split('. ').slice(0,3).join('. ') + '.'; } } catch(e){}
         }
 
-        // Fallback: Memoria -> Síntesis -> Charla
+        // Fallback
         if(!res) {
-            // Memoria
-            const norm = window.normalize(txt);
             brain.memory.forEach(m => { if(m.inputs.includes(norm)) res = m.output; });
-            
-            // Síntesis (Busca palabra clave en diccionario)
-            if(!res) {
-               try { const docSnap = await getDoc(doc(db, "dictionary", norm)); if(docSnap.exists()) res = docSnap.data().def; } catch(e){}
-            }
-            
-            // Charla Casual
-            if(!res) {
-                const greetings = {"hola":"¡Hola!", "gracias":"¡De nada!", "adios":"¡Hasta luego!"};
-                for(let k in greetings) if(norm.includes(k)) res = greetings[k];
-            }
+            if(!res) try { const docSnap = await getDoc(doc(db, "dictionary", norm)); if(docSnap.exists()) res = docSnap.data().def; } catch(e){}
         }
 
-        if(res) {
-            window.appendMsg('ai', res, true);
-        } else {
-            window.appendMsg('ai', "No tengo información sobre eso. ¿Me enseñas?", false);
-            // Registrar error
-            if(db) setDoc(doc(db, "alexia_db", "main_brain"), { missingLog: arrayUnion({ q: txt, a: "Sin respuesta", date: new Date().toISOString() }) }, { merge: true });
+        const loadEl = document.getElementById('loading'); if(loadEl) loadEl.remove();
+        
+        if(res) window.finishResponse(txt, res, true);
+        else {
+            window.appendMsg('ai', "No tengo esa información. ¿Me enseñas?", false);
+            if(db) setDoc(doc(db, "alexia_db", "main_brain"), { missingLog: arrayUnion({ q: txt, a: "N/A", date: new Date().toISOString() }) }, { merge: true });
         }
     };
 
     // UI UTILS
-    window.appendMsg = (role, text, tts) => {
-        const div = document.createElement('div'); div.className = `msg-row ${role}-row`;
+    window.appendMsg = (role, text, tts, id) => {
+        const div = document.createElement('div'); div.className = `msg-row ${role}-row`; if(id) div.id = id;
         div.innerHTML = `<div class="msg-bubble">${text}</div>`;
         document.getElementById('chat-box').appendChild(div);
         div.scrollIntoView({behavior:'smooth'});
         if(tts && role === 'ai') { const u = new SpeechSynthesisUtterance(text); u.lang = 'es-MX'; synth.speak(u); }
     };
 
+    window.finishResponse = (userTxt, aiTxt, suggest) => {
+        window.appendMsg('ai', aiTxt + `<div class="feedback-area"><button class="feedback-btn" onclick="window.rateAnswer('good','${userTxt}')">👍</button><button class="feedback-btn" onclick="window.rateAnswer('bad','${userTxt}')">🎓 Enseñar</button></div>`, true);
+        window.saveLocalChat(userTxt, aiTxt);
+        if(suggest) window.generateSuggestions();
+    };
+
+    window.rateAnswer = (type, query) => {
+        if (type === 'good') alert("¡Genial!");
+        else { chatState = { mode: 'waiting_correction', lastQuery: query }; window.appendMsg('ai', "¿Qué debía responder?"); }
+    };
+
+    window.generateSuggestions = () => { activeSuggestions = []; const randomTopic = ["Ciencia","Historia","Arte"][Math.floor(Math.random()*3)]; activeSuggestions.push({ label: `Wiki: ${randomTopic}`, query: `informacion de ${randomTopic}` }); const content = document.getElementById('suggestions-content'); if(content) { content.innerHTML = ""; activeSuggestions.forEach(s => { content.innerHTML += `<div class="sug-item" onclick="window.useSuggestion('${s.query}')">${s.label}</div>`; }); } };
+    
+    window.saveLocalChat = (u, a) => { const key = `chats_${currentUser?currentUser.uid:'guest'}`; let c = JSON.parse(localStorage.getItem(key)||'[]'); if(!currentChatId) { currentChatId=Date.now(); c.unshift({id:currentChatId, title:u, messages:[]}); } const chat = c.find(x=>x.id==currentChatId); if(chat) chat.messages.push({r:'user',t:u},{r:'ai',t:a}); localStorage.setItem(key, JSON.stringify(c)); window.renderLocalHistory(); };
+    
+    window.renderLocalHistory = () => { const key = `chats_${currentUser?currentUser.uid:'guest'}`; const c = JSON.parse(localStorage.getItem(key)||'[]'); document.getElementById('history-container').innerHTML = c.map(x=>`<div class="chat-item" onclick="window.loadLocalChat(${x.id})">${x.title}</div>`).join(''); };
+    
+    window.loadLocalChat = (id) => { currentChatId=id; const c = JSON.parse(localStorage.getItem(`chats_${currentUser?currentUser.uid:'guest'}`)||'[]'); const chat = c.find(x=>x.id==id); document.getElementById('chat-box').innerHTML=""; chat?.messages.forEach(m=>window.appendMsg(m.r,m.t)); };
+
     // INIT
+    if (document.getElementById('mic-btn') && !('webkitSpeechRecognition' in window)) document.getElementById('mic-btn').style.display = 'none';
+    else { recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)(); recognition.onresult = (e) => { document.getElementById('chat-input').value = e.results[0][0].transcript; window.sendMessage(); }; }
+
     onAuthStateChanged(auth, (u) => {
         if(u) {
-            currentUser = u;
-            document.getElementById('top-login-btn').style.display = 'none';
-            document.getElementById('header-user-profile').style.display = 'block';
-            document.getElementById('dd-name').innerText = u.displayName || "Usuario";
-            document.getElementById('dd-email').innerText = u.email;
-            if(u.email === ADMIN_EMAIL) document.getElementById('admin-link-container').style.display = 'block';
+            currentUser = u; document.getElementById('top-login-btn').style.display='none'; document.getElementById('header-user-profile').style.display='block';
+            document.getElementById('dd-name').innerText = u.displayName||"Usuario"; document.getElementById('dd-email').innerText = u.email;
+            if(u.email === ADMIN_EMAIL) document.getElementById('admin-link-container').style.display='block';
             window.closeModal();
-        } else {
-            currentUser = null;
-            document.getElementById('top-login-btn').style.display = 'block';
-            document.getElementById('header-user-profile').style.display = 'none';
-        }
+        } else { currentUser = null; document.getElementById('top-login-btn').style.display='block'; document.getElementById('header-user-profile').style.display='none'; }
+        window.renderLocalHistory();
     });
     
     if(db) onSnapshot(doc(db, "alexia_db", "main_brain"), (s) => { if(s.exists()) brain = s.data(); if(document.getElementById('admin-dash').style.display === 'flex') renderAdminQueue(); });
