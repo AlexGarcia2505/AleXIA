@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V67 - Historial Fix</title>
+    <title>AleXIA V67 - NeuroFix</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -173,18 +173,18 @@
 </head>
 <body>
 
-<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+<div class="overlay" id="overlay" onclick="window.toggleSidebar()"></div>
 
 <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <span style="font-weight:bold; font-size:1.1rem; display:flex; align-items:center; gap:10px;">
             <i class="fas fa-brain" style="color:var(--accent)"></i> AleXIA
-            <button onclick="emergencyReset(event)" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:0.9rem;" title="REPARAR APP"><i class="fas fa-trash-alt"></i></button>
+            <button onclick="window.emergencyReset(event)" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:0.9rem;" title="REPARAR APP"><i class="fas fa-trash-alt"></i></button>
         </span>
         <div id="connection-dot" class="status-dot offline"></div>
-        <button onclick="toggleSidebar()" style="background:none; border:none; color:white; cursor:pointer; margin-left:auto; font-size:1.2rem;" class="toggle-btn"><i class="fas fa-times"></i></button>
+        <button onclick="window.toggleSidebar()" style="background:none; border:none; color:white; cursor:pointer; margin-left:auto; font-size:1.2rem;" class="toggle-btn"><i class="fas fa-times"></i></button>
     </div>
-    <button class="new-chat-btn" onclick="startNewChat()"><i class="fas fa-plus"></i> Nuevo chat</button>
+    <button class="new-chat-btn" onclick="window.startNewChat()"><i class="fas fa-plus"></i> Nuevo chat</button>
     
     <div class="history-list">
         <div id="pinned-section" style="display:none; margin-bottom:15px;"><small style="padding:0 15px; color:#666; font-size:0.7rem; text-transform:uppercase; font-weight:bold;">Fijados</small><div id="pinned-container"></div><div style="height:1px; background:#333; margin:10px 15px;"></div></div>
@@ -195,13 +195,13 @@
 
 <div class="main-content">
     <div class="top-bar">
-        <button class="menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+        <button class="menu-btn" onclick="window.toggleSidebar()"><i class="fas fa-bars"></i></button>
         <span style="font-weight:500;">AleXv2</span>
         <div style="flex:1"></div>
         
-        <button id="top-login-btn" onclick="openLogin()" class="btn-login">Entrar</button>
+        <button id="top-login-btn" onclick="window.openLogin()" class="btn-login">Entrar</button>
         
-        <div id="header-user-profile" class="header-profile" onclick="toggleUserMenu(event)">
+        <div id="header-user-profile" class="header-profile" onclick="window.toggleUserMenu(event)">
             <div id="header-avatar" class="user-avatar small">U</div>
             <div id="user-dropdown" class="profile-dropdown">
                 <div class="dropdown-header">
@@ -209,9 +209,9 @@
                     <div id="dd-email" class="dd-email">correo@ejemplo.com</div>
                 </div>
                 <div id="admin-link-container" style="display:none;">
-                    <button onclick="openDash()" class="dropdown-item"><i class="fas fa-chalkboard-teacher"></i> Panel Docente</button>
+                    <button onclick="window.openDash()" class="dropdown-item"><i class="fas fa-chalkboard-teacher"></i> Panel Docente</button>
                 </div>
-                <button onclick="logout(event)" class="dropdown-item danger"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+                <button onclick="window.logout(event)" class="dropdown-item danger"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
             </div>
         </div>
     </div>
@@ -226,63 +226,42 @@
     <div id="suggestions-popup" class="suggestions-popup">
         <div style="display:flex; justify-content:space-between; margin-bottom:10px; color:#aaa; font-size:0.8rem;">
             <span>Sugerencias del tema</span>
-            <button onclick="toggleSuggestions()" style="background:none; border:none; color:#777;"><i class="fas fa-times"></i></button>
+            <button onclick="window.toggleSuggestions()" style="background:none; border:none; color:#777;"><i class="fas fa-times"></i></button>
         </div>
         <div id="suggestions-content"></div>
     </div>
 
     <div class="input-container">
         <div class="input-wrapper">
-            <button id="idea-btn" class="action-btn idea-btn" onclick="toggleSuggestions()" title="Ver sugerencias"><i class="far fa-lightbulb"></i></button>
+            <button id="idea-btn" class="action-btn idea-btn" onclick="window.toggleSuggestions()" title="Ver sugerencias"><i class="far fa-lightbulb"></i></button>
             <input type="text" id="chat-input" class="chat-input" placeholder="Pregunta o dicta..." autocomplete="off">
-            <button class="action-btn mic-btn" id="mic-btn" onclick="toggleVoice()"><i class="fas fa-microphone"></i></button>
-            <button class="action-btn send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
+            <button class="action-btn mic-btn" id="mic-btn" onclick="window.toggleVoice()"><i class="fas fa-microphone"></i></button>
+            <button class="action-btn send-btn" onclick="window.sendMessage()"><i class="fas fa-arrow-up"></i></button>
         </div>
         <div class="footer-info">AleXIA puede cometer errores. Verifica la información importante.</div>
     </div>
 </div>
 
-<div id="auth-modal" class="modal"><div class="card"><div style="text-align:center; margin-bottom:15px;"><h2 style="margin:0;">Únete a AleXIA</h2><p style="color:#aaa; font-size:0.85rem; margin-top:5px;">El servicio es <b>100% gratuito</b>.</p></div><div style="display:flex; margin-bottom:20px; border-bottom:1px solid #333;"><button class="tab-btn active" onclick="showAuth('login')" id="tab-login">Entrar</button><button class="tab-btn" onclick="showAuth('register')" id="tab-register">Registrarse</button></div><form id="section-login" onsubmit="emailLogin(); return false;"><input type="email" id="l-email" class="field" placeholder="Correo electrónico" autocomplete="username" required><input type="password" id="l-pass" class="field" placeholder="Contraseña" autocomplete="current-password" required><button type="submit" class="btn-full btn-primary">Iniciar Sesión</button></form><form id="section-register" style="display:none;" onsubmit="emailRegister(); return false;"><input type="email" id="r-email" class="field" placeholder="Tu Correo Real" autocomplete="username" required><input type="password" id="r-pass" class="field" placeholder="Crea una Contraseña" autocomplete="new-password" required><button type="submit" class="btn-full btn-primary">Crear Cuenta Gratis</button><p style="font-size:0.75rem; color:#aaa; margin-top:10px;">* Te enviaremos un link de verificación.</p></form><div style="margin:20px 0; border-top:1px solid #333; position:relative;"><span style="background:#1e1f20; padding:0 10px; position:absolute; top:-10px; left:45%; color:#777; font-size:0.8rem;">O</span></div><button class="btn-full btn-google" onclick="googleLogin()"><i class="fab fa-google"></i> Continuar con Google</button><button onclick="closeModal()" style="background:none; border:none; color:#777; margin-top:15px; cursor:pointer;">Cerrar</button></div></div>
-<div id="verify-modal" class="modal"><div class="card"><i class="fas fa-envelope" style="font-size:3rem; color:var(--accent); margin-bottom:15px;"></i><h3>Verifica tu Correo</h3><p style="color:#ccc; font-size:0.9rem;">Enlace enviado. Verifica tu email para acceder.</p><button class="btn-full btn-primary" onclick="closeVerify()">Entendido</button></div></div>
+<div id="auth-modal" class="modal"><div class="card"><div style="text-align:center; margin-bottom:15px;"><h2 style="margin:0;">Únete a AleXIA</h2><p style="color:#aaa; font-size:0.85rem; margin-top:5px;">El servicio es <b>100% gratuito</b>.</p></div><div style="display:flex; margin-bottom:20px; border-bottom:1px solid #333;"><button class="tab-btn active" onclick="window.showAuth('login')" id="tab-login">Entrar</button><button class="tab-btn" onclick="window.showAuth('register')" id="tab-register">Registrarse</button></div><form id="section-login" onsubmit="window.emailLogin(); return false;"><input type="email" id="l-email" class="field" placeholder="Correo electrónico" autocomplete="username" required><input type="password" id="l-pass" class="field" placeholder="Contraseña" autocomplete="current-password" required><button type="submit" class="btn-full btn-primary">Iniciar Sesión</button></form><form id="section-register" style="display:none;" onsubmit="window.emailRegister(); return false;"><input type="email" id="r-email" class="field" placeholder="Tu Correo Real" autocomplete="username" required><input type="password" id="r-pass" class="field" placeholder="Crea una Contraseña" autocomplete="new-password" required><button type="submit" class="btn-full btn-primary">Crear Cuenta Gratis</button><p style="font-size:0.75rem; color:#aaa; margin-top:10px;">* Te enviaremos un link de verificación.</p></form><div style="margin:20px 0; border-top:1px solid #333; position:relative;"><span style="background:#1e1f20; padding:0 10px; position:absolute; top:-10px; left:45%; color:#777; font-size:0.8rem;">O</span></div><button class="btn-full btn-google" onclick="window.googleLogin()"><i class="fab fa-google"></i> Continuar con Google</button><button onclick="window.closeModal()" style="background:none; border:none; color:#777; margin-top:15px; cursor:pointer;">Cerrar</button></div></div>
+<div id="verify-modal" class="modal"><div class="card"><i class="fas fa-envelope" style="font-size:3rem; color:var(--accent); margin-bottom:15px;"></i><h3>Verifica tu Correo</h3><p style="color:#ccc; font-size:0.9rem;">Enlace enviado. Verifica tu email para acceder.</p><button class="btn-full btn-primary" onclick="window.closeVerify()">Entendido</button></div></div>
 
 <div id="admin-dash" class="modal">
     <div class="card" style="max-width:650px; width:95%; max-height:85vh; overflow:hidden; display:flex; flex-direction:column;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
             <h3><i class="fas fa-chalkboard-teacher"></i> Panel Docente</h3>
-            <button onclick="closeDash()" style="background:none; border:none; color:white; font-size:1.2rem;"><i class="fas fa-times"></i></button>
+            <button onclick="window.closeDash()" style="background:none; border:none; color:white; font-size:1.2rem;"><i class="fas fa-times"></i></button>
         </div>
         <div style="background:#27272a; padding:10px; border-radius:8px; margin-bottom:15px; text-align:left;">
             <h4 style="margin:0; color:var(--accent); font-size:0.9rem;">📚 Cargar Diccionario</h4>
             <input type="file" id="json-upload" accept=".json" style="margin-top:5px; width:100%; font-size:0.8rem;">
-            <button onclick="uploadDictionary()" style="background:var(--accent); color:#000; border:none; padding:4px 10px; border-radius:5px; margin-top:5px; cursor:pointer; font-weight:bold; font-size:0.8rem;">Procesar (Lotes)</button>
+            <button onclick="window.uploadDictionary()" style="background:var(--accent); color:#000; border:none; padding:4px 10px; border-radius:5px; margin-top:5px; cursor:pointer; font-weight:bold; font-size:0.8rem;">Procesar (Lotes)</button>
             <div id="upload-status" style="margin-top:5px; font-size:0.8rem; color:var(--success);"></div>
         </div>
         <div id="dash-content" style="flex:1; overflow-y:auto; text-align:left; padding-right:5px;"></div>
     </div>
 </div>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-    import { getFirestore, doc, onSnapshot, setDoc, updateDoc, arrayUnion, arrayRemove, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-
-    // Reemplaza con TUS credenciales de Firebase
-    const firebaseConfig = {
-        apiKey: "AIzaSyAeNVoB1ZasZSauIf6G7GbIa4bbJJ3_5cw",
-        authDomain: "alexia-1c4f2.firebaseapp.com",
-        projectId: "alexia-1c4f2",
-        storageBucket: "alexia-1c4f2.firebasestorage.app",
-        messagingSenderId: "483778313354",
-        appId: "1:483778313354:web:c28c9da35d5674b174c173"
-    };
-    
-    // EXPOSICIÓN GLOBAL DE MÓDULOS Y CONFIGURACIÓN
-    window.modules = { initializeApp, getFirestore, doc, onSnapshot, setDoc, updateDoc, arrayUnion, arrayRemove, getDoc, writeBatch, getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification };
-    window.FIREBASE_CONFIG = firebaseConfig;
-    window.ADMIN_EMAIL = "eljacksonyt@gmail.com";
-</script>
-
-<script src="alexia_logic.js" defer></script>
+<script type="module" src="alexia_logic.js"></script>
 
 </body>
 </html>
