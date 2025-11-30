@@ -645,8 +645,29 @@
 
     // Funciones Admin/Aux
     window.dashAct = async (act, idx) => { const item = brain.reviewQueue[idx]; const editedA = document.getElementById(`edit-a-${idx}`).value; if(act === 'app') { await updateDoc(doc(db, "alexia_db", "main_brain"), { memory: arrayUnion({ inputs: [processSynonyms(item.q)], output: editedA }), reviewQueue: arrayRemove(item) }); } else { await updateDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayRemove(item) }); } setTimeout(renderAdminQueue, 500); };
-    window.promoteToMemory = async (idx) => { const item = brain.missingLog[idx]; const newAnswer = document.getElementById(`teach-a-${idx}`).value; if(!newAnswer) return; await updateDoc(doc(db, "alexia_db", "main_brain"), { memory: arrayUnion({ inputs: [processSynonyms(item.q)], output: newAnswer }), missingLog: arrayRemove(item) }); document.getElementById(`teach-a-${idx}`).parentNode.parentNode.style.opacity = '0.5'; };
-    window.deleteLog = async (idx) => { const item = brain.missingLog[idx]; await updateDoc(doc(db, "alexia_db", "main_brain"), { missingLog: arrayRemove(item) }); };
+window.promoteToMemory = async (idx) => { 
+    const item = brain.missingLog[idx]; 
+    const newAnswer = document.getElementById(`teach-a-${idx}`).value; 
+    if(!newAnswer) return; 
+    
+    await updateDoc(doc(db, "alexia_db", "main_brain"), { 
+        memory: arrayUnion({ inputs: [processSynonyms(item.q)], output: newAnswer }), 
+        missingLog: arrayRemove(item) 
+    }); 
+    
+    // Esto recarga la lista después de medio segundo
+    setTimeout(renderAdminQueue, 500); 
+};
+window.deleteLog = async (idx) => { 
+    const item = brain.missingLog[idx]; 
+    
+    await updateDoc(doc(db, "alexia_db", "main_brain"), { 
+        missingLog: arrayRemove(item) 
+    }); 
+    
+    // Esto recarga la lista después de medio segundo
+    setTimeout(renderAdminQueue, 500); 
+};
     window.openDash = () => { document.getElementById('admin-dash').style.display = 'flex'; renderAdminQueue(); }
     window.closeDash = () => document.getElementById('admin-dash').style.display = 'none';
     window.checkLoginAction = () => { if(currentUser) { if(confirm("¿Cerrar sesión?")) signOut(auth); } else { openLogin(); } }
