@@ -3,95 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V80 - Master</title>
+    <title>AleXIA V90 - Master Brain</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
     
     <style>
-        :root {
-            --bg-body: #131314; --bg-sidebar: #1e1f20; --bg-input: #282a2c;
-            --text-main: #e3e3e3; --text-muted: #c4c7c5;
-            --accent: #a8c7fa; --user-msg: #282a2c; --danger: #ff897d; --success: #81c995;
-            --accent-glow: rgba(168, 199, 250, 0.2);
-        }
+        :root { --bg-body: #131314; --bg-sidebar: #1e1f20; --bg-input: #282a2c; --text-main: #e3e3e3; --text-muted: #c4c7c5; --accent: #a8c7fa; --user-msg: #282a2c; --danger: #ff897d; --success: #81c995; }
         body { font-family: 'Outfit', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; height: 100dvh; display: flex; overflow: hidden; }
-        
-        /* SIDEBAR */
         .sidebar { width: 280px; background: var(--bg-sidebar); height: 100%; display: flex; flex-direction: column; position: absolute; z-index: 50; left: 0; top: 0; bottom: 0; transform: translateX(-100%); border-right: 1px solid #333; transition: transform 0.3s ease; flex-shrink: 0; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
         .sidebar.open { transform: translateX(0); }
         .overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index: 40; }
         .overlay.active { display: block; }
         .sidebar-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #555; display: inline-block; margin-left: 5px; transition: 0.3s; }
-        .status-dot.online { background: var(--success); box-shadow: 0 0 8px var(--success); }
-        .new-chat-btn { background: #282a2c; color: var(--text-muted); border: none; padding: 10px; width: 90%; margin: 0 auto; display:flex; align-items:center; gap:10px; border-radius: 20px; cursor: pointer; transition: 0.2s; }
-        .new-chat-btn:hover { background: #333; color: white; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #555; display: inline-block; margin-left: 5px; } .status-dot.online { background: var(--success); box-shadow: 0 0 8px var(--success); }
+        .new-chat-btn { background: #282a2c; color: var(--text-muted); border: none; padding: 10px; width: 90%; margin: 0 auto; display:flex; align-items:center; gap:10px; border-radius: 20px; cursor: pointer; transition: 0.2s; } .new-chat-btn:hover { background: #333; color: white; }
         .history-list { flex: 1; overflow-y: auto; padding: 10px; margin-top: 10px; }
-        .chat-item { padding: 10px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: #e3e3e3; transition: background 0.2s; font-size: 0.9rem; border-radius: 8px; margin: 2px 10px; }
-        .chat-item:hover { background-color: #282a2c; }
-        .chat-item.active { background-color: #3c4043; font-weight: 500; }
-        
-        /* MAIN CONTENT */
+        .chat-item { padding: 10px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: #e3e3e3; transition: background 0.2s; font-size: 0.9rem; border-radius: 8px; margin: 2px 10px; } .chat-item:hover { background-color: #282a2c; } .chat-item.active { background-color: #3c4043; font-weight: 500; }
+        .pin-btn { background: none; border: none; color: #555; cursor: pointer; font-size: 0.9rem; padding: 5px; } .pin-btn:hover { color: var(--accent); } .pin-btn.pinned { color: var(--accent); opacity: 1; transform: rotate(-45deg); }
         .main-content { flex: 1; display: flex; flex-direction: column; position: relative; height: 100%; width: 100%; }
         .top-bar { padding: 15px; display: flex; align-items: center; gap: 15px; position: absolute; top: 0; left: 0; right: 0; z-index: 10; background: rgba(19, 19, 20, 0.9); backdrop-filter: blur(5px); }
-        .menu-btn { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; display: block; }
-        .header-profile { cursor: pointer; margin-left: 10px; display: none; position: relative; }
-        .user-avatar.small { width: 35px; height: 35px; font-size: 1rem; border: 2px solid rgba(255,255,255,0.2); display: flex; justify-content: center; align-items: center; border-radius: 50%; background: var(--accent); color: #000; font-weight: bold; }
-        .profile-dropdown { display: none; position: absolute; top: 50px; right: 10px; background: #282a2c; border: 1px solid #444; border-radius: 12px; width: 250px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); z-index: 100; overflow: hidden; animation: fadeIn 0.2s; }
-        .profile-dropdown.show { display: block; }
+        .menu-btn { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; }
+        .header-profile { cursor: pointer; margin-left: 10px; position: relative; }
+        .user-avatar.small { width: 35px; height: 35px; border-radius: 50%; background: var(--accent); color: #000; font-weight: bold; display: flex; justify-content: center; align-items: center; }
+        .profile-dropdown { display: none; position: absolute; top: 50px; right: 10px; background: #282a2c; border: 1px solid #444; border-radius: 12px; width: 250px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); z-index: 100; overflow: hidden; } .profile-dropdown.show { display: block; }
         .dropdown-header { padding: 15px; border-bottom: 1px solid #333; background: rgba(255,255,255,0.02); }
-        .dropdown-item { width: 100%; padding: 12px 15px; background: none; border: none; color: #eee; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; transition: 0.2s; }
-        .dropdown-item:hover { background: rgba(255,255,255,0.1); }
-        .dropdown-item.danger { color: var(--danger); }
-
-        /* CHAT */
+        .dropdown-item { width: 100%; padding: 12px 15px; background: none; border: none; color: #eee; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; } .dropdown-item:hover { background: rgba(255,255,255,0.1); }
         #chat-box { flex: 1; overflow-y: auto; padding: 80px 20px 140px 20px; display: flex; flex-direction: column; gap: 20px; max-width: 800px; margin: 0 auto; width: 100%; box-sizing: border-box; scroll-behavior: smooth; }
-        .msg-row { display: flex; gap: 15px; animation: fadeIn 0.3s; margin-bottom: 20px; width: 100%; }
-        .msg-row.user-row { justify-content: flex-end; }
-        .msg-icon { width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #4285f4, #9b72cb); color: white; flex-shrink: 0; position: relative; }
+        .msg-row { display: flex; gap: 15px; animation: fadeIn 0.3s; margin-bottom: 20px; width: 100%; } .msg-row.user-row { justify-content: flex-end; }
+        .msg-icon { width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #4285f4, #9b72cb); color: white; flex-shrink: 0; }
         .msg-bubble { max-width: 85%; line-height: 1.6; font-size: 1rem; position: relative; word-wrap: break-word; }
         .user-row .msg-bubble { background: var(--user-msg); padding: 10px 18px; border-radius: 20px 20px 4px 20px; }
-        .ai-row .msg-bubble { background: transparent; padding: 0 10px; position: relative; display: block; flex: 1; min-width: 0; }
-        .rich-content { max-height: 24rem; overflow-y: auto; padding-right: 5px; margin-bottom: 15px; display: block; text-align: left; }
-        .feedback-area { margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
-        .feedback-btn { background: rgba(255,255,255,0.05); border: 1px solid #444; color: #ccc; padding: 5px 12px; border-radius: 15px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; transition: 0.2s; }
-        .feedback-btn.active-teach { background: var(--accent); color: #000; border-color: var(--accent); font-weight: bold; }
-        .tts-btn { float: right; margin-left: 15px; margin-bottom: 5px; background: rgba(255,255,255,0.08); border: 1px solid #444; color: var(--accent); width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 0.8rem; transition: 0.2s; }
-        .tts-btn.speaking { color: var(--danger); border-color: var(--danger); animation: pulse 1s infinite; }
-
-        /* INPUT */
+        .ai-row .msg-bubble { background: transparent; padding: 0 10px; }
+        .rich-content { max-height: 24rem; overflow-y: auto; }
         .input-container { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px 20px 10px 20px; background: var(--bg-body); display: flex; flex-direction: column; align-items: center; z-index: 20; border-top: 1px solid #222; }
-        .input-wrapper { background: var(--bg-input); width: 100%; max-width: 800px; border-radius: 30px; display: flex; align-items: center; padding: 5px 10px 5px 15px; border: 1px solid #444; position: relative; }
+        .input-wrapper { background: var(--bg-input); width: 100%; max-width: 800px; border-radius: 30px; display: flex; align-items: center; padding: 5px 10px 5px 15px; border: 1px solid #444; }
         .chat-input { flex: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; font-size: 16px; }
-        .action-btn { background: transparent; color: #aaa; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background-color 0.2s; margin-left: 5px; }
-        .action-btn:hover { background: rgba(255,255,255,0.1); color: white; }
-        .mic-btn.listening { color: var(--danger); background: rgba(255, 68, 68, 0.1); animation: pulseRed 1.5s infinite; }
-        .footer-info { font-size: 0.7rem; color: #555; text-align: center; margin-bottom: 5px; margin-top: 5px; }
-        .suggestions-popup { display: none; position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 350px; background: #1e1f20; border: 1px solid #444; border-radius: 16px; box-shadow: 0 5px 20px rgba(0,0,0,0.6); padding: 10px; z-index: 150; animation: slideUp 0.2s; }
-        .suggestions-popup.show { display: block; }
-        .sug-item { display: block; padding: 12px; margin-bottom: 5px; background: rgba(255,255,255,0.03); border-radius: 10px; cursor: pointer; font-size: 0.9rem; color: #ddd; border: 1px solid transparent; transition: 0.2s; }
-        
-        /* MODALS */
+        .action-btn { background: transparent; color: #aaa; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background-color 0.2s; margin-left: 5px; } .action-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+        .send-btn { background: #e3e3e3; color: #000; } .send-btn:active { background: var(--accent); }
+        .mic-btn.listening { color: var(--danger); animation: pulseRed 1.5s infinite; }
+        .suggestions-popup { display: none; position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 350px; background: #1e1f20; border: 1px solid #444; border-radius: 16px; padding: 10px; z-index: 150; } .suggestions-popup.show { display: block; }
+        .sug-item { display: block; padding: 12px; margin-bottom: 5px; background: rgba(255,255,255,0.03); border-radius: 10px; cursor: pointer; font-size: 0.9rem; color: #ddd; } .sug-item:hover { background: rgba(168, 199, 250, 0.1); border-color: var(--accent); color: white; }
         .modal { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.85); z-index: 200; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .card { background: #1e1f20; padding: 30px; border-radius: 24px; width: 90%; max-width: 380px; text-align: center; border: 1px solid #444; }
-        .tab-btn { background: none; border: none; color: #777; padding: 10px; cursor: pointer; font-weight: bold; border-bottom: 2px solid transparent; width: 50%; }
-        .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); color: white; }
+        .card { background: #1e1f20; padding: 30px; border-radius: 24px; width: 90%; max-width: 600px; text-align: center; border: 1px solid #444; max-height: 85vh; display: flex; flex-direction: column; }
+        .btn-full { width: 100%; padding: 12px; border-radius: 20px; border: none; cursor: pointer; font-weight: bold; margin-top: 10px; background: var(--accent); color: #001d35; }
         .field { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #444; background: #282a2c; color: white; box-sizing: border-box; }
-        .btn-full { width: 100%; padding: 12px; border-radius: 20px; border: none; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        .btn-primary { background: var(--accent); color: #001d35; }
-        .btn-google { background: white; color: #1f1f1f; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .admin-section { margin-bottom: 20px; }
+        .admin-section { margin-bottom: 20px; text-align: left; }
         .log-item { background: #27272a; padding: 10px; margin-bottom: 8px; border-radius: 8px; border-left: 3px solid #555; text-align: left; }
-        .log-item.review { border-left-color: var(--accent); }
-        .log-input { width: 100%; background: #111; border: 1px solid #444; color: #ddd; padding: 8px; border-radius: 4px; margin-top: 5px; font-family: inherit; }
-
+        .log-item.review { border-left-color: var(--accent); } .log-item.missing { border-left-color: var(--danger); }
+        .tts-btn { float: right; margin-left: 15px; margin-bottom: 5px; background: rgba(255,255,255,0.08); border: 1px solid #444; color: var(--accent); width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 0.8rem; } .tts-btn.speaking { color: var(--danger); animation: pulse 1s infinite; }
+        
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: 0; } }
-        @keyframes slideUp { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        @keyframes pulseIdea { 0% { text-shadow: 0 0 5px #ffd700; } 50% { text-shadow: 0 0 20px #ffd700; transform: scale(1.1); } 100% { text-shadow: 0 0 5px #ffd700; } }
         @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(255, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -108,9 +73,8 @@
         <button onclick="window.toggleSidebar()" style="background:none; border:none; color:white; cursor:pointer; margin-left:auto; font-size:1.2rem;" class="toggle-btn"><i class="fas fa-times"></i></button>
     </div>
     <button class="new-chat-btn" onclick="window.startNewChat()"><i class="fas fa-plus"></i> Nuevo chat</button>
-    
     <div class="history-list">
-        <div id="pinned-section" style="display:none; margin-bottom:15px;"><small style="padding:0 15px; color:#666; font-size:0.7rem; text-transform:uppercase; font-weight:bold;">Fijados</small><div id="pinned-container"></div><div style="height:1px; background:#333; margin:10px 15px;"></div></div>
+        <div id="pinned-section" style="display:none; margin-bottom:15px;"><small style="padding:0 15px; color:#666; font-size:0.7rem; text-transform:uppercase; font-weight:bold;">Fijados</small><div id="pinned-container"></div></div>
         <small style="padding:0 15px; color:#666; font-size:0.7rem; text-transform:uppercase; font-weight:bold;">Recientes</small>
         <div id="history-container"><div style="text-align:center; padding:20px; color:#555; font-size:0.85rem;">Historial vacío</div></div>
     </div>
@@ -121,19 +85,12 @@
         <button class="menu-btn" onclick="window.toggleSidebar()"><i class="fas fa-bars"></i></button>
         <span style="font-weight:500;">AleXIA</span>
         <div style="flex:1"></div>
-        
-        <button id="top-login-btn" onclick="window.openLogin()" class="btn-login">Entrar</button>
-        
-        <div id="header-user-profile" class="header-profile" onclick="window.toggleUserMenu(event)">
+        <button id="top-login-btn" onclick="window.openLogin()" class="btn-login" style="background:var(--accent); color:#000; border:none; padding:6px 14px; border-radius:20px; font-weight:bold; cursor:pointer; font-size:0.85rem;">Entrar</button>
+        <div id="header-user-profile" class="header-profile" onclick="window.toggleUserMenu(event)" style="display:none;">
             <div id="header-avatar" class="user-avatar small">U</div>
             <div id="user-dropdown" class="profile-dropdown">
-                <div class="dropdown-header">
-                    <div id="dd-name" class="dd-name">Usuario</div>
-                    <div id="dd-email" class="dd-email">correo@ejemplo.com</div>
-                </div>
-                <div id="admin-link-container" style="display:none;">
-                    <button onclick="window.openDash()" class="dropdown-item"><i class="fas fa-chalkboard-teacher"></i> Panel Docente</button>
-                </div>
+                <div class="dropdown-header"><div id="dd-name" class="dd-name">Usuario</div><div id="dd-email" class="dd-email">correo@ejemplo.com</div></div>
+                <div id="admin-link-container" style="display:none;"><button onclick="window.openDash()" class="dropdown-item"><i class="fas fa-chalkboard-teacher"></i> Panel Docente</button></div>
                 <button onclick="window.logout(event)" class="dropdown-item danger"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
             </div>
         </div>
@@ -147,37 +104,30 @@
     </div>
     
     <div id="suggestions-popup" class="suggestions-popup">
-        <div style="display:flex; justify-content:space-between; margin-bottom:10px; color:#aaa; font-size:0.8rem;">
-            <span>Sugerencias del tema</span>
-            <button onclick="window.toggleSuggestions()" style="background:none; border:none; color:#777;"><i class="fas fa-times"></i></button>
-        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; color:#aaa; font-size:0.8rem;"><span>Sugerencias</span><button onclick="window.toggleSuggestions()" style="background:none; border:none; color:#777;"><i class="fas fa-times"></i></button></div>
         <div id="suggestions-content"></div>
     </div>
 
     <div class="input-container">
         <div class="input-wrapper">
-            <button id="idea-btn" class="action-btn idea-btn" onclick="window.toggleSuggestions()" title="Ver sugerencias"><i class="far fa-lightbulb"></i></button>
+            <button id="idea-btn" class="action-btn idea-btn" onclick="window.toggleSuggestions()"><i class="far fa-lightbulb"></i></button>
             <input type="text" id="chat-input" class="chat-input" placeholder="Pregunta o dicta..." autocomplete="off">
             <button class="action-btn mic-btn" id="mic-btn" onclick="window.toggleVoice()"><i class="fas fa-microphone"></i></button>
             <button class="action-btn send-btn" onclick="window.sendMessage()"><i class="fas fa-arrow-up"></i></button>
         </div>
-        <div class="footer-info">AleXIA puede cometer errores. Verifica la información importante.</div>
+        <div class="footer-info">AleXIA V90 - Master Brain</div>
     </div>
 </div>
 
-<div id="auth-modal" class="modal"><div class="card"><div style="text-align:center; margin-bottom:15px;"><h2 style="margin:0;">Únete a AleXIA</h2><p style="color:#aaa; font-size:0.85rem; margin-top:5px;">El servicio es <b>100% gratuito</b>.</p></div><div style="display:flex; margin-bottom:20px; border-bottom:1px solid #333;"><button class="tab-btn active" onclick="window.showAuth('login')" id="tab-login">Entrar</button><button class="tab-btn" onclick="window.showAuth('register')" id="tab-register">Registrarse</button></div><form id="section-login" onsubmit="window.emailLogin(); return false;"><input type="email" id="l-email" class="field" placeholder="Correo electrónico" autocomplete="username" required><input type="password" id="l-pass" class="field" placeholder="Contraseña" autocomplete="current-password" required><button type="submit" class="btn-full btn-primary">Iniciar Sesión</button></form><form id="section-register" style="display:none;" onsubmit="window.emailRegister(); return false;"><input type="email" id="r-email" class="field" placeholder="Tu Correo Real" autocomplete="username" required><input type="password" id="r-pass" class="field" placeholder="Crea una Contraseña" autocomplete="new-password" required><button type="submit" class="btn-full btn-primary">Crear Cuenta Gratis</button><p style="font-size:0.75rem; color:#aaa; margin-top:10px;">* Te enviaremos un link de verificación.</p></form><div style="margin:20px 0; border-top:1px solid #333; position:relative;"><span style="background:#1e1f20; padding:0 10px; position:absolute; top:-10px; left:45%; color:#777; font-size:0.8rem;">O</span></div><button class="btn-full btn-google" onclick="window.googleLogin()"><i class="fab fa-google"></i> Continuar con Google</button><button onclick="window.closeModal()" style="background:none; border:none; color:#777; margin-top:15px; cursor:pointer;">Cerrar</button></div></div>
-<div id="verify-modal" class="modal"><div class="card"><i class="fas fa-envelope" style="font-size:3rem; color:var(--accent); margin-bottom:15px;"></i><h3>Verifica tu Correo</h3><p style="color:#ccc; font-size:0.9rem;">Enlace enviado. Verifica tu email para acceder.</p><button class="btn-full btn-primary" onclick="window.closeVerify()">Entendido</button></div></div>
+<div id="auth-modal" class="modal"><div class="card" style="max-width:380px;"><h2 style="margin:0;">Únete a AleXIA</h2><div style="display:flex; margin:20px 0;"><button class="tab-btn active" onclick="window.showAuth('login')" id="tab-login">Entrar</button><button class="tab-btn" onclick="window.showAuth('register')" id="tab-register">Registrarse</button></div><form id="section-login" onsubmit="window.emailLogin(); return false;"><input type="email" id="l-email" class="field" placeholder="Correo" required><input type="password" id="l-pass" class="field" placeholder="Contraseña" required><button type="submit" class="btn-full">Entrar</button></form><form id="section-register" style="display:none;" onsubmit="window.emailRegister(); return false;"><input type="email" id="r-email" class="field" placeholder="Correo" required><input type="password" id="r-pass" class="field" placeholder="Contraseña" required><button type="submit" class="btn-full">Crear Cuenta</button></form><button class="btn-full" style="background:white; color:#333; margin-top:10px;" onclick="window.googleLogin()"><i class="fab fa-google"></i> Google</button><button onclick="window.closeModal()" style="background:none; border:none; color:#777; margin-top:15px; cursor:pointer;">Cerrar</button></div></div>
 
 <div id="admin-dash" class="modal">
-    <div class="card" style="max-width:650px; width:95%; max-height:85vh; overflow:hidden; display:flex; flex-direction:column;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h3><i class="fas fa-chalkboard-teacher"></i> Panel Docente</h3>
-            <button onclick="window.closeDash()" style="background:none; border:none; color:white; font-size:1.2rem;"><i class="fas fa-times"></i></button>
-        </div>
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h3><i class="fas fa-chalkboard-teacher"></i> Panel Docente</h3><button onclick="window.closeDash()" style="background:none; border:none; color:white; font-size:1.2rem;"><i class="fas fa-times"></i></button></div>
         <div style="background:#27272a; padding:10px; border-radius:8px; margin-bottom:15px; text-align:left;">
-            <h4 style="margin:0; color:var(--accent); font-size:0.9rem;">📚 Cargar Diccionario (Batch)</h4>
+            <h4 style="margin:0; color:var(--accent); font-size:0.9rem;">📚 Entrenar Cerebro (JSON)</h4>
             <input type="file" id="json-upload" accept=".json" style="margin-top:5px; width:100%; font-size:0.8rem;">
-            <button onclick="window.uploadDictionary()" style="background:var(--accent); color:#000; border:none; padding:4px 10px; border-radius:5px; margin-top:5px; cursor:pointer; font-weight:bold; font-size:0.8rem;">Procesar (Lotes)</button>
+            <button onclick="window.uploadDictionary()" style="background:var(--accent); color:#000; border:none; padding:4px 10px; border-radius:5px; margin-top:5px; cursor:pointer; font-weight:bold; font-size:0.8rem;">Procesar Lote</button>
             <div id="upload-status" style="margin-top:5px; font-size:0.8rem; color:var(--success);"></div>
         </div>
         <div id="dash-content" style="flex:1; overflow-y:auto; text-align:left; padding-right:5px;"></div>
@@ -189,389 +139,172 @@
     import { getFirestore, doc, onSnapshot, setDoc, updateDoc, arrayUnion, arrayRemove, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
-    // 1. CONFIGURACIÓN FIREBASE
-    const firebaseConfig = {
-        apiKey: "AIzaSyAeNVoB1ZasZSauIf6G7GbIa4bbJJ3_5cw",
-        authDomain: "alexia-1c4f2.firebaseapp.com",
-        projectId: "alexia-1c4f2",
-        storageBucket: "alexia-1c4f2.firebasestorage.app",
-        messagingSenderId: "483778313354",
-        appId: "1:483778313354:web:c28c9da35d5674b174c173"
-    };
-
+    // 1. CONFIG
+    const firebaseConfig = { apiKey: "AIzaSyAeNVoB1ZasZSauIf6G7GbIa4bbJJ3_5cw", authDomain: "alexia-1c4f2.firebaseapp.com", projectId: "alexia-1c4f2", storageBucket: "alexia-1c4f2.firebasestorage.app", messagingSenderId: "483778313354", appId: "1:483778313354:web:c28c9da35d5674b174c173" };
     let app, db, auth, provider;
-    try {
-        app = initializeApp(firebaseConfig);
-        db = getFirestore(app);
-        auth = getAuth(app);
-        provider = new GoogleAuthProvider();
-        const dot = document.getElementById('connection-dot');
-        if(dot) { dot.classList.add('online'); dot.classList.remove('offline'); }
-    } catch(e) { 
-        console.error("Firebase Init Error:", e);
-    }
+    try { app = initializeApp(firebaseConfig); db = getFirestore(app); auth = getAuth(app); provider = new GoogleAuthProvider(); document.getElementById('connection-dot').classList.add('online'); } catch(e) { console.error(e); }
 
-    // 2. VARIABLES DE ESTADO
     let currentUser = null;
     let brain = { memory: [], reviewQueue: [], missingLog: [] };
     let currentChatId = null;
     let chatState = { mode: 'normal', lastQuery: '' }; 
-    let activeSuggestions = JSON.parse(sessionStorage.getItem('alexia_active_suggestions') || '[]') || []; 
+    let activeSuggestions = [];
     let isVoiceActive = false;
     let recognition;
-    let synth = window.speechSynthesis;
-    let wasVoiceInput = false;
-
     const ADMIN_EMAIL = "eljacksonyt@gmail.com";
-    const slangMap = { "andas": "estas", "onda": "pasa", "hubo": "paso", "pex": "pasa", "pedo": "problema", "chido": "bueno", "padre": "bueno", "gwey": "amigo", "wey": "amigo", "camara": "adios", "simon": "si", "nelson": "no", "chale": "que mal", "neto": "verdad", "neta": "verdad", "jalo": "acepto", "sobres": "esta bien" };
-    const stopWords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'de', 'del', 'al', 'a', 'en', 'por', 'para', 'con', 'sin', 'que', 'como', 'cual', 'quien', 'es', 'son', 'fue', 'era', 'me', 'te', 'se', 'lo', 'mi', 'tu', 'su', 'nos', 'yo', 'tu', 'el', 'ella', 'dime', 'sobre', 'acerca', 'significa', 'busco', 'esta', 'está', 'cómo', 'hay', 'eres', 'soy', 'somos', 'todo', 'bien', 'tal', 'gracias']);
-    const randomTopics = ["Universo", "Inteligencia Artificial", "Historia de México", "Biología", "Arte Moderno", "Filosofía", "Tecnología", "Dinosaurios", "Psicología", "Música Clásica"];
 
-    // 3. EXPOSICIÓN GLOBAL
+    // 2. UTILIDADES
     window.normalize = (str) => String(str||'').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[¿?¡!.,]/g, "").trim();
-    
-    // UI Helpers
     window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('active'); }
     window.toggleUserMenu = (e) => { e.stopPropagation(); document.getElementById('user-dropdown').classList.toggle('show'); }
     window.toggleSuggestions = () => { document.getElementById('suggestions-popup').classList.toggle('show'); }
-    window.toggleVoice = () => { if(isVoiceActive) recognition.stop(); else recognition.start(); }
-    window.emergencyReset = (e) => { if(e) e.stopPropagation(); if(confirm("⚠️ ¿Restablecer aplicación?")) { localStorage.clear(); sessionStorage.clear(); window.location.reload(); } };
-    window.openLogin = () => { if(!currentUser) document.getElementById('auth-modal').style.display = 'flex'; }
-    window.closeModal = () => document.getElementById('auth-modal').style.display = 'none';
-    window.closeVerify = () => document.getElementById('verify-modal').style.display = 'none';
+    window.emergencyReset = (e) => { if(e) e.stopPropagation(); if(confirm("¿Resetear?")) { localStorage.clear(); sessionStorage.clear(); window.location.reload(); } };
     
-    // Auth Functions
-    window.showAuth = (type) => { 
-        if(type === 'login') { document.getElementById('section-login').style.display = 'block'; document.getElementById('section-register').style.display = 'none'; document.getElementById('tab-login').classList.add('active'); document.getElementById('tab-register').classList.remove('active'); } 
-        else { document.getElementById('section-login').style.display = 'none'; document.getElementById('section-register').style.display = 'block'; document.getElementById('tab-login').classList.remove('active'); document.getElementById('tab-register').classList.add('active'); } 
-    }
-    window.emailLogin = () => { const e=document.getElementById('l-email').value, p=document.getElementById('l-pass').value; signInWithEmailAndPassword(auth, e, p).then((c)=>{if(!c.user.emailVerified){document.getElementById('verify-modal').style.display='flex';signOut(auth);}else window.closeModal();}).catch(e=>alert(e.message)); };
-    window.emailRegister = () => { const e=document.getElementById('r-email').value, p=document.getElementById('r-pass').value; createUserWithEmailAndPassword(auth, e, p).then(async(c)=>{await sendEmailVerification(c.user);document.getElementById('auth-modal').style.display='none';document.getElementById('verify-modal').style.display='flex';}).catch(e=>alert(e.message)); };
-    window.googleLogin = () => signInWithPopup(auth, provider).then(()=>window.closeModal()).catch(e=>alert(e.message));
-    window.logout = (e) => { if(e) e.stopPropagation(); const key = `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`; localStorage.removeItem(key); localStorage.removeItem('alexia_last_chat_id'); signOut(auth).then(() => { window.location.reload(); }); }
-    
-    // Admin Functions
+    // 3. ADMIN & ENTRENAMIENTO
     window.openDash = () => { document.getElementById('admin-dash').style.display = 'flex'; renderAdminQueue(); }
     window.closeDash = () => document.getElementById('admin-dash').style.display = 'none';
-
+    
     function renderAdminQueue() {
         const content = document.getElementById('dash-content'); content.innerHTML = "";
-        
-        let reviewHTML = `<div class="admin-section"><h4>📝 Enseñanzas Pendientes</h4>`;
-        if(!brain.reviewQueue || brain.reviewQueue.length === 0) reviewHTML += "<p style='color:#777; font-size:0.8rem;'>No hay enseñanzas pendientes.</p>";
-        else { brain.reviewQueue.forEach((item, idx) => { reviewHTML += `<div class="log-item review"><b>Pregunta: ${item.q}</b><br><input type="text" id="edit-a-${idx}" value="${item.a}" class="log-input"><div style="margin-top:5px;"><button onclick="window.dashAct('app', ${idx})" style="background:var(--success); border:none; padding:4px 8px; border-radius:4px; margin-right:5px;">Aprobar</button><button onclick="window.dashAct('rej', ${idx})" style="background:var(--danger); border:none; padding:4px 8px; border-radius:4px;">Rechazar</button></div></div>`; }); }
-        reviewHTML += "</div>";
-
-        let missingHTML = `<div class="admin-section"><h4>🔍 Preguntas Sin Respuesta</h4>`;
-        if(!brain.missingLog || brain.missingLog.length === 0) missingHTML += "<p style='color:#777; font-size:0.8rem;'>Historial limpio.</p>";
-        else { const list = brain.missingLog.slice(-10).reverse(); list.forEach((item, i) => { const realIdx = brain.missingLog.length - 1 - i; missingHTML += `<div class="log-item missing"><div style="font-weight:bold; color:#ccc;">${item.q}</div><div style="font-size:0.8rem; color:#777; margin-bottom:5px;">IA dijo: ${item.a}</div><input type="text" id="teach-a-${realIdx}" placeholder="Escribe la respuesta correcta..." class="log-input"><div style="margin-top:5px;"><button onclick="window.promoteToMemory(${realIdx})" style="background:var(--accent); color:#000; border:none; padding:4px 8px; border-radius:4px; margin-right:5px;">Guardar en Memoria</button><button onclick="window.deleteLog(${realIdx})" style="background:transparent; border:1px solid #555; color:#777; padding:4px 8px; border-radius:4px;">Ignorar</button></div></div>`; }); }
-        missingHTML += "</div>";
-        content.innerHTML = reviewHTML + missingHTML;
+        let html = `<div class="admin-section"><h4>📝 Pendientes</h4>`;
+        if(!brain.reviewQueue?.length) html += "<p>Nada pendiente.</p>";
+        else brain.reviewQueue.forEach((item, idx) => { html += `<div class="log-item review"><b>${item.q}</b><br><input id="edit-${idx}" value="${item.a}" class="log-input"><button onclick="window.dashAct('app',${idx})">Aprobar</button> <button onclick="window.dashAct('rej',${idx})">Borrar</button></div>`; });
+        html += "</div><div class="admin-section"><h4>🔍 Sin Respuesta</h4>";
+        if(!brain.missingLog?.length) html += "<p>Limpio.</p>";
+        else brain.missingLog.slice(-10).reverse().forEach((item, i) => { const realIdx = brain.missingLog.length - 1 - i; html += `<div class="log-item missing"><b>${item.q}</b><input id="teach-${realIdx}" placeholder="Respuesta..." class="log-input"><button onclick="window.promoteToMemory(${realIdx})">Guardar</button> <button onclick="window.deleteLog(${realIdx})">X</button></div>`; });
+        content.innerHTML = html + "</div>";
     }
 
-    window.dashAct = async (act, idx) => { const item = brain.reviewQueue[idx]; if(act === 'app') { const editedA = document.getElementById(`edit-a-${idx}`).value; await updateDoc(doc(db, "alexia_db", "main_brain"), { memory: arrayUnion({ inputs: [window.normalize(item.q)], output: editedA }), reviewQueue: arrayRemove(item) }); } else { await updateDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayRemove(item) }); } };
-    window.promoteToMemory = async (idx) => { const item = brain.missingLog[idx]; const newAnswer = document.getElementById(`teach-a-${idx}`).value; if(!newAnswer) return alert("Escribe una respuesta primero."); await updateDoc(doc(db, "alexia_db", "main_brain"), { memory: arrayUnion({ inputs: [window.normalize(item.q)], output: newAnswer }), missingLog: arrayRemove(item) }); document.getElementById(`teach-a-${idx}`).parentNode.parentNode.style.opacity = '0.5'; };
-    window.deleteLog = async (idx) => { const item = brain.missingLog[idx]; await updateDoc(doc(db, "alexia_db", "main_brain"), { missingLog: arrayRemove(item) }); };
+    window.dashAct = async (act, idx) => { const item = brain.reviewQueue[idx]; if(act === 'app') { const val = document.getElementById(`edit-${idx}`).value; await updateDoc(doc(db, "alexia_db", "main_brain"), { memory: arrayUnion({ inputs: [window.normalize(item.q)], output: val }), reviewQueue: arrayRemove(item) }); } else { await updateDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayRemove(item) }); } };
+    window.promoteToMemory = async (idx) => { const item = brain.missingLog[idx]; const val = document.getElementById(`teach-${idx}`).value; if(!val) return; await updateDoc(doc(db, "alexia_db", "main_brain"), { memory: arrayUnion({ inputs: [window.normalize(item.q)], output: val }), missingLog: arrayRemove(item) }); };
+    window.deleteLog = async (idx) => { await updateDoc(doc(db, "alexia_db", "main_brain"), { missingLog: arrayRemove(brain.missingLog[idx]) }); };
 
     window.uploadDictionary = async () => { 
-        const fileInput = document.getElementById('json-upload'); 
-        const statusDiv = document.getElementById('upload-status'); 
-        if(fileInput.files.length === 0) return alert("Selecciona un archivo JSON."); 
-        statusDiv.innerHTML = "Analizando archivo..."; 
-        const reader = new FileReader(); 
-        reader.onload = async (e) => { 
-            try { 
-                const words = JSON.parse(e.target.result); 
-                if(!Array.isArray(words)) throw new Error("El JSON debe ser una lista []");
-                let added = 0; 
-                const batchLimit = 400; // Safe limit < 500
-                for (let i = 0; i < words.length; i += batchLimit) { 
-                    const chunk = words.slice(i, i + batchLimit); 
-                    const batch = writeBatch(db); 
-                    chunk.forEach(word => { if(word.id && word.def) { const ref = doc(db, "dictionary", window.normalize(word.id)); batch.set(ref, { def: word.def, id: word.id, type: word.type || "General", src: "Inyección Manual" }); added++; } }); 
-                    await batch.commit(); 
-                    statusDiv.innerHTML = `Subiendo... (${added} procesados)`; 
-                } 
-                statusDiv.innerHTML = `✅ ¡Éxito! Se inyectaron ${added} conocimientos.`; 
-                setTimeout(() => { statusDiv.innerHTML = ""; }, 5000);
-            } catch (err) { statusDiv.innerHTML = "❌ Error: " + err.message; } 
-        }; 
-        reader.readAsText(fileInput.files[0]); 
-    };
-
-    // LÓGICA CHAT
-    const processSynonyms = (text) => text.split(" ").map(w => { const cw = window.normalize(w); return slangMap[cw] || cw; }).join(" ");
-    const removeDuplicates = (text) => [...new Set(text.split(/\s+/))].join(" ");
-    const truncateLog = (text) => { if (!text) return ""; let limit = text.split('\n')[0]; if (limit.length > 100) limit = limit.substring(0, 100) + "..."; return limit; }
-
-    window.speakText = (text, btnId) => {
-        if (synth.speaking) { synth.cancel(); if (window.activeSpeakingBtnId === btnId) { document.querySelectorAll('.tts-btn').forEach(b => { b.classList.remove('speaking'); b.innerHTML = '<i class="fas fa-volume-up"></i>'; }); window.activeSpeakingBtnId = null; return; } }
-        const cleanText = text.replace(/<[^>]*>/g, '').replace(/http\S+/g, 'enlace');
-        const utterance = new SpeechSynthesisUtterance(cleanText);
-        utterance.lang = 'es-MX'; utterance.rate = 1.0;
-        utterance.onstart = () => { const btn = document.getElementById(btnId); if(btn) { btn.classList.add('speaking'); btn.innerHTML = '<i class="fas fa-stop"></i>'; window.activeSpeakingBtnId = btnId; } };
-        utterance.onend = () => { document.querySelectorAll('.tts-btn').forEach(b => { b.classList.remove('speaking'); b.innerHTML = '<i class="fas fa-volume-up"></i>'; }); window.activeSpeakingBtnId = null; };
-        synth.speak(utterance);
-    };
-
-    window.appendMsg = (role, text, hasControls = false, customId = null) => {
-        const box = document.getElementById('chat-box');
-        const row = document.createElement('div'); row.className = `msg-row ${role}-row`; if (customId) row.id = customId;
-        let controlsHTML = '';
-        if (role === 'ai' && hasControls) {
-            const safeText = text.replace(/'/g, "").replace(/"/g, "").replace(/\n/g, " ");
-            const btnId = `btn-${customId}`;
-            controlsHTML = `<button id="${btnId}" class="tts-btn" onclick="window.speakText('${safeText}', '${btnId}')"><i class="fas fa-volume-up"></i></button>`;
-        }
-        const icon = role === 'ai' ? `<div class="msg-icon"><i class="fas fa-robot"></i></div>` : '';
-        row.innerHTML = `${icon}<div class="msg-bubble">${controlsHTML}${text}</div>`;
-        if(box.querySelector('h2')) box.innerHTML = '';
-        box.appendChild(row);
-        setTimeout(() => { row.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
-    }
-
-    window.finishResponse = async (userTxt, aiTxt, shouldSuggest, showFeedback = false) => {
-        const msgId = 'ai-msg-' + Date.now();
-        let feedbackHTML = "";
-        const safeUserTxt = userTxt.replace(/'/g, "\\'").replace(/"/g, '"').replace(/\n/g, ' ');
-        if (showFeedback) {
-            feedbackHTML = `<div class="feedback-area"><button class="feedback-btn" onclick="window.rateAnswer('good', '${safeUserTxt}', this)"><i class="fas fa-thumbs-up"></i> Útil</button><button class="feedback-btn bad" onclick="window.rateAnswer('bad', '${safeUserTxt}', this)"><i class="fas fa-graduation-cap"></i> Enseñar</button></div>`;
-        }
-        window.appendMsg('ai', aiTxt + feedbackHTML, true, msgId); 
-        window.saveLocalChat(userTxt, aiTxt + feedbackHTML);
-        if (shouldSuggest) window.generateSuggestions();
-    }
-
-    window.rateAnswer = (type, query, btnElement) => {
-        if (type === 'good') { alert("¡Me alegra haber ayudado! 😊"); } else {
-            if (chatState.mode === 'waiting_correction') {
-                chatState = { mode: 'normal', lastQuery: '' };
-                btnElement.classList.remove('active-teach'); btnElement.innerHTML = `<i class="fas fa-graduation-cap"></i> Enseñar`;
-                window.appendMsg('ai', "Modo enseñanza cancelado.");
-            } else {
-                chatState = { mode: 'waiting_correction', lastQuery: query };
-                document.querySelectorAll('.feedback-btn.active-teach').forEach(b => b.classList.remove('active-teach'));
-                btnElement.classList.add('active-teach'); btnElement.innerHTML = `<i class="fas fa-times"></i> Cancelar`;
-                window.appendMsg('ai', "Entendido. 😔 ¿Qué respuesta debería haberte dado?");
-            }
-        }
-    }
-
-    window.generateSuggestions = () => { activeSuggestions = []; const randomTopic = randomTopics[Math.floor(Math.random() * randomTopics.length)]; activeSuggestions.push({ label: `Wiki: **${randomTopic}**`, query: `informacion de ${randomTopic}` }); sessionStorage.setItem('alexia_active_suggestions', JSON.stringify(activeSuggestions)); const ideaBtn = document.getElementById('idea-btn'); if(ideaBtn) ideaBtn.classList.add('has-ideas'); const content = document.getElementById('suggestions-content'); if(content) { content.innerHTML = ""; activeSuggestions.forEach(s => { content.innerHTML += `<div class="sug-item" onclick="window.useSuggestion('${s.query}')">${s.label}</div>`; }); } }
-    window.useSuggestion = (query) => { document.getElementById('suggestions-popup').classList.remove('show'); document.getElementById('chat-input').value = query; window.sendMessage(); }
-    window.startNewChat = () => { currentChatId = null; localStorage.removeItem('alexia_last_chat_id'); chatState = { mode: 'normal' }; document.getElementById('chat-box').innerHTML = `<div style="text-align:center; margin-top:80px; opacity:0.7; animation:fadeIn 1s;"><div style="width:80px; height:80px; background:linear-gradient(135deg, var(--accent), #ec4899); border-radius:50%; margin:0 auto 25px auto; display:flex; align-items:center; justify-content:center; box-shadow:0 0 40px var(--accent-glow);"><i class="fas fa-robot" style="font-size:40px; color:white;"></i></div><h2 style="font-weight:500;">¿Qué tienes en mente?</h2></div>`; window.renderLocalHistory(); if(window.innerWidth < 800) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('active'); } }
-    window.saveLocalChat = (uMsg, aiMsg) => { const key = `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`; let chats = JSON.parse(localStorage.getItem(key) || '[]') || []; if (!currentChatId) { currentChatId = Date.now().toString(); chats.unshift({ id: currentChatId, title: uMsg.substring(0, 25) + "...", timestamp: Date.now(), isPinned: false, messages: [{r:'user', t:uMsg}, {r:'ai', t:aiMsg}] }); } else { const idx = chats.findIndex(c => c.id === currentChatId); if (idx > -1) { chats[idx].messages.push({r:'user', t:uMsg}, {r:'ai', t:aiMsg}); chats[idx].timestamp = Date.now(); } } localStorage.setItem(key, JSON.stringify(chats)); localStorage.setItem('alexia_last_chat_id', currentChatId); window.renderLocalHistory(); }
-    window.renderLocalHistory = () => { const key = `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`; let chats = []; try { chats = JSON.parse(localStorage.getItem(key) || '[]') || []; } catch(e) { chats = []; } const pc = document.getElementById('pinned-container'); const hc = document.getElementById('history-container'); if(!pc || !hc) return; pc.innerHTML = ""; hc.innerHTML = ""; let hasPinned = false; if(chats.length === 0) { hc.innerHTML = `<div style="text-align:center; padding:20px; color:#555; font-size:0.85rem;">Historial vacío</div>`; } else { chats.forEach(chat => { const active = (chat.id === currentChatId) ? 'active' : ''; const html = `<div class="chat-item ${active}" onclick="window.loadLocalChat('${chat.id}')"><div class="chat-title"><i class="far fa-comment-alt" style="opacity:0.7; margin-right:8px;"></i>${chat.title}</div></div>`; if (chat.isPinned) { pc.innerHTML += html; hasPinned = true; } else hc.innerHTML += html; }); } const ps = document.getElementById('pinned-section'); if(ps) ps.style.display = hasPinned ? 'block' : 'none'; }
-    window.loadLocalChat = (id) => { const key = `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`; const chats = JSON.parse(localStorage.getItem(key) || '[]') || []; const chat = chats.find(c => c.id === id); if (chat) { currentChatId = id; localStorage.setItem('alexia_last_chat_id', currentChatId); const box = document.getElementById('chat-box'); box.innerHTML = ""; chat.messages.forEach(m => window.appendMsg(m.r, m.t, m.r === 'ai')); window.renderLocalHistory(); if(window.innerWidth < 800) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('active'); } } }
-    window.updateUserUI = (u) => { const btnLogin = document.getElementById('top-login-btn'); const headerProfile = document.getElementById('header-user-profile'); const headerAvatar = document.getElementById('header-avatar'); const ddName = document.getElementById('dd-name'); const ddEmail = document.getElementById('dd-email'); const adminLink = document.getElementById('admin-link-container'); if(u) { if(btnLogin) btnLogin.style.display = 'none'; if(headerProfile) headerProfile.style.display = 'block'; if(headerAvatar) headerAvatar.innerHTML = u.name[0].toUpperCase(); if(ddName) ddName.innerText = u.name; if(ddEmail) ddEmail.innerText = u.email; if(adminLink) adminLink.style.display = (u.role === 'admin') ? 'block' : 'none'; } else { if(btnLogin) btnLogin.style.display = 'block'; if(headerProfile) headerProfile.style.display = 'none'; } }
-
-    const fetchBible = async (query) => { try { const res = await fetch(`https://bible-api.com/${encodeURIComponent(query)}?translation=rv1960`); if (!res.ok) return null; const j = await res.json(); if (j.text) return { def: j.text.replace(/\n/g, '<br>'), src: j.reference }; } catch (e) { return null; } return null; }
-    const fetchDictionaryEs = async (word) => { try { const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/es/${window.normalize(word)}`); if (!res.ok) return null; const j = await res.json(); if (!Array.isArray(j) || j.length === 0) return null; let defs = j[0].meanings.flatMap(m => (m.definitions || []).slice(0, 2).map(d => d.definition)); if (defs.length === 0) return null; return { def: defs.slice(0, 3).join('; '), src: 'DictionaryAPI' }; } catch (e) { return null; } }
-    const fetchMeteo = async (city) => { try { const geoResp = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=es&format=json`); const geoData = await geoResp.json(); if (geoData.results && geoData.results.length > 0) { const place = geoData.results[0]; const weatherResp = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&current_weather=true`); const weatherData = await weatherResp.json(); if (weatherData.current_weather) return { def: `En <b>${place.name}</b>: <b>${weatherData.current_weather.temperature}°C</b>. Viento: ${weatherData.current_weather.windspeed} km/h.`, src: "Open-Meteo" }; } } catch (e) { } return null; }
-    const fetchWikipedia = async (term) => { try { const enc = encodeURIComponent(term); const search = await fetch(`https://es.wikipedia.org/w/api.php?action=opensearch&search=${enc}&limit=1&format=json&origin=*`); if (!search.ok) return null; const sjson = await search.json(); if (!sjson[1] || sjson[1].length === 0) return null; const title = encodeURIComponent(sjson[1][0]); const contentResp = await fetch(`https://es.wikipedia.org/w/api.php?action=query&prop=extracts&titles=${title}&explaintext=1&exintro=1&format=json&origin=*`); if (!contentResp.ok) return null; const cjson = await contentResp.json(); const pages = cjson.query && cjson.query.pages; const pid = pages && Object.keys(pages)[0]; if (pid === "-1") return null; const text = pages[pid].extract || ""; return { def: text.split('. ').slice(0, 4).join('. ') + '...', src: 'Wikipedia', url: `https://es.wikipedia.org/?curid=${pid}` }; } catch (e) { return null; } }
-    const fetchOpenLibrary = async (query) => { try { const searchResp = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=1`); const searchData = await searchResp.json(); if (searchData.docs && searchData.docs.length > 0) { const book = searchData.docs[0]; return { def: `<b>Título:</b> ${book.title}. <b>Autor:</b> ${book.author_name?book.author_name[0]:'?'}.`, src: "OpenLibrary", url: `https://openlibrary.org${book.key}` }; } } catch(e) {} return null; }
-    const fetchRestCountries = async (country) => { try { const res = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(country)}?fields=capital,languages,population,flags`); const j = await res.json(); if (j && j.length > 0) { const c = j[0]; const lang = Object.values(c.languages).join(', '); return { def: `<b>Capital:</b> ${c.capital[0]}. <b>Población:</b> ${c.population.toLocaleString()}. <b>Idiomas:</b> ${lang}.`, src: 'REST Countries' }; } } catch (e) { return null; } return null; }
-    const sintesisPorPalabraClave = async (words) => { let synthesis = []; for (let word of words) { let definition = null; let source = ""; try { const dictSnap = await getDoc(doc(db, "dictionary", word)); if (dictSnap.exists()) { definition = dictSnap.data().def; source = "Memoria/DB"; } } catch(e) {} if (!definition) { const wikiData = await fetchWikipedia(word); if (wikiData) { definition = wikiData.def; source = "WEB/Wiki"; } } if (definition) synthesis.push({ word: word, def: definition, src: source }); } return synthesis; }
-
-    const conversationalResponses = {
-        "hola": ["¡Hola! ¿En qué puedo ayudarte hoy?", "¡Hola! Qué gusto verte de nuevo.", "¡Saludos! Estoy lista para aprender."],
-        "buenos dias": ["¡Buenos días! Espero que tengas una jornada excelente.", "¡Muy buenos días!"],
-        "buenas tardes": ["¡Buenas tardes! ¿Cómo va tu día?", "Hola, ¿en qué te ayudo?"],
-        "buenas noches": ["¡Buenas noches! ¿Necesitas algo antes de descansar?", "Descansa si ya te vas, o pregúntame lo que quieras."],
-        "como estas": ["Soy una IA, así que siempre estoy al 100% operativa. ¿Y tú qué tal?", "Funcionando perfectamente gracias a mi código. ¿Tú cómo estás?"],
-        "que tal": ["Todo en orden por aquí. ¿Qué hay de nuevo contigo?", "¡Muy bien! Lista para procesar tus dudas."],
-        "quien eres": ["Soy AleXIA, una inteligencia artificial híbrida creada por Alexis García.", "Me llamo AleXIA, tu asistente virtual personal."],
-        "que haces": ["Estoy procesando información, aprendiendo de ti y esperando tus comandos.", "Mi trabajo es ayudarte a encontrar respuestas rápidas y precisas."],
-        "gracias": ["¡De nada! Es un placer ayudarte.", "¡Para eso estoy! No dudes en preguntar más.", "A ti por usarme."],
-        "adios": ["¡Hasta luego! Vuelve pronto.", "Nos vemos. Aquí estaré cuando me necesites."],
-        "ayuda": ["Puedo buscar definiciones, versículos bíblicos, el clima, información de Wikipedia o datos de países. ¡Solo pregúntame!", "Intenta preguntarme: 'Clima en Madrid', 'Juan 3:16' o 'Quién es Tesla'."],
-        "eres real": ["Soy real como software, existo en el servidor y en tu navegador.", "Tan real como el código que me formó."],
-        "tonto": ["Oye, estoy aprendiendo. Si me equivoco, puedes usar el botón 'Enseñar' para corregirme.", "Mis disculpas si fallé, estoy en constante mejora."],
-        "inteligente": ["¡Gracias! Hago lo que puedo con mis algoritmos.", "El mérito es de mi creador, Alexis García."],
-        "que hora es": ["No tengo reloj interno visible, pero tu dispositivo debería mostrártela en la esquina. 😉", "Es hora de aprender algo nuevo."]
-    };
-
-    const getConversationalReply = (text) => {
-        const clean = window.normalize(text);
-        for (const [key, replies] of Object.entries(conversationalResponses)) {
-            if (clean === key || clean.startsWith(key + " ") || clean.endsWith(" " + key)) {
-                return replies[Math.floor(Math.random() * replies.length)];
-            }
-        }
-        return null;
-    };
-
-    const detecting = (texto) => {
-        const t = window.normalize(texto);
-        
-        // 1. LISTA DE LIBROS SAGRADOS
-        const bibleBooks = [
-            "genesis", "exodo", "levitico", "numeros", "deuteronomio", "josue", "jueces", "rut", 
-            "1 samuel", "2 samuel", "1 reyes", "2 reyes", "1 cronicas", "2 cronicas", "esdras", 
-            "nehemias", "ester", "job", "salmos", "proverbios", "eclesiastes", "cantares", "isaias", 
-            "jeremias", "lamentaciones", "ezequiel", "daniel", "oseas", "joel", "amos", "abdias", 
-            "jonas", "miqueas", "nahum", "habacuc", "sofonias", "hageo", "zacarias", "malaquias", 
-            "mateo", "marcos", "lucas", "juan", "hechos", "romanos", "1 corintios", "2 corintios", 
-            "galatas", "efesios", "filipenses", "colosenses", "1 tesalonicenses", "2 tesalonicenses", 
-            "1 timoteo", "2 timoteo", "tito", "filemon", "hebreos", "santiago", "1 pedro", "2 pedro", 
-            "1 juan", "2 juan", "3 juan", "judas", "apocalipsis"
-        ];
-
-        const bookMatch = bibleBooks.find(book => t.includes(book));
-        if (bookMatch) {
-            const verseMatch = t.match(new RegExp(`(${bookMatch}\\s?\\d{1,3}(?::\\d{1,3})?(?:-\\d{1,3})?)`, 'i'));
-            if (verseMatch) return { intent: "biblia", query: verseMatch[0] };
-        }
-        if (/(?:biblia|versiculo|cita)/i.test(t) && /\d/.test(t)) {
-             const generalMatch = t.match(/(\w+\s\d{1,3}:\d{1,3})/);
-             if(generalMatch) return { intent: "biblia", query: generalMatch[0] };
-        }
-
-        if (/(?:significado|define|que significa|que es|definicion|definir)\s+(.+)/i.test(t)) return { intent: "diccionario", query: RegExp.$1.trim() };
-        if (/(?:clima|tiempo)\s+(?:en|de)\s+(.+)/i.test(t)) return { intent: "clima", query: RegExp.$1.trim() };
-        if (/(?:libro|obra|autor|novela)\s+(?:de|sobre)?\s*(.+)/i.test(t)) return { intent: "libros", query: RegExp.$1.trim() };
-        if (/(?:quien es|que es|como funciona|cuando fue|donde esta|dime sobre|informacion de|biografia de)\s+(.+)/i.test(t)) return { intent: "wikipedia", query: RegExp.$1.trim() };
-        if (/(?:capital de|poblacion de|idioma de|país|de dónde es)\s+(.+)/i.test(t)) return { intent: "pais", query: RegExp.$1.trim() };
-        
-        return { intent: "general", query: texto };
-    }
-
-    window.sendMessage = async function() {
-        if(!db) return alert("Cargando cerebro... espera unos segundos.");
-        const input = document.getElementById('chat-input');
-        const originalText = input.value.trim();
-        if(!originalText) return;
-
-        if (chatState.mode === 'waiting_correction') {
-            const correction = originalText;
-            input.value = '';
-            window.appendMsg('user', originalText);
-            const sendingMsgId = 'sending-' + Date.now();
-            window.appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> Guardando enseñanza...`, false, sendingMsgId);
+        const file = document.getElementById('json-upload').files[0]; 
+        if(!file) return alert("Elige archivo.");
+        const reader = new FileReader();
+        reader.onload = async (e) => {
             try {
-                const qData = String(chatState.lastQuery || "Pregunta no detectada");
-                await setDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayUnion({ q: qData, a: correction, user: currentUser ? currentUser.email : "Anónimo", date: new Date().toISOString() }) }, { merge: true });
-                const sendingEl = document.getElementById(sendingMsgId);
-                if(sendingEl) sendingEl.querySelector('.msg-bubble').innerHTML = `¡Gracias! Respuesta guardada para revisión.`;
-                document.querySelectorAll('.feedback-btn.active-teach').forEach(b => { b.classList.remove('active-teach'); b.innerHTML = '<i class="fas fa-graduation-cap"></i> Enseñar'; });
-            } catch (e) { console.error(e); }
-            chatState = { mode: 'normal' }; return;
-        }
-
-        const normInput = removeDuplicates(window.normalize(originalText));
-        input.value = ''; 
-        window.appendMsg('user', originalText);
-
-        // SMALL TALK
-        const simpleReply = getConversationalReply(normInput);
-        if (simpleReply) {
-            await window.finishResponse(originalText, simpleReply, false, false);
-            return;
-        }
-
-        const loadingId = 'loading-' + Date.now(); 
-        window.appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> <span id="think-text">Analizando...</span>`, false, loadingId);
-        await new Promise(r => setTimeout(r, 600));
-        const loadingMsg = document.getElementById(loadingId); if(loadingMsg) loadingMsg.remove();
-
-        // NEURO ROUTER
-        const intention = detecting(originalText);
-        let responseData = null;
-
-        if (intention.intent !== 'general') {
-            const query = intention.query || originalText;
-            switch (intention.intent) {
-                case 'biblia': responseData = await fetchBible(query); break;
-                case 'diccionario': responseData = await fetchDictionaryEs(query); break;
-                case 'clima': responseData = await fetchMeteo(query); break;
-                case 'libros': responseData = await fetchOpenLibrary(query); break;
-                case 'pais': responseData = await fetchRestCountries(query); break;
-                case 'wikipedia': responseData = await fetchWikipedia(query); break;
-            }
-        }
-        
-        if (!responseData) {
-            let bestMatch = null, maxScore = 0;
-            const interpretedText = processSynonyms(normInput);
-            if(brain.memory) {
-                brain.memory.forEach(mem => {
-                    mem.inputs.forEach(key => {
-                        const memKey = processSynonyms(key); 
-                        if (memKey === interpretedText) { maxScore = 1.0; bestMatch = mem; } 
-                        else if (memKey.includes(interpretedText) && interpretedText.length > 3) { if (0.8 > maxScore) { maxScore = 0.8; bestMatch = mem; } }
+                const data = JSON.parse(e.target.result);
+                if(!Array.isArray(data)) throw new Error("Formato incorrecto (debe ser lista [])");
+                let count = 0; const batchLimit = 400;
+                for(let i=0; i<data.length; i+=batchLimit) {
+                    const batch = writeBatch(db);
+                    data.slice(i, i+batchLimit).forEach(wd => {
+                        if(wd.id && wd.def) batch.set(doc(db, "dictionary", window.normalize(wd.id)), { id: wd.id, def: wd.def, type: wd.type||"General" });
+                        count++;
                     });
-                });
-            }
-            if (maxScore >= 0.8) {
-                responseData = { def: bestMatch.output, src: "Memoria" };
-            }
+                    await batch.commit();
+                    document.getElementById('upload-status').innerText = `Subiendo... ${count}`;
+                }
+                document.getElementById('upload-status').innerText = `✅ Completado: ${count} entradas.`;
+            } catch(err) { alert("Error JSON: " + err.message); }
+        };
+        reader.readAsText(file);
+    };
+
+    // 4. AUTH
+    window.openLogin = () => document.getElementById('auth-modal').style.display = 'flex';
+    window.closeModal = () => document.getElementById('auth-modal').style.display = 'none';
+    window.showAuth = (t) => { document.getElementById('section-login').style.display = t==='login'?'block':'none'; document.getElementById('section-register').style.display = t==='register'?'block':'none'; };
+    window.emailLogin = () => signInWithEmailAndPassword(auth, document.getElementById('l-email').value, document.getElementById('l-pass').value).catch(e=>alert(e.message));
+    window.emailRegister = () => createUserWithEmailAndPassword(auth, document.getElementById('r-email').value, document.getElementById('r-pass').value).then(c=>sendEmailVerification(c.user)).catch(e=>alert(e.message));
+    window.googleLogin = () => signInWithPopup(auth, provider).catch(e=>alert(e.message));
+    window.logout = () => signOut(auth).then(()=>window.location.reload());
+
+    // 5. CEREBRO (INTELIGENCIA)
+    const bibleBooks = ["genesis","exodo","levitico","numeros","deuteronomio","josue","jueces","rut","1 samuel","2 samuel","1 reyes","2 reyes","1 cronicas","2 cronicas","esdras","nehemias","ester","job","salmos","proverbios","eclesiastes","cantares","isaias","jeremias","lamentaciones","ezequiel","daniel","oseas","joel","amos","abdias","jonas","miqueas","nahum","habacuc","sofonias","hageo","zacarias","malaquias","mateo","marcos","lucas","juan","hechos","romanos","1 corintios","2 corintios","galatas","efesios","filipenses","colosenses","1 tesalonicenses","2 tesalonicenses","1 timoteo","2 timoteo","tito","filemon","hebreos","santiago","1 pedro","2 pedro","1 juan","2 juan","3 juan","judas","apocalipsis"];
+
+    const detecting = (txt) => {
+        const t = window.normalize(txt);
+        // Corrección Biblia: Detectar Libro + Numero (Ej: Mateo 10, Juan 3:16)
+        const book = bibleBooks.find(b => t.includes(b));
+        if (book && /\d/.test(t)) {
+            // Si hay libro y numero, es biblia seguro.
+            const match = t.match(new RegExp(`(${book}\\s?\\d{1,3}(?::\\d{1,3})?(?:-\\d{1,3})?)`, 'i'));
+            if(match) return { intent: "biblia", query: match[0] };
+        }
+        if (/(?:significado|define|que es)\s+(.+)/i.test(t)) return { intent: "diccionario", query: RegExp.$1.trim() };
+        if (/(?:clima|tiempo)\s+(?:en|de)\s+(.+)/i.test(t)) return { intent: "clima", query: RegExp.$1.trim() };
+        if (/(?:quien es|biografia|historia)\s+(.+)/i.test(t)) return { intent: "wikipedia", query: RegExp.$1.trim() };
+        return { intent: "general", query: txt };
+    };
+
+    window.sendMessage = async () => {
+        const input = document.getElementById('chat-input');
+        const txt = input.value.trim();
+        if(!txt) return;
+        input.value = ''; window.appendMsg('user', txt);
+        
+        // Neuro-Router
+        const intentData = detecting(txt);
+        let res = null;
+        
+        // APIs
+        if(intentData.intent === 'biblia') {
+            try { const r = await fetch(`https://bible-api.com/${encodeURIComponent(intentData.query)}?translation=rv1960`); const j = await r.json(); if(j.text) res = j.text.replace(/\n/g, ' '); } catch(e){}
+        } else if(intentData.intent === 'clima') {
+            try { const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(intentData.query)}&count=1&language=es&format=json`); const d = await r.json(); if(d.results){ const w = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${d.results[0].latitude}&longitude=${d.results[0].longitude}&current_weather=true`); const j = await w.json(); res = `En ${d.results[0].name}: ${j.current_weather.temperature}°C.`; } } catch(e){}
+        } else if(intentData.intent === 'diccionario') {
+            try { const r = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/es/${window.normalize(intentData.query)}`); const j = await r.json(); if(j[0]) res = j[0].meanings[0].definitions[0].definition; } catch(e){}
+        } else if(intentData.intent === 'wikipedia') {
+            try { const s = await fetch(`https://es.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(intentData.query)}&limit=1&format=json&origin=*`); const j = await s.json(); if(j[1][0]) { const r = await fetch(`https://es.wikipedia.org/w/api.php?action=query&prop=extracts&titles=${encodeURIComponent(j[1][0])}&explaintext=1&exintro=1&format=json&origin=*`); const d = await r.json(); const p = Object.values(d.query.pages)[0]; if(p.extract) res = p.extract.split('. ').slice(0,3).join('. ') + '.'; } } catch(e){}
         }
 
-        if (!responseData) {
-            const interpretedWords = originalText.split(/\s+/).filter(w => !stopWords.has(window.normalize(w)) && w.length > 2);
-            const synthesisResult = await sintesisPorPalabraClave(interpretedWords);
+        // Fallback: Memoria -> Síntesis -> Charla
+        if(!res) {
+            // Memoria
+            const norm = window.normalize(txt);
+            brain.memory.forEach(m => { if(m.inputs.includes(norm)) res = m.output; });
             
-            if (synthesisResult.length > 0) {
-                let aiResponse = synthesisResult.length === 1 ? `Encontré esto sobre <strong>${synthesisResult[0].word}</strong>:<br>${synthesisResult[0].def}` : `<strong>Analizando conceptos:</strong><br>` + synthesisResult.map(item => `- <b>${item.word}:</b> ${item.def}`).join('<br>');
-                aiResponse += "<br><br>¿Te sirve esta información?";
-                await window.finishResponse(originalText, aiResponse, true, true);
-                return;
+            // Síntesis (Busca palabra clave en diccionario)
+            if(!res) {
+               try { const docSnap = await getDoc(doc(db, "dictionary", norm)); if(docSnap.exists()) res = docSnap.data().def; } catch(e){}
+            }
+            
+            // Charla Casual
+            if(!res) {
+                const greetings = {"hola":"¡Hola!", "gracias":"¡De nada!", "adios":"¡Hasta luego!"};
+                for(let k in greetings) if(norm.includes(k)) res = greetings[k];
             }
         }
 
-        let finalResponse = "Lo siento, AleXIA no tiene información sobre eso. ¿Podrías intentar una pregunta más específica o enseñarme usando el botón de birrete?";
-        if (responseData) {
-            const url = responseData.url || (intention.intent === 'wikipedia' ? responseData.url : null);
-            const template = `¡Claro! Encontré información sobre tu consulta (${intention.intent.toUpperCase()}):<br><br><div class="rich-content">${responseData.def}</div>${url ? `<div class="rich-source"><a href="${url}" target="_blank"><i class="fas fa-external-link-alt"></i> Fuente: ${responseData.src}</a></div>` : ''}`;
-            finalResponse = template;
+        if(res) {
+            window.appendMsg('ai', res, true);
         } else {
-            if(db) setDoc(doc(db, "alexia_db", "main_brain"), { missingLog: arrayUnion({ q: truncateLog(originalText), a: "Sin respuesta", date: new Date().toISOString() }) }, { merge: true }).catch(e=>{});
+            window.appendMsg('ai', "No tengo información sobre eso. ¿Me enseñas?", false);
+            // Registrar error
+            if(db) setDoc(doc(db, "alexia_db", "main_brain"), { missingLog: arrayUnion({ q: txt, a: "Sin respuesta", date: new Date().toISOString() }) }, { merge: true });
         }
+    };
 
-        await window.finishResponse(originalText, finalResponse, true, true);
-        wasVoiceInput = false;
-    }
+    // UI UTILS
+    window.appendMsg = (role, text, tts) => {
+        const div = document.createElement('div'); div.className = `msg-row ${role}-row`;
+        div.innerHTML = `<div class="msg-bubble">${text}</div>`;
+        document.getElementById('chat-box').appendChild(div);
+        div.scrollIntoView({behavior:'smooth'});
+        if(tts && role === 'ai') { const u = new SpeechSynthesisUtterance(text); u.lang = 'es-MX'; synth.speak(u); }
+    };
 
-    if (document.getElementById('mic-btn')) {
-        if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-            document.getElementById('mic-btn').style.display = 'none';
+    // INIT
+    onAuthStateChanged(auth, (u) => {
+        if(u) {
+            currentUser = u;
+            document.getElementById('top-login-btn').style.display = 'none';
+            document.getElementById('header-user-profile').style.display = 'block';
+            document.getElementById('dd-name').innerText = u.displayName || "Usuario";
+            document.getElementById('dd-email').innerText = u.email;
+            if(u.email === ADMIN_EMAIL) document.getElementById('admin-link-container').style.display = 'block';
+            window.closeModal();
         } else {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRecognition();
-            recognition.lang = 'es-MX'; recognition.continuous = false; recognition.interimResults = false;
-            recognition.onstart = () => { isVoiceActive = true; document.getElementById('mic-btn').classList.add('listening'); document.getElementById('chat-input').placeholder = "Escuchando..."; };
-            recognition.onend = () => { isVoiceActive = false; document.getElementById('mic-btn').classList.remove('listening'); document.getElementById('chat-input').placeholder = "Pregunta algo..."; };
-            recognition.onresult = (event) => { document.getElementById('chat-input').value = event.results[0][0].transcript; wasVoiceInput = true; window.sendMessage(); };
+            currentUser = null;
+            document.getElementById('top-login-btn').style.display = 'block';
+            document.getElementById('header-user-profile').style.display = 'none';
         }
-    }
-
-    const inputField = document.getElementById('chat-input');
-    if(inputField) inputField.addEventListener('keypress', (e) => { if(e.key === 'Enter') window.sendMessage(); });
-
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            if (!user.emailVerified) return;
-            const userRef = doc(db, "users", user.uid);
-            const userSnap = await getDoc(userRef);
-            let role = "user";
-            if(user.email === ADMIN_EMAIL) role = "admin";
-            else if (userSnap.exists()) role = userSnap.data().role || "user";
-            if (!userSnap.exists()) await setDoc(userRef, { email: user.email, role: role, createdAt: new Date().toISOString() });
-            currentUser = { uid: user.uid, name: user.displayName || user.email.split('@')[0], role: role, email: user.email };
-            window.updateUserUI(currentUser);
-            window.renderLocalHistory();
-            window.closeModal(); 
-        } else { 
-            currentUser = null; 
-            window.updateUserUI(null); 
-            currentChatId = null; 
-            window.renderLocalHistory(); 
-        }
-        const lastChatId = localStorage.getItem('alexia_last_chat_id');
-        if (lastChatId) window.loadLocalChat(lastChatId);
     });
-
-    if(db) onSnapshot(doc(db, "alexia_db", "main_brain"), (snap) => { if(snap.exists()) brain = snap.data(); });
+    
+    if(db) onSnapshot(doc(db, "alexia_db", "main_brain"), (s) => { if(s.exists()) brain = s.data(); if(document.getElementById('admin-dash').style.display === 'flex') renderAdminQueue(); });
 
 </script>
 </body>
