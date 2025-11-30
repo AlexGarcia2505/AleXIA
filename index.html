@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V59 - Reinicio Total</title>
+    <title>AleXIA V60 - Auto-Reparación</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -35,8 +35,7 @@
         }
 
         .sidebar-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
-        
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #555; display: inline-block; margin-left: 5px; transition: 0.3s; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #555; display: inline-block; margin-left: 10px; transition: 0.3s; }
         .status-dot.online { background: var(--success); box-shadow: 0 0 8px var(--success); }
         .status-dot.offline { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
 
@@ -143,7 +142,7 @@
     <div class="sidebar-header">
         <span style="font-weight:bold; font-size:1.1rem; display:flex; align-items:center; gap:10px;">
             <i class="fas fa-brain" style="color:var(--accent)"></i> AleXIA
-            <button onclick="fullReset(event)" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:0.9rem;" title="Restablecer App"><i class="fas fa-trash-alt"></i></button>
+            <button onclick="emergencyReset()" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:0.9rem;" title="REPARAR APP"><i class="fas fa-trash-alt"></i></button>
         </span>
         <div id="connection-dot" class="status-dot offline"></div>
         <button onclick="toggleSidebar()" style="background:none; border:none; color:white; cursor:pointer; margin-left:auto;" class="toggle-btn"><i class="fas fa-times"></i></button>
@@ -256,28 +255,39 @@
     const stopWords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'de', 'del', 'al', 'a', 'en', 'por', 'para', 'con', 'sin', 'que', 'como', 'cual', 'quien', 'es', 'son', 'fue', 'era', 'me', 'te', 'se', 'lo', 'mi', 'tu', 'su', 'nos', 'yo', 'tu', 'el', 'ella', 'dime', 'sobre', 'acerca', 'significa', 'busco', 'esta', 'está', 'cómo', 'hay', 'eres', 'soy', 'somos', 'todo', 'bien', 'tal', 'gracias']);
     const contextualReplies = { "que tal como estas": ["¿Qué gusto saludarte, yo muy bien, y tú?", "¿Cómo te ha ido últimamente?"], "hola": ["¡Hola! ¿Cómo andas?", "Saludos. ¿Qué me cuentas?"], "si": ["Perfecto.", "Excelente."], "no": ["Entendido."], "adios": ["¡Hasta luego!", "¡Cuídate mucho!"], "estoy bien y tu": ["Me alegra. Yo muy bien."] };
     
-    // --- FUNCIÓN DE LIMPIEZA TOTAL (BOTÓN PAPELERA) ---
-    window.fullReset = (e) => {
+    // --- FUNCIÓN DE EMERGENCIA PARA ELIMINAR DATOS CORRUPTOS ---
+    window.emergencyReset = (e) => {
         if(e) e.stopPropagation();
-        if(confirm("¿Restablecer aplicación para corregir errores? Se borrará el historial local.")) {
+        if(confirm("⚠️ ¿Restablecer aplicación?\nEsto borrará el historial local para corregir el error.")) {
             localStorage.clear();
-            location.reload();
+            sessionStorage.clear();
+            window.location.reload();
         }
     };
 
     if(auth) {
         onAuthStateChanged(auth, async (user) => {
             if (user) {
+                // FORCE UI UPDATE (CRITICAL FIX)
+                document.getElementById('u-name').innerText = user.displayName || user.email.split('@')[0];
+                document.getElementById('u-role').innerText = (user.email === ADMIN_EMAIL) ? 'Admin' : 'Usuario';
+                document.getElementById('u-avatar').innerText = (user.displayName || user.email)[0].toUpperCase();
+                document.getElementById('u-avatar').innerHTML = (user.displayName || user.email)[0].toUpperCase(); // Ensure text
+                document.getElementById('btn-logout').style.display = 'block';
+                document.getElementById('top-login-btn').style.display = 'none';
+                document.getElementById('admin-menu-container').style.display = (user.email === ADMIN_EMAIL) ? 'block' : 'none';
+
                 if (!user.emailVerified) return;
                 const userRef = doc(db, "users", user.uid);
                 const userSnap = await getDoc(userRef);
                 let role = "user";
                 if(user.email === ADMIN_EMAIL) role = "admin";
                 else if (userSnap.exists()) role = userSnap.data().role || "user";
+                
                 if (!userSnap.exists()) await setDoc(userRef, { email: user.email, role: role, createdAt: new Date().toISOString() });
+                
                 currentUser = { uid: user.uid, name: user.displayName || user.email.split('@')[0], role: role, email: user.email };
-                updateUserUI(currentUser);
-                renderLocalHistory(); // Intentar renderizar
+                renderLocalHistory();
                 closeModal(); 
             } else { 
                 currentUser = null; 
@@ -286,7 +296,6 @@
                 renderLocalHistory(); 
             }
 
-            // CORRECCIÓN: Si el ID guardado no existe en el array limpio, no hacer nada (evita crash)
             const lastChatId = localStorage.getItem('alexia_last_chat_id');
             if (lastChatId) loadLocalChat(lastChatId);
         });
@@ -321,7 +330,6 @@
         recognition.onresult = (event) => { document.getElementById('chat-input').value = event.results[0][0].transcript; wasVoiceInput = true; window.sendMessage(); };
     } else { document.getElementById('mic-btn').style.display = 'none'; }
 
-    // DETECTOR DE CONVERSACIÓN
     function checkConversational(normInput) {
         const greetings = ["hola", "que tal", "como estas", "buenos dias", "buenas tardes", "buenas noches", "que onda", "todo bien", "saludos"];
         if (greetings.some(g => normInput.includes(g))) {
@@ -578,70 +586,76 @@
         content.innerHTML = reviewHTML + missingHTML;
     }
 
-    // --- REPARADOR DE HISTORIAL V59 (FORZADO) ---
+    // --- REPARADOR DE HISTORIAL V59 (AUTO-SELF-HEALING ON LOAD) ---
     function renderLocalHistory() {
         const key = getLocalKey(); 
         let chats = [];
         try {
-            chats = JSON.parse(localStorage.getItem(key));
-            if (!Array.isArray(chats)) throw new Error("Format error");
+            const raw = localStorage.getItem(key);
+            if(raw) chats = JSON.parse(raw);
+            if (!Array.isArray(chats)) throw new Error("Invalid format");
         } catch(e) {
-            console.log("Limpiando historial dañado...");
-            localStorage.removeItem(key);
-            localStorage.removeItem('alexia_last_chat_id');
+            console.warn("Historial corrupto detectado. Limpiando...");
+            localStorage.removeItem(key); 
+            localStorage.removeItem('alexia_last_chat_id'); 
             chats = [];
         }
 
-        const pc = document.getElementById('pinned-container'); 
-        const hc = document.getElementById('history-container'); 
-        pc.innerHTML = ""; hc.innerHTML = ""; 
+        const pc = document.getElementById('pinned-container'); const hc = document.getElementById('history-container');
+        if(pc) pc.innerHTML = ""; if(hc) hc.innerHTML = ""; 
         let hasPinned = false;
         
         if(chats.length === 0) { 
-            hc.innerHTML = `<div style="text-align:center; padding:20px; color:#555; font-size:0.85rem;">Historial vacío</div>`; 
+            if(hc) hc.innerHTML = `<div style="text-align:center; padding:20px; color:#555; font-size:0.85rem;">Historial vacío</div>`; 
         } else { 
             chats.forEach(chat => { 
                 const active = (chat.id === currentChatId) ? 'active' : ''; 
-                // PROTECCIÓN EXTRA: Si chat.title es null, poner texto por defecto
-                const title = chat.title || "Conversación nueva"; 
+                const title = chat.title || "Chat sin título"; 
                 const pinClass = chat.isPinned ? 'pinned' : ''; 
                 const html = `<div class="chat-item ${active}" onclick="loadLocalChat('${chat.id}')"><div class="chat-title"><i class="far fa-comment-alt" style="opacity:0.7; margin-right:8px;"></i>${title}</div><button class="pin-btn ${pinClass}" onclick="togglePinLocal(event, '${chat.id}')"><i class="fas fa-thumbtack"></i></button></div>`; 
-                if (chat.isPinned) { pc.innerHTML += html; hasPinned = true; } else hc.innerHTML += html; 
+                if (chat.isPinned && pc) { pc.innerHTML += html; hasPinned = true; } else if(hc) hc.innerHTML += html; 
             }); 
         } 
-        document.getElementById('pinned-section').style.display = hasPinned ? 'block' : 'none';
+        const ps = document.getElementById('pinned-section');
+        if(ps) ps.style.display = hasPinned ? 'block' : 'none';
     }
 
     function saveLocalChat(uMsg, aiMsg) { const key = getLocalKey(); let chats = []; try { chats = JSON.parse(localStorage.getItem(key)) || []; } catch(e){ chats = []; } if (!currentChatId) { currentChatId = Date.now().toString(); chats.unshift({ id: currentChatId, title: uMsg.substring(0, 25) + "...", timestamp: Date.now(), isPinned: false, messages: [{r:'user', t:uMsg}, {r:'ai', t:aiMsg}] }); } else { const idx = chats.findIndex(c => c.id === currentChatId); if (idx > -1) { chats[idx].messages.push({r:'user', t:uMsg}, {r:'ai', t:aiMsg}); chats[idx].timestamp = Date.now(); } } localStorage.setItem(key, JSON.stringify(chats)); localStorage.setItem('alexia_last_chat_id', currentChatId); renderLocalHistory(); }
     
     function getLocalKey() { 
-        // Si currentUser es nulo (por error de carga), usa 'guest' para no romper
+        // FIX CRÍTICO: Si no hay usuario aún, asumimos invitado para no romper
         const uid = currentUser ? currentUser.uid : 'guest'; 
         return `alexia_chats_${uid}`; 
     }
 
-    // --- PROTECCIÓN DE ARRANQUE PARA NO LLAMAR FUNCIONES CON NULL ---
-    function loadLocalChat(id) {
-        if(!id) return;
-        const key = getLocalKey(); 
-        try {
-            const chats = JSON.parse(localStorage.getItem(key)) || []; 
-            const chat = chats.find(c => c.id === id); 
-            if (chat) { 
-                currentChatId = id; 
-                localStorage.setItem('alexia_last_chat_id', currentChatId); 
-                const box = document.getElementById('chat-box'); 
-                box.innerHTML = ""; 
-                chat.messages.forEach(m => appendMsg(m.r, m.t, m.r === 'ai')); 
-                renderLocalHistory(); 
-                if(window.innerWidth < 800) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('active'); } 
-            } else {
-                // Si el ID guardado ya no existe (porque borramos), iniciar nuevo
-                startNewChat();
-            }
-        } catch(e) {
-            startNewChat();
+    function updateUserUI(u) {
+        const adminBtn = document.getElementById('admin-menu-container');
+        if(u) {
+            document.getElementById('u-name').innerText = u.name; 
+            document.getElementById('u-role').innerText = u.role === 'admin' ? 'Admin' : 'Usuario';
+            document.getElementById('u-avatar').innerHTML = u.name[0].toUpperCase(); 
+            document.getElementById('btn-logout').style.display = 'block'; 
+            document.getElementById('top-login-btn').style.display = 'none';
+            if(adminBtn) adminBtn.style.display = (u.role === 'admin') ? 'block' : 'none';
+        } else {
+            document.getElementById('u-name').innerText = "Invitado"; 
+            document.getElementById('u-role').innerText = "Clic para entrar"; 
+            document.getElementById('u-avatar').innerHTML = `<i class="fas fa-user"></i>`;
+            document.getElementById('btn-logout').style.display = 'none'; 
+            document.getElementById('top-login-btn').style.display = 'block'; 
+            if(adminBtn) adminBtn.style.display = 'none';
         }
+    }
+
+    // --- CARGA INICIAL ROBUSTA ---
+    // Intentamos limpiar al cargar por si acaso
+    try {
+        const testKey = 'test_storage';
+        localStorage.setItem(testKey, 'test');
+        localStorage.removeItem(testKey);
+    } catch(e) {
+        console.error("Storage dañado, limpiando...");
+        localStorage.clear();
     }
 
     document.getElementById('chat-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
