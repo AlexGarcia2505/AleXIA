@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V1.6 (Smart Clean)</title>
+    <title>AleXIA V1.8 (Divine Logic)</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -175,7 +175,7 @@
 <div class="main-content">
     <div class="top-bar">
         <button class="menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-        <span style="font-weight:500;">AleXIA V1.6</span>
+        <span style="font-weight:500;">AleXIA V1.8</span>
         <div style="flex:1"></div>
         
         <button id="top-login-btn" onclick="openLogin()" class="btn-login">Entrar</button>
@@ -469,12 +469,11 @@
         const originalText = input.value.trim();
         if(!originalText) return;
 
-        // --- MANEJO DE REBOTE (MENÚ A/B/C) ---
+        // --- MANEJO DE REBOTE ---
         const normInput = cleanString(originalText);
         if (lastSearchTerm) {
             if (normInput === 'a') {
                 input.value = ''; appendMsg('user', "A (Diccionario)");
-                // LÓGICA CORREGIDA: Tomar solo la última palabra si hay un artículo (ej: "un maestro" -> "maestro")
                 let cleanTerm = lastSearchTerm.trim().split(/\s+/).pop();
                 await processSpecificIntent(cleanTerm, 'DiccionarioAPI'); return;
             }
@@ -615,14 +614,14 @@
              aiResponse += formatExtras(foundFullConcept.extra);
              
              let sources = "mi entrenamiento";
-             if (foundFullConcept.src.includes("Wiki")) sources = "Wikipedia";
+             if (foundFullConcept.src.includes("Wiki") || foundFullConcept.src.includes("Wikisource")) sources = "Wikipedia / Wikisource";
              if (foundFullConcept.src === "DiccionarioAPI") sources = "Diccionario Global";
+             if (foundFullConcept.src === "BibleAPI") sources = "Biblia (Reina Valera)";
              if (foundFullConcept.src === "Memoria") sources = "mi diccionario personal";
              if (connectorDef) sources += " y mis palabras clave";
 
              aiResponse += `<br><br><div style="font-size:0.75rem; color:#888; border-top:1px solid #444; padding-top:5px;"><em>Extraído de ${sources}</em></div>`;
              
-             // MENÚ DE REBOTE MEJORADO
              aiResponse += `<br><div style="font-size:0.8rem; color:#888; margin-top:10px; border-top:1px solid #333; padding-top:8px;">
                 ¿Buscas otra cosa? Escribe:<br>
                 <span style="color:var(--text-main); font-weight:bold;">A</span> Diccionario <span style="color:var(--accent); margin:0 5px;">|</span>
@@ -655,7 +654,7 @@
                 synthesis.concepts.forEach(c => {
                     if (c.src === "Memoria") sources.add("mi diccionario personal");
                     if (c.src === "DiccionarioAPI") sources.add("Diccionario Global");
-                    if (c.src.includes("Wikipedia")) sources.add("Wikipedia");
+                    if (c.src.includes("Wiki")) sources.add("Wikipedia");
                 });
             }
             if (sources.size === 0) return "";
@@ -733,7 +732,6 @@
         
         if (normText.includes("ingles") || normText.includes("traduc") || normText.includes("como se dice")) {
             let query = originalText.replace(/como se dice|en ingles|en inglés|traduce|traducir|el|la|los|las|un|una/gi, "").trim();
-            // CORRECCIÓN: TOMAR SOLO LA ÚLTIMA PALABRA PARA TRADUCCIÓN
             query = query.split(/\s+/).pop();
             return { action: 'execute_search', source: 'DiccionarioAPI', query: query };
         }
@@ -741,6 +739,19 @@
         if (normText.startsWith("define") || normText.includes("significado de") || normText.includes("concepto de")) {
              let query = originalText.replace(/define|significado de|concepto de|el|la|los|las/gi, "").trim();
              return { action: 'execute_search', source: 'DiccionarioAPI', query: query };
+        }
+
+        // DETECTOR BÍBLICO (V1.8 - Solo si hay números)
+        // Busca Patrón: Palabra + Numero + DosPuntos + Numero (Ej: Mateo 10:5 o 1 Juan 2:4)
+        // Regex mejorado para aceptar "1 Juan", "2 Pedro", etc.
+        let bibleMatch = originalText.match(/(?:versiculo|biblia|libro de)?\s*(\d?\s*[a-zA-ZáéíóúÁÉÍÓÚñÑ]+)\s+(\d+)[\s:]+(\d+)/i);
+        if (bibleMatch) {
+            // bibleMatch[1] = Libro (1 Juan), bibleMatch[2] = Cap (5), bibleMatch[3] = Vers (4)
+            let libro = bibleMatch[1].trim();
+            let capitulo = bibleMatch[2];
+            let versiculo = bibleMatch[3];
+            let query = `${libro} ${capitulo}:${versiculo}`;
+            return { action: 'execute_search', source: 'BibleCombined', query: query };
         }
 
         let match = normText.match(/(?:clima|tiempo)\s+(?:en|de)\s+(.+)/); if (match) return { action: 'execute_search', source: 'Meteo/WEB', query: match[1] };
@@ -763,7 +774,6 @@
             aiResponse += formatExtras(searchData.extra);
             aiResponse += `<div class="rich-source"><a href="${searchData.url}" target="_blank"><i class="fas fa-external-link-alt"></i> Fuente (${source})</a></div>`;
             
-            // MENU DE REBOTE MEJORADO
             aiResponse += `<br><div style="font-size:0.8rem; color:#888; margin-top:10px; border-top:1px solid #333; padding-top:8px;">
                 ¿Buscas otra cosa? Escribe:<br>
                 <span style="color:var(--text-main); font-weight:bold;">A</span> Diccionario <span style="color:var(--accent); margin:0 5px;">|</span>
@@ -786,6 +796,94 @@
     async function fetchExternalData(term, forceSource = 'Wikipedia/WEB') {
         const encoded = encodeURIComponent(term);
         
+        // --- BIBLE MODULE (V1.8 - Double Engine) ---
+        if (forceSource === 'BibleCombined') {
+            // Regex para extraer partes: "1 Juan 5:4" -> Libro: "1 Juan", Cap: 5, Vers: 4
+            let parts = term.match(/(\d?\s*[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+)\s+(\d+)[:\s]+(\d+)/);
+            if (!parts) return null;
+
+            let libroRaw = parts[1].trim(); 
+            let capitulo = parts[2];
+            let versiculo = parts[3];
+
+            // 1. Corrector de Nombres para Wikisource
+            const libroMap = {
+                "apocalipsis": "Apocalipsis de Juan",
+                "hechos": "Hechos de los Apóstoles",
+                "cantares": "Cantar de los Cantares",
+                "salmos": "Salmos",
+                "1 juan": "Primera Epístola de Juan",
+                "2 juan": "Segunda Epístola de Juan",
+                "3 juan": "Tercera Epístola de Juan",
+                "1 pedro": "Primera Epístola de Pedro",
+                "2 pedro": "Segunda Epístola de Pedro",
+                "1 reyes": "I Reyes",
+                "2 reyes": "II Reyes",
+                "1 samuel": "I Samuel",
+                "2 samuel": "II Samuel",
+                "1 cronicas": "I Crónicas",
+                "2 cronicas": "II Crónicas",
+                "1 corintios": "Primera Epístola a los Corintios",
+                "2 corintios": "Segunda Epístola a los Corintios"
+            };
+            let libroKey = libroRaw.toLowerCase();
+            let libroWiki = libroMap[libroKey] || (libroRaw.charAt(0).toUpperCase() + libroRaw.slice(1));
+
+            // --- INTENTO 1: WIKISOURCE (Reina Valera 1909) ---
+            try {
+                let pageTitle = `Biblia_Reina-Valera_1909/${libroWiki}/${capitulo}`;
+                let wikiUrl = `https://es.wikisource.org/w/api.php?action=parse&page=${encodeURIComponent(pageTitle)}&format=json&prop=text&origin=*`;
+                
+                const resp = await fetch(wikiUrl);
+                const data = await resp.json();
+
+                if (!data.error && data.parse && data.parse.text) {
+                    let htmlContent = data.parse.text['*'];
+                    let tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = htmlContent;
+                    
+                    // Buscar versículo
+                    let verseText = "";
+                    let paragraphs = tempDiv.querySelectorAll('p, dd, li');
+                    for (let p of paragraphs) {
+                        let t = p.textContent.trim();
+                        // Regex flexible: empieza con numero + punto o espacio
+                        if (new RegExp(`^${versiculo}[\\s\\.]`).test(t)) {
+                            verseText = t; break;
+                        }
+                    }
+                    
+                    if (verseText) {
+                        let cleanVerse = verseText.replace(new RegExp(`^${versiculo}[\\s\\.]*`), '').trim();
+                        return {
+                            def: `<i>"${cleanVerse}"</i><br><br><b>📖 ${libroWiki} ${capitulo}:${versiculo}</b>`,
+                            src: "Wikisource (RV 1909)",
+                            url: `https://es.wikisource.org/wiki/${pageTitle}`,
+                            extra: { type: "Texto Sagrado", pais: "Reina Valera 1909" }
+                        };
+                    }
+                }
+            } catch(e) { console.log("Wikisource falló, probando API secundaria..."); }
+
+            // --- INTENTO 2: BIBLE-API.COM (Fallback) ---
+            try {
+                let apiQuery = `${libroRaw} ${capitulo}:${versiculo}`.replace(/\s+/g, '+');
+                const resp2 = await fetch(`https://bible-api.com/${apiQuery}?translation=rvr1909`);
+                const data2 = await resp2.json();
+                
+                if (data2.text) {
+                    return {
+                        def: `<i>"${data2.text.trim()}"</i><br><br><b>📖 ${data2.reference}</b>`,
+                        src: "BibleAPI (RV 1909)",
+                        url: "https://bible-api.com",
+                        extra: { type: "Versículo Bíblico", pais: "Reina Valera 1909" }
+                    };
+                }
+            } catch(e) {}
+
+            return null; // Falló todo
+        }
+
         if (forceSource === 'Meteo/WEB') {
             try {
                 const geoResp = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encoded}&count=1&language=es&format=json`);
