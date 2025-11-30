@@ -389,6 +389,9 @@
         return null;
     }
 
+    // =========================================================================
+    // FUNCION PRINCIPAL DE ENVIO DE MENSAJES (CORREGIDA CON INTEGRACIÓN)
+    // =========================================================================
     window.sendMessage = async function() {
         if(!db) return alert("Sin conexión a base de datos.");
         const input = document.getElementById('chat-input');
@@ -450,6 +453,54 @@
 
         const interpretedText = processSynonyms(normInput);
         const words = interpretedText.split(/\s+/).filter(w => !stopWords.has(w) && w.length > 2);
+
+        // *** INICIO DE LA INTEGRACIÓN DE alexia_logic.js (Lógica Mejorada) ***
+        // 1. Verificar si el módulo de lógica externa está cargado.
+        if (window.alexiaLogic && typeof window.alexiaLogic.detectIntent === 'function') {
+            const externalIntent = window.alexiaLogic.detectIntent(originalText);
+            
+            if (externalIntent) {
+                const loadingId_ext = 'loading-ext-' + Date.now();
+                appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> <span id="think-text">Consultando fuente externa (${externalIntent.action})...</span>`, false, loadingId_ext);
+                
+                let resultText = null;
+
+                try {
+                    switch (externalIntent.action) {
+                        case 'dictionary':
+                            const dictData = await window.alexiaLogic.fetchDictionaryEs(externalIntent.query);
+                            resultText = dictData ? dictData.def : `No encontré la palabra: "${externalIntent.query}" en el diccionario.`;
+                            break;
+                        case 'wikipedia':
+                            const wikiData = await window.alexiaLogic.fetchWikipedia(externalIntent.query);
+                            resultText = wikiData ? wikiData.def : `No encontré información sobre "${externalIntent.query}" en Wikipedia.`;
+                            break;
+                        case 'bible':
+                            const bibleData = await window.alexiaLogic.fetchBible(externalIntent.query);
+                            resultText = bibleData ? bibleData.def : `No pude encontrar el versículo: "${externalIntent.query}".`;
+                            break;
+                        // Los intentos 'clima' y 'libro' (y otros no implementados) se pasan a la lógica siguiente.
+                        default:
+                            break; 
+                    }
+                } catch(error) {
+                    console.error(`Error al consultar ${externalIntent.action}:`, error);
+                    resultText = `Ocurrió un error al consultar la fuente de ${externalIntent.action}.`;
+                }
+
+                // Eliminar mensaje de carga y mostrar el resultado
+                const loadingMsg_ext = document.getElementById(loadingId_ext);
+                if(loadingMsg_ext) loadingMsg_ext.remove();
+                
+                if (resultText) {
+                    await finishResponse(originalText, resultText, true, true);
+                    wasVoiceInput = false;
+                    return; // Detener el procesamiento, la lógica externa manejó la solicitud.
+                }
+            }
+        }
+        // *** FIN DE LA INTEGRACIÓN ***
+
 
         const specificIntent = checkSpecificIntent(originalText);
         if (specificIntent) { await processSpecificIntent(specificIntent.query, specificIntent.source); wasVoiceInput = false; return; }
