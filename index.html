@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V1.8 (Divine Logic)</title>
+    <title>AleXIA V1.9 (Bible Detective)</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -18,44 +18,31 @@
         }
         body { font-family: 'Outfit', sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; height: 100dvh; display: flex; overflow: hidden; }
         
-        .sidebar {
-            width: 280px; background: var(--bg-sidebar); height: 100%; display: flex; flex-direction: column;
-            position: absolute; z-index: 50; left: 0; top: 0; bottom: 0;
-            transform: translateX(-100%); border-right: 1px solid #333; transition: transform 0.3s ease;
-            flex-shrink: 0; box-shadow: 5px 0 15px rgba(0,0,0,0.5);
-        }
+        .sidebar { width: 280px; background: var(--bg-sidebar); height: 100%; display: flex; flex-direction: column; position: absolute; z-index: 50; left: 0; top: 0; bottom: 0; transform: translateX(-100%); border-right: 1px solid #333; transition: transform 0.3s ease; flex-shrink: 0; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
         .sidebar.open { transform: translateX(0); }
         .overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index: 40; }
         .overlay.active { display: block; }
-        
         .sidebar-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
         .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #555; display: inline-block; margin-left: 5px; transition: 0.3s; }
         .status-dot.online { background: var(--success); box-shadow: 0 0 8px var(--success); }
         .status-dot.offline { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
-
         .new-chat-btn { background: #282a2c; color: var(--text-muted); border: none; padding: 10px; width: 90%; margin: 0 auto; display:flex; align-items:center; gap:10px; border-radius: 20px; cursor: pointer; transition: 0.2s; }
         .new-chat-btn:hover { background: #333; color: white; }
-
         .history-list { flex: 1; overflow-y: auto; padding: 10px; margin-top: 10px; }
         .chat-item { padding: 10px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: #e3e3e3; transition: background 0.2s; font-size: 0.9rem; border-radius: 8px; margin: 2px 10px; }
         .chat-item:hover { background-color: #282a2c; }
         .chat-item.active { background-color: #3c4043; font-weight: 500; }
         .chat-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
-        
         .pin-btn { background: none; border: none; color: #555; cursor: pointer; font-size: 0.9rem; padding: 5px; transition: 0.2s; }
         .pin-btn:hover { color: var(--accent); transform: scale(1.1); }
         .pin-btn.pinned { color: var(--accent); opacity: 1; transform: rotate(-45deg); }
-
         .user-panel { padding: 15px; border-top: 1px solid #333; display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: #000; display: flex; justify-content: center; align-items: center; font-weight: bold; }
-
         .main-content { flex: 1; display: flex; flex-direction: column; position: relative; height: 100%; width: 100%; }
         .top-bar { padding: 15px; display: flex; align-items: center; gap: 15px; position: absolute; top: 0; left: 0; right: 0; z-index: 10; background: rgba(19, 19, 20, 0.9); backdrop-filter: blur(5px); }
         .menu-btn { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; display: block; }
-
         .header-profile { cursor: pointer; margin-left: 10px; display: none; position: relative; }
         .user-avatar.small { width: 35px; height: 35px; font-size: 1rem; border: 2px solid rgba(255,255,255,0.2); display: flex; justify-content: center; align-items: center; border-radius: 50%; background: var(--accent); color: #000; font-weight: bold; }
-        
         .profile-dropdown { display: none; position: absolute; top: 50px; right: 10px; background: #282a2c; border: 1px solid #444; border-radius: 12px; width: 250px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); z-index: 100; overflow: hidden; animation: fadeIn 0.2s; }
         .profile-dropdown.show { display: block; }
         .dropdown-header { padding: 15px; border-bottom: 1px solid #333; background: rgba(255,255,255,0.02); }
@@ -64,7 +51,6 @@
         .dropdown-item { width: 100%; padding: 12px 15px; background: none; border: none; color: #eee; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; transition: 0.2s; }
         .dropdown-item:hover { background: rgba(255,255,255,0.1); }
         .dropdown-item.danger { color: var(--danger); }
-        
         #chat-box { flex: 1; overflow-y: auto; padding: 80px 20px 140px 20px; display: flex; flex-direction: column; gap: 20px; max-width: 800px; margin: 0 auto; width: 100%; box-sizing: border-box; scroll-behavior: smooth; }
         .msg-row { display: flex; gap: 15px; animation: fadeIn 0.3s; margin-bottom: 20px; width: 100%; }
         .msg-row.user-row { justify-content: flex-end; }
@@ -72,7 +58,6 @@
         .msg-bubble { max-width: 85%; line-height: 1.6; font-size: 1rem; position: relative; word-wrap: break-word; }
         .user-row .msg-bubble { background: var(--user-msg); padding: 10px 18px; border-radius: 20px 20px 4px 20px; }
         .ai-row .msg-bubble { background: transparent; padding: 0 10px; position: relative; display: block; flex: 1; min-width: 0; }
-        
         .rich-content { max-height: 24rem; overflow-y: auto; padding-right: 5px; margin-bottom: 15px; display: block; text-align: left; }
         .rich-content::-webkit-scrollbar { width: 6px; }
         .rich-content::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
@@ -80,49 +65,33 @@
         .rich-content p { display: block; margin-bottom: 15px; text-align: left; clear: both; }
         .rich-source { display: block; width: 100%; margin-top: 10px; padding-top: 15px; border-top: 1px solid #333; font-size: 0.9rem; color: var(--accent); clear: both; }
         .rich-source a { color: var(--accent); text-decoration: none; display: flex; align-items: center; gap: 10px; padding: 5px 0; }
-
         .suggestion-prompt { margin-top: 25px; font-weight: 500; color: var(--accent); display: block; margin-bottom: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
         .suggestion-item { display: block; margin-top: 12px; padding: 8px 12px; border-radius: 8px; background: rgba(255,255,255,0.03); font-size: 0.95rem; cursor: pointer; transition: all 0.2s; line-height: 1.5; border: 1px solid transparent; white-space: normal; }
         .suggestion-item:hover { background: rgba(168, 199, 250, 0.1); border-color: var(--accent); color: white; }
-
         .feedback-area { margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
         .feedback-btn { background: rgba(255,255,255,0.05); border: 1px solid #444; color: #ccc; padding: 5px 12px; border-radius: 15px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; transition: 0.2s; }
         .feedback-btn:hover { background: rgba(255,255,255,0.1); color: white; }
         .feedback-btn.active-teach { background: var(--accent); color: #000; border-color: var(--accent); font-weight: bold; box-shadow: 0 0 10px var(--accent-glow); }
-
-        .tts-btn { 
-            float: right; margin-left: 15px; margin-bottom: 5px; 
-            background: rgba(255,255,255,0.08); border: 1px solid #444; color: var(--accent); 
-            width: 30px; height: 30px; border-radius: 50%; cursor: pointer; 
-            display: flex; justify-content: center; align-items: center; font-size: 0.8rem; 
-            transition: 0.2s; 
-        }
+        .tts-btn { float: right; margin-left: 15px; margin-bottom: 5px; background: rgba(255,255,255,0.08); border: 1px solid #444; color: var(--accent); width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 0.8rem; transition: 0.2s; }
         .tts-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.1); border-color: white; }
         .tts-btn.speaking { color: var(--danger); border-color: var(--danger); animation: pulse 1s infinite; background: rgba(255, 137, 125, 0.1); }
-
         .input-container { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px 20px 10px 20px; background: var(--bg-body); display: flex; flex-direction: column; align-items: center; z-index: 20; border-top: 1px solid #222; }
         .input-wrapper { background: var(--bg-input); width: 100%; max-width: 800px; border-radius: 30px; display: flex; align-items: center; padding: 5px 10px 5px 15px; border: 1px solid #444; position: relative; }
         .chat-input { flex: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; font-size: 16px; }
-        
         .action-btn { background: transparent; color: #aaa; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background-color 0.2s; margin-left: 5px; }
         .action-btn:hover { background: rgba(255,255,255,0.1); color: white; }
-        
         .send-btn { background: #e3e3e3; color: #000; transition: background-color 0.1s ease; }
         .send-btn:active { background: var(--accent); color: #000; }
-        
         .idea-btn { color: #aaa; transition: 0.3s; }
         .idea-btn:hover { color: #ffd700; background: rgba(255, 215, 0, 0.1); }
         .idea-btn.has-ideas { color: #ffd700; animation: pulseIdea 2s infinite; }
-
         .mic-btn.listening { color: var(--danger); background: rgba(255, 68, 68, 0.1); animation: pulseRed 1.5s infinite; }
         .footer-info { font-size: 0.7rem; color: #555; text-align: center; margin-bottom: 5px; margin-top: 5px; }
-
         .suggestions-popup { display: none; position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 350px; background: #1e1f20; border: 1px solid #444; border-radius: 16px; box-shadow: 0 5px 20px rgba(0,0,0,0.6); padding: 10px; z-index: 150; animation: slideUp 0.2s; }
         .suggestions-popup.show { display: block; }
         .sug-item { display: block; padding: 12px; margin-bottom: 5px; background: rgba(255,255,255,0.03); border-radius: 10px; cursor: pointer; font-size: 0.9rem; color: #ddd; border: 1px solid transparent; transition: 0.2s; }
         .sug-item:hover { background: rgba(168, 199, 250, 0.1); border-color: var(--accent); color: white; }
         .sug-item strong { color: var(--accent); }
-
         .modal { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.85); z-index: 200; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .card { background: #1e1f20; padding: 30px; border-radius: 24px; width: 90%; max-width: 380px; text-align: center; border: 1px solid #444; }
         .tab-btn { background: none; border: none; color: #777; padding: 10px; cursor: pointer; font-weight: bold; border-bottom: 2px solid transparent; width: 50%; }
@@ -131,16 +100,13 @@
         .btn-full { width: 100%; padding: 12px; border-radius: 20px; border: none; cursor: pointer; font-weight: bold; margin-top: 10px; }
         .btn-primary { background: var(--accent); color: #001d35; }
         .btn-google { background: white; color: #1f1f1f; display: flex; align-items: center; justify-content: center; gap: 10px; }
-      
-		.btn-login { background: var(--accent); color: #000; border: none; padding: 6px 14px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
-
+        .btn-login { background: var(--accent); color: #000; border: none; padding: 6px 14px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
         .admin-section { margin-bottom: 20px; }
         .admin-section h4 { color: var(--accent); border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 10px; }
         .log-item { background: #27272a; padding: 10px; margin-bottom: 8px; border-radius: 8px; border-left: 3px solid #555; text-align: left; }
         .log-item.review { border-left-color: var(--accent); }
         .log-item.missing { border-left-color: var(--danger); }
         .log-input { width: 100%; background: #111; border: 1px solid #444; color: #ddd; padding: 8px; border-radius: 4px; margin-top: 5px; font-family: inherit; }
-
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: 0; } }
         @keyframes slideUp { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
@@ -151,139 +117,36 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/toxicity"></script>
 </head>
 <body>
-
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-
 <div class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <span style="font-weight:bold; font-size:1.1rem; display:flex; align-items:center; gap:10px;">
-            <i class="fas fa-brain" style="color:var(--accent)"></i> AleXIA
-            <button onclick="emergencyReset(event)" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:0.9rem;" title="REPARAR APP"><i class="fas fa-trash-alt"></i></button>
-        </span>
-        <div id="connection-dot" class="status-dot offline"></div>
-        <button onclick="toggleSidebar()" style="background:none; border:none; color:white; cursor:pointer; margin-left:auto; font-size:1.2rem;" class="toggle-btn"><i class="fas fa-times"></i></button>
-    </div>
+    <div class="sidebar-header"><span style="font-weight:bold; font-size:1.1rem; display:flex; align-items:center; gap:10px;"><i class="fas fa-brain" style="color:var(--accent)"></i> AleXIA <button onclick="emergencyReset(event)" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:0.9rem;" title="REPARAR APP"><i class="fas fa-trash-alt"></i></button></span><div id="connection-dot" class="status-dot offline"></div><button onclick="toggleSidebar()" style="background:none; border:none; color:white; cursor:pointer; margin-left:auto; font-size:1.2rem;" class="toggle-btn"><i class="fas fa-times"></i></button></div>
     <button class="new-chat-btn" onclick="startNewChat()"><i class="fas fa-plus"></i> Nuevo chat</button>
-    
-    <div class="history-list">
-        <div id="pinned-section" style="display:none; margin-bottom:15px;"><small style="padding:0 15px; color:#666; font-size:0.7rem; text-transform:uppercase; font-weight:bold;">Fijados</small><div id="pinned-container"></div><div style="height:1px; background:#333; margin:10px 15px;"></div></div>
-        <small style="padding:0 15px; color:#666; font-size:0.7rem; text-transform:uppercase; font-weight:bold;">Recientes</small>
-        <div id="history-container"><div style="text-align:center; padding:20px; color:#555; font-size:0.85rem;">Historial vacío</div></div>
-    </div>
+    <div class="history-list"><div id="pinned-section" style="display:none; margin-bottom:15px;"><small style="padding:0 15px; color:#666; font-size:0.7rem; text-transform:uppercase; font-weight:bold;">Fijados</small><div id="pinned-container"></div><div style="height:1px; background:#333; margin:10px 15px;"></div></div><small style="padding:0 15px; color:#666; font-size:0.7rem; text-transform:uppercase; font-weight:bold;">Recientes</small><div id="history-container"><div style="text-align:center; padding:20px; color:#555; font-size:0.85rem;">Historial vacío</div></div></div>
 </div>
-
 <div class="main-content">
-    <div class="top-bar">
-        <button class="menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-        <span style="font-weight:500;">AleXIA V1.8</span>
-        <div style="flex:1"></div>
-        
-        <button id="top-login-btn" onclick="openLogin()" class="btn-login">Entrar</button>
-        
-        <div id="header-user-profile" class="header-profile" onclick="toggleUserMenu(event)">
-            <div id="header-avatar" class="user-avatar small">U</div>
-            <div id="user-dropdown" class="profile-dropdown">
-                <div class="dropdown-header">
-                    <div id="dd-name" class="dd-name">Usuario</div>
-                    <div id="dd-email" class="dd-email">correo@ejemplo.com</div>
-                </div>
-                <div id="admin-link-container" style="display:none;">
-                    <button onclick="openDash()" class="dropdown-item"><i class="fas fa-chalkboard-teacher"></i> Panel Docente</button>
-                </div>
-                <button onclick="logout(event)" class="dropdown-item danger"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="chat-box">
-        <div style="text-align:center; margin-top:60px; opacity:0.6;">
-            <i class="fas fa-sparkles" style="font-size:3rem; margin-bottom:20px; background:linear-gradient(45deg, #4285f4, #d96570); -webkit-background-clip:text; color:transparent;"></i>
-            <h2>¿Qué tienes en mente?</h2>
-        </div>
-    </div>
-    
-    <div id="suggestions-popup" class="suggestions-popup">
-        <div style="display:flex; justify-content:space-between; margin-bottom:10px; color:#aaa; font-size:0.8rem;">
-            <span>Sugerencias del tema</span>
-            <button onclick="toggleSuggestions()" style="background:none; border:none; color:#777;"><i class="fas fa-times"></i></button>
-        </div>
-        <div id="suggestions-content"></div>
-    </div>
-
-    <div class="input-container">
-        <div class="input-wrapper">
-            <button id="idea-btn" class="action-btn idea-btn" onclick="toggleSuggestions()" title="Ver sugerencias"><i class="far fa-lightbulb"></i></button>
-            <input type="text" id="chat-input" class="chat-input" placeholder="Pregunta o dicta..." autocomplete="off">
-            <button class="action-btn mic-btn" id="mic-btn" onclick="toggleVoice()"><i class="fas fa-microphone"></i></button>
-            <button class="action-btn send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
-        </div>
-        <div class="footer-info">AleXIA puede cometer errores. Aprenderá cuando le enseñas.</div>
-    </div>
+    <div class="top-bar"><button class="menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button><span style="font-weight:500;">AleXIA V1.9</span><div style="flex:1"></div><button id="top-login-btn" onclick="openLogin()" class="btn-login">Entrar</button><div id="header-user-profile" class="header-profile" onclick="toggleUserMenu(event)"><div id="header-avatar" class="user-avatar small">U</div><div id="user-dropdown" class="profile-dropdown"><div class="dropdown-header"><div id="dd-name" class="dd-name">Usuario</div><div id="dd-email" class="dd-email">correo@ejemplo.com</div></div><div id="admin-link-container" style="display:none;"><button onclick="openDash()" class="dropdown-item"><i class="fas fa-chalkboard-teacher"></i> Panel Docente</button></div><button onclick="logout(event)" class="dropdown-item danger"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button></div></div></div>
+    <div id="chat-box"><div style="text-align:center; margin-top:60px; opacity:0.6;"><i class="fas fa-sparkles" style="font-size:3rem; margin-bottom:20px; background:linear-gradient(45deg, #4285f4, #d96570); -webkit-background-clip:text; color:transparent;"></i><h2>¿Qué tienes en mente?</h2></div></div>
+    <div id="suggestions-popup" class="suggestions-popup"><div style="display:flex; justify-content:space-between; margin-bottom:10px; color:#aaa; font-size:0.8rem;"><span>Sugerencias del tema</span><button onclick="toggleSuggestions()" style="background:none; border:none; color:#777;"><i class="fas fa-times"></i></button></div><div id="suggestions-content"></div></div>
+    <div class="input-container"><div class="input-wrapper"><button id="idea-btn" class="action-btn idea-btn" onclick="toggleSuggestions()" title="Ver sugerencias"><i class="far fa-lightbulb"></i></button><input type="text" id="chat-input" class="chat-input" placeholder="Pregunta o dicta..." autocomplete="off"><button class="action-btn mic-btn" id="mic-btn" onclick="toggleVoice()"><i class="fas fa-microphone"></i></button><button class="action-btn send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button></div><div class="footer-info">AleXIA puede cometer errores. Aprenderá cuando le enseñas.</div></div>
 </div>
-
 <div id="auth-modal" class="modal"><div class="card"><div style="text-align:center; margin-bottom:15px;"><h2 style="margin:0;">Únete a AleXIA</h2><p style="color:#aaa; font-size:0.85rem; margin-top:5px;">El servicio es <b>100% gratuito</b>.</p></div><div style="display:flex; margin-bottom:20px; border-bottom:1px solid #333;"><button class="tab-btn active" onclick="showAuth('login')" id="tab-login">Entrar</button><button class="tab-btn" onclick="showAuth('register')" id="tab-register">Registrarse</button></div><form id="section-login" onsubmit="emailLogin(); return false;"><input type="email" id="l-email" class="field" placeholder="Correo electrónico" autocomplete="username" required><input type="password" id="l-pass" class="field" placeholder="Contraseña" autocomplete="current-password" required><button type="submit" class="btn-full btn-primary">Iniciar Sesión</button></form><form id="section-register" style="display:none;" onsubmit="emailRegister(); return false;"><input type="email" id="r-email" class="field" placeholder="Tu Correo Real" autocomplete="username" required><input type="password" id="r-pass" class="field" placeholder="Crea una Contraseña" autocomplete="new-password" required><button type="submit" class="btn-full btn-primary">Crear Cuenta Gratis</button><p style="font-size:0.75rem; color:#aaa; margin-top:10px;">* Te enviaremos un link de verificación.</p></form><div style="margin:20px 0; border-top:1px solid #333; position:relative;"><span style="background:#1e1f20; padding:0 10px; position:absolute; top:-10px; left:45%; color:#777; font-size:0.8rem;">O</span></div><button class="btn-full btn-google" onclick="googleLogin()"><i class="fab fa-google"></i> Continuar con Google</button><button onclick="closeModal()" style="background:none; border:none; color:#777; margin-top:15px; cursor:pointer;">Cerrar</button></div></div>
 <div id="verify-modal" class="modal"><div class="card"><i class="fas fa-envelope" style="font-size:3rem; color:var(--accent); margin-bottom:15px;"></i><h3>Verifica tu Correo</h3><p style="color:#ccc; font-size:0.9rem;">Enlace enviado. Verifica tu email para acceder.</p><button class="btn-full btn-primary" onclick="closeVerify()">Entendido</button></div></div>
-
-<div id="admin-dash" class="modal">
-    <div class="card" style="max-width:650px; width:95%; max-height:85vh; overflow:hidden; display:flex; flex-direction:column;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h3><i class="fas fa-chalkboard-teacher"></i> Panel Docente</h3>
-            <button onclick="closeDash()" style="background:none; border:none; color:white; font-size:1.2rem;"><i class="fas fa-times"></i></button>
-        </div>
-        <div style="background:#27272a; padding:10px; border-radius:8px; margin-bottom:15px; text-align:left;">
-            <h4 style="margin:0; color:var(--accent); font-size:0.9rem;">📚 Cargar Diccionario</h4>
-            <input type="file" id="json-upload" accept=".json" style="margin-top:5px; width:100%; font-size:0.8rem;">
-            <button onclick="uploadDictionary()" style="background:var(--accent); color:#000; border:none; padding:4px 10px; border-radius:5px; margin-top:5px; cursor:pointer; font-weight:bold; font-size:0.8rem;">Procesar (Lotes)</button>
-            <div id="upload-status" style="margin-top:5px; font-size:0.8rem; color:var(--success);"></div>
-        </div>
-        <div style="background:#27272a; padding:10px; border-radius:8px; margin-bottom:15px; text-align:left; border-left: 3px solid #ff897d;">
-            <h4 style="margin:0; color:#ff897d; font-size:0.9rem;">🔑 Cargar Palabras Clave</h4>
-            <input type="file" id="json-keywords-upload" accept=".json" style="margin-top:5px; width:100%; font-size:0.8rem;">
-            <button onclick="uploadKeywords()" style="background:#ff897d; color:#000; border:none; padding:4px 10px; border-radius:5px; margin-top:5px; cursor:pointer; font-weight:bold; font-size:0.8rem;">Subir a 'preguntaspalbraclave'</button>
-            <div id="upload-status-keywords" style="margin-top:5px; font-size:0.8rem; color:var(--success);"></div>
-        </div>
-        <div id="dash-content" style="flex:1; overflow-y:auto; text-align:left; padding-right:5px;"></div>
-    </div>
-</div>
+<div id="admin-dash" class="modal"><div class="card" style="max-width:650px; width:95%; max-height:85vh; overflow:hidden; display:flex; flex-direction:column;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h3><i class="fas fa-chalkboard-teacher"></i> Panel Docente</h3><button onclick="closeDash()" style="background:none; border:none; color:white; font-size:1.2rem;"><i class="fas fa-times"></i></button></div><div style="background:#27272a; padding:10px; border-radius:8px; margin-bottom:15px; text-align:left;"><h4 style="margin:0; color:var(--accent); font-size:0.9rem;">📚 Cargar Diccionario</h4><input type="file" id="json-upload" accept=".json" style="margin-top:5px; width:100%; font-size:0.8rem;"><button onclick="uploadDictionary()" style="background:var(--accent); color:#000; border:none; padding:4px 10px; border-radius:5px; margin-top:5px; cursor:pointer; font-weight:bold; font-size:0.8rem;">Procesar (Lotes)</button><div id="upload-status" style="margin-top:5px; font-size:0.8rem; color:var(--success);"></div></div><div style="background:#27272a; padding:10px; border-radius:8px; margin-bottom:15px; text-align:left; border-left: 3px solid #ff897d;"><h4 style="margin:0; color:#ff897d; font-size:0.9rem;">🔑 Cargar Palabras Clave</h4><input type="file" id="json-keywords-upload" accept=".json" style="margin-top:5px; width:100%; font-size:0.8rem;"><button onclick="uploadKeywords()" style="background:#ff897d; color:#000; border:none; padding:4px 10px; border-radius:5px; margin-top:5px; cursor:pointer; font-weight:bold; font-size:0.8rem;">Subir a 'preguntaspalbraclave'</button><div id="upload-status-keywords" style="margin-top:5px; font-size:0.8rem; color:var(--success);"></div></div><div id="dash-content" style="flex:1; overflow-y:auto; text-align:left; padding-right:5px;"></div></div></div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
     import { getFirestore, doc, onSnapshot, setDoc, updateDoc, arrayUnion, arrayRemove, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyAeNVoB1ZasZSauIf6G7GbIa4bbJJ3_5cw",
-        authDomain: "alexia-1c4f2.firebaseapp.com",
-        projectId: "alexia-1c4f2",
-        storageBucket: "alexia-1c4f2.firebasestorage.app",
-        messagingSenderId: "483778313354",
-        appId: "1:483778313354:web:c28c9da35d5674b174c173"
-    };
-
+    const firebaseConfig = { apiKey: "AIzaSyAeNVoB1ZasZSauIf6G7GbIa4bbJJ3_5cw", authDomain: "alexia-1c4f2.firebaseapp.com", projectId: "alexia-1c4f2", storageBucket: "alexia-1c4f2.firebasestorage.app", messagingSenderId: "483778313354", appId: "1:483778313354:web:c28c9da35d5674b174c173" };
     let app, db, auth, provider;
-    try {
-        app = initializeApp(firebaseConfig);
-        db = getFirestore(app);
-        auth = getAuth(app);
-        provider = new GoogleAuthProvider();
-        document.getElementById('connection-dot').classList.add('online');
-        document.getElementById('connection-dot').classList.remove('offline');
-    } catch(e) { 
-        console.error("Firebase Init Error:", e);
-        alert("Error de conexión: " + e.message); 
-    }
+    try { app = initializeApp(firebaseConfig); db = getFirestore(app); auth = getAuth(app); provider = new GoogleAuthProvider(); document.getElementById('connection-dot').classList.add('online'); document.getElementById('connection-dot').classList.remove('offline'); } catch(e) { console.error("Firebase Init Error:", e); alert("Error de conexión: " + e.message); }
 
     let currentUser = null;
     let brain = { memory: [], reviewQueue: [], missingLog: [] };
     let lastSearchTerm = null;
-
     let toxicityModel = null;
-    if(window.toxicity) {
-        window.toxicity.load(0.85).then(model => {
-            toxicityModel = model;
-            console.log("✅ Modelo de Toxicidad: ACTIVO");
-        });
-    }
+    if(window.toxicity) { window.toxicity.load(0.85).then(model => { toxicityModel = model; console.log("✅ Modelo de Toxicidad: ACTIVO"); }); }
 
     const ADMIN_EMAIL = "eljacksonyt@gmail.com";
     let currentChatId = null;
@@ -297,171 +160,47 @@
     const randomTopics = ["Universo", "Inteligencia Artificial", "Historia de México", "Biología", "Arte Moderno", "Filosofía", "Tecnología", "Dinosaurios", "Psicología", "Música Clásica"];
     const bookSubjects = ["love", "science", "history", "fantasy", "mystery", "art", "psychology", "mexico"];
     const globalCities = ["Cancún", "Ciudad de México", "Madrid", "Tokio", "Nueva York", "Buenos Aires", "Londres", "París", "Monterrey", "Guadalajara", "Bogotá", "Lima", "Berlín", "Roma"];
-
     const slangMap = { "andas": "estas", "onda": "pasa", "hubo": "paso", "pex": "pasa", "pedo": "problema", "chido": "bueno", "padre": "bueno", "gwey": "amigo", "wey": "amigo", "camara": "adios", "simon": "si", "nelson": "no", "chale": "que mal", "neto": "verdad", "neta": "verdad", "jalo": "acepto", "sobres": "esta bien" };
-    
-    const stopWords = new Set([
-        'el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 
-        'lo', 'al', 'del', 'y', 'o', 'a', 'e', 'u', 'de', 'en', 'con', 
-        'mi', 'tu', 'su', 'me', 'te', 'se', 'nos' 
-    ]);
+    const stopWords = new Set([ 'el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'lo', 'al', 'del', 'y', 'o', 'a', 'e', 'u', 'de', 'en', 'con', 'mi', 'tu', 'su', 'me', 'te', 'se', 'nos' ]);
 
     window.toggleUserMenu = (e) => { e.stopPropagation(); document.getElementById('user-dropdown').classList.toggle('show'); }
-    window.onclick = (e) => { 
-        if (!e.target.matches('.header-profile') && !e.target.matches('.header-profile *')) { 
-            document.getElementById('user-dropdown').classList.remove('show'); 
-        } 
-        if (!e.target.closest('#suggestions-popup') && !e.target.closest('#idea-btn')) {
-            document.getElementById('suggestions-popup').classList.remove('show');
-        }
-    }
+    window.onclick = (e) => { if (!e.target.matches('.header-profile') && !e.target.matches('.header-profile *')) { document.getElementById('user-dropdown').classList.remove('show'); } if (!e.target.closest('#suggestions-popup') && !e.target.closest('#idea-btn')) { document.getElementById('suggestions-popup').classList.remove('show'); } }
     window.emergencyReset = (e) => { if(e) e.stopPropagation(); if(confirm("⚠️ ¿Restablecer aplicación?")) { localStorage.clear(); sessionStorage.clear(); window.location.reload(); } };
     window.toggleSuggestions = () => { const popup = document.getElementById('suggestions-popup'); popup.classList.toggle('show'); }
     window.useSuggestion = (query) => { document.getElementById('suggestions-popup').classList.remove('show'); document.getElementById('chat-input').value = query; sendMessage(); }
+    window.toggleSidebar = () => { const sb = document.getElementById('sidebar'); const ov = document.getElementById('overlay'); sb.classList.toggle('open'); ov.classList.toggle('active'); }
 
-    window.toggleSidebar = () => { 
-        const sb = document.getElementById('sidebar');
-        const ov = document.getElementById('overlay');
-        sb.classList.toggle('open');
-        ov.classList.toggle('active');
-    }
-
-    if(auth) {
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                if (!user.emailVerified) return;
-                const userRef = doc(db, "users", user.uid);
-                const userSnap = await getDoc(userRef);
-                let role = "user";
-                if(user.email === ADMIN_EMAIL) role = "admin";
-                else if (userSnap.exists()) role = userSnap.data().role || "user";
-                if (!userSnap.exists()) await setDoc(userRef, { email: user.email, role: role, createdAt: new Date().toISOString() });
-                currentUser = { uid: user.uid, name: user.displayName || user.email.split('@')[0], role: role, email: user.email };
-                updateUserUI(currentUser);
-                renderLocalHistory();
-                closeModal(); 
-            } else { 
-                currentUser = null; 
-                updateUserUI(null); 
-                currentChatId = null; 
-                renderLocalHistory(); 
-            }
-            const lastChatId = localStorage.getItem('alexia_last_chat_id');
-            if (lastChatId) loadLocalChat(lastChatId);
-        });
-    }
-
+    if(auth) { onAuthStateChanged(auth, async (user) => { if (user) { if (!user.emailVerified) return; const userRef = doc(db, "users", user.uid); const userSnap = await getDoc(userRef); let role = "user"; if(user.email === ADMIN_EMAIL) role = "admin"; else if (userSnap.exists()) role = userSnap.data().role || "user"; if (!userSnap.exists()) await setDoc(userRef, { email: user.email, role: role, createdAt: new Date().toISOString() }); currentUser = { uid: user.uid, name: user.displayName || user.email.split('@')[0], role: role, email: user.email }; updateUserUI(currentUser); renderLocalHistory(); closeModal(); } else { currentUser = null; updateUserUI(null); currentChatId = null; renderLocalHistory(); } const lastChatId = localStorage.getItem('alexia_last_chat_id'); if (lastChatId) loadLocalChat(lastChatId); }); }
     if(db) { onSnapshot(doc(db, "alexia_db", "main_brain"), (snap) => { if(snap.exists()) brain = snap.data(); }); }
 
     window.toggleVoice = () => { if(isVoiceActive) recognition.stop(); else recognition.start(); }
-    window.speakText = (text, btnId) => {
-        if (synth.speaking) { synth.cancel(); if (window.activeSpeakingBtnId === btnId) { resetSpeakerIcons(); window.activeSpeakingBtnId = null; return; } }
-        const cleanText = text.replace(/<[^>]*>/g, '').replace(/http\S+/g, 'enlace').replace(/A\)|B\)|C\)/g, '');
-        const utterance = new SpeechSynthesisUtterance(cleanText);
-        utterance.lang = 'es-MX'; utterance.rate = 1.0;
-        utterance.onstart = () => { resetSpeakerIcons(); const btn = document.getElementById(btnId); if(btn) { btn.classList.add('speaking'); btn.innerHTML = '<i class="fas fa-stop"></i>'; window.activeSpeakingBtnId = btnId; } };
-        utterance.onend = () => { resetSpeakerIcons(); window.activeSpeakingBtnId = null; };
-        synth.speak(utterance);
-    };
+    window.speakText = (text, btnId) => { if (synth.speaking) { synth.cancel(); if (window.activeSpeakingBtnId === btnId) { resetSpeakerIcons(); window.activeSpeakingBtnId = null; return; } } const cleanText = text.replace(/<[^>]*>/g, '').replace(/http\S+/g, 'enlace').replace(/A\)|B\)|C\)/g, ''); const utterance = new SpeechSynthesisUtterance(cleanText); utterance.lang = 'es-MX'; utterance.rate = 1.0; utterance.onstart = () => { resetSpeakerIcons(); const btn = document.getElementById(btnId); if(btn) { btn.classList.add('speaking'); btn.innerHTML = '<i class="fas fa-stop"></i>'; window.activeSpeakingBtnId = btnId; } }; utterance.onend = () => { resetSpeakerIcons(); window.activeSpeakingBtnId = null; }; synth.speak(utterance); };
     function resetSpeakerIcons() { document.querySelectorAll('.tts-btn').forEach(b => { b.classList.remove('speaking'); b.innerHTML = '<i class="fas fa-volume-up"></i>'; }); }
 
-    function levenshteinDistance(a, b) {
-        const matrix = [];
-        for (let i = 0; i <= b.length; i++) matrix[i] = [i];
-        for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
-        for (let i = 1; i <= b.length; i++) {
-            for (let j = 1; j <= a.length; j++) {
-                if (b.charAt(i - 1) === a.charAt(j - 1)) {
-                    matrix[i][j] = matrix[i - 1][j - 1];
-                } else {
-                    matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1));
-                }
-            }
-        }
-        return matrix[b.length][a.length];
-    }
+    // EXPOSE FUNCTION TO GLOBAL SCOPE FOR BIBLE BUTTON
+    window.autoReadBible = async (query) => {
+        const input = document.getElementById('chat-input');
+        input.value = ""; // Clean input
+        // Visual simulation of user asking
+        appendMsg('user', "📖 Leer " + query);
+        await processSpecificIntent(query, 'BibleCombined'); 
+    };
 
+    function levenshteinDistance(a, b) { const matrix = []; for (let i = 0; i <= b.length; i++) matrix[i] = [i]; for (let j = 0; j <= a.length; j++) matrix[0][j] = j; for (let i = 1; i <= b.length; i++) { for (let j = 1; j <= a.length; j++) { if (b.charAt(i - 1) === a.charAt(j - 1)) { matrix[i][j] = matrix[i - 1][j - 1]; } else { matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1)); } } } return matrix[b.length][a.length]; }
     function cleanString(str) { return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim(); }
     function normalize(str) { return cleanString(str).replace(/[¿?¡!.,]/g, ""); }
     function processSynonyms(text) { return text.split(" ").map(w => { const cw = normalize(w); return slangMap[cw] || cw; }).join(" "); }
     function removeDuplicates(text) { const words = text.split(/\s+/); return [...new Set(words)].join(" "); }
     function truncateLog(text) { if (!text) return ""; let limit = text.split('\n')[0]; if (limit.length > 100) limit = limit.substring(0, 100) + "..."; return limit; }
 
-    async function getConnectorPhrase(word) {
-        if(!word) return null;
-        try {
-            const cleanId = cleanString(word);
-            const docRef = doc(db, "preguntaspalbraclave", cleanId);
-            const snap = await getDoc(docRef);
-            if (snap.exists()) { return snap.data().def; }
-        } catch (e) { console.error("Error buscando conector:", e); }
-        return null;
-    }
-    
-    function findInMemoryFuzzy(phrase) {
-        if(!brain || !brain.memory) return null;
-        const target = cleanString(phrase);
-        const exact = brain.memory.find(mem => mem.inputs.some(inp => cleanString(inp) === target));
-        if(exact) return { def: exact.output, src: "Memoria", extra: { type: "Entrenamiento", pais: "Local" } };
-        if(target.length > 4) {
-             const fuzzy = brain.memory.find(mem => mem.inputs.some(inp => {
-                 const cln = cleanString(inp);
-                 const dist = levenshteinDistance(target, cln);
-                 return dist <= 2; 
-             }));
-             if(fuzzy) return { def: fuzzy.output, src: "Memoria", extra: { type: "Entrenamiento (Corregido)", pais: "Local" } };
-        }
-        return null;
-    }
+    async function getConnectorPhrase(word) { if(!word) return null; try { const cleanId = cleanString(word); const docRef = doc(db, "preguntaspalbraclave", cleanId); const snap = await getDoc(docRef); if (snap.exists()) { return snap.data().def; } } catch (e) { console.error("Error buscando conector:", e); } return null; }
+    function findInMemoryFuzzy(phrase) { if(!brain || !brain.memory) return null; const target = cleanString(phrase); const exact = brain.memory.find(mem => mem.inputs.some(inp => cleanString(inp) === target)); if(exact) return { def: exact.output, src: "Memoria", extra: { type: "Entrenamiento", pais: "Local" } }; if(target.length > 4) { const fuzzy = brain.memory.find(mem => mem.inputs.some(inp => { const cln = cleanString(inp); const dist = levenshteinDistance(target, cln); return dist <= 2; })); if(fuzzy) return { def: fuzzy.output, src: "Memoria", extra: { type: "Entrenamiento (Corregido)", pais: "Local" } }; } return null; }
 
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        recognition = new SpeechRecognition();
-        recognition.lang = 'es-MX'; recognition.continuous = false; recognition.interimResults = false;
-        recognition.onstart = () => { isVoiceActive = true; document.getElementById('mic-btn').classList.add('listening'); document.getElementById('chat-input').placeholder = "Escuchando..."; };
-        recognition.onend = () => { isVoiceActive = false; document.getElementById('mic-btn').classList.remove('listening'); document.getElementById('chat-input').placeholder = "Pregunta algo..."; };
-        recognition.onresult = (event) => { document.getElementById('chat-input').value = event.results[0][0].transcript; wasVoiceInput = true; window.sendMessage(); };
-    } else { document.getElementById('mic-btn').style.display = 'none'; }
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) { const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; recognition = new SpeechRecognition(); recognition.lang = 'es-MX'; recognition.continuous = false; recognition.interimResults = false; recognition.onstart = () => { isVoiceActive = true; document.getElementById('mic-btn').classList.add('listening'); document.getElementById('chat-input').placeholder = "Escuchando..."; }; recognition.onend = () => { isVoiceActive = false; document.getElementById('mic-btn').classList.remove('listening'); document.getElementById('chat-input').placeholder = "Pregunta algo..."; }; recognition.onresult = (event) => { document.getElementById('chat-input').value = event.results[0][0].transcript; wasVoiceInput = true; window.sendMessage(); }; } else { document.getElementById('mic-btn').style.display = 'none'; }
 
-    function checkConversational(normInput) {
-        const greetings = ["hola", "que tal", "como estas", "buenos dias", "buenas tardes", "buenas noches", "que onda", "todo bien", "saludos"];
-        if (greetings.some(g => normInput.includes(g))) {
-            const replies = ["¡Hola! Espero que estés genial. ¿En qué puedo ayudarte hoy?", "¡Saludos! Todo bien por aquí en mi mundo digital. ¿Y tú?", "¡Qué gusto saludarte! Cuéntame, ¿qué tienes en mente?", "¡Hola! Estoy lista para aprender o ayudarte."];
-            return replies[Math.floor(Math.random() * replies.length)];
-        }
-        return null;
-    }
+    function checkConversational(normInput) { const greetings = ["hola", "que tal", "como estas", "buenos dias", "buenas tardes", "buenas noches", "que onda", "todo bien", "saludos"]; if (greetings.some(g => normInput.includes(g))) { const replies = ["¡Hola! Espero que estés genial. ¿En qué puedo ayudarte hoy?", "¡Saludos! Todo bien por aquí en mi mundo digital. ¿Y tú?", "¡Qué gusto saludarte! Cuéntame, ¿qué tienes en mente?", "¡Hola! Estoy lista para aprender o ayudarte."]; return replies[Math.floor(Math.random() * replies.length)]; } return null; }
 
-    async function searchInAllSources(phrase) {
-        const cleanPhrase = cleanString(phrase);
-        const wordCount = phrase.trim().split(/\s+/).length;
-        if(!cleanPhrase) return null;
-
-        if (wordCount >= 3) {
-            const wikiData = await fetchExternalData(phrase, 'Wikipedia/WEB');
-            if(wikiData) return wikiData;
-            const memData = findInMemoryFuzzy(phrase);
-            if(memData) return memData;
-        } else {
-            try {
-                const docRef = doc(db, "dictionary", cleanPhrase);
-                const snap = await getDoc(docRef);
-                if(snap.exists()) return { def: snap.data().def, src: "Memoria", extra: snap.data() };
-            } catch(e) {}
-            const memData = findInMemoryFuzzy(phrase);
-            if(memData) return memData;
-            try {
-                const docRef = doc(db, "preguntaspalbraclave", cleanPhrase);
-                const snap = await getDoc(docRef);
-                if(snap.exists()) return { def: snap.data().def, src: "Memoria", extra: { type: "Palabra Clave" } };
-            } catch(e) {}
-            const apiData = await fetchExternalData(phrase, 'DiccionarioAPI');
-            if (apiData) return apiData;
-            const wikiData = await fetchExternalData(phrase, 'Wikipedia/WEB');
-            if(wikiData) return wikiData;
-        }
-        return null;
-    }
+    async function searchInAllSources(phrase) { const cleanPhrase = cleanString(phrase); const wordCount = phrase.trim().split(/\s+/).length; if(!cleanPhrase) return null; if (wordCount >= 3) { const wikiData = await fetchExternalData(phrase, 'Wikipedia/WEB'); if(wikiData) return wikiData; const memData = findInMemoryFuzzy(phrase); if(memData) return memData; } else { try { const docRef = doc(db, "dictionary", cleanPhrase); const snap = await getDoc(docRef); if(snap.exists()) return { def: snap.data().def, src: "Memoria", extra: snap.data() }; } catch(e) {} const memData = findInMemoryFuzzy(phrase); if(memData) return memData; try { const docRef = doc(db, "preguntaspalbraclave", cleanPhrase); const snap = await getDoc(docRef); if(snap.exists()) return { def: snap.data().def, src: "Memoria", extra: { type: "Palabra Clave" } }; } catch(e) {} const apiData = await fetchExternalData(phrase, 'DiccionarioAPI'); if (apiData) return apiData; const wikiData = await fetchExternalData(phrase, 'Wikipedia/WEB'); if(wikiData) return wikiData; } return null; }
 
     window.sendMessage = async function() {
         if(!db) return alert("Sin conexión a base de datos.");
@@ -472,86 +211,21 @@
         // --- MANEJO DE REBOTE ---
         const normInput = cleanString(originalText);
         if (lastSearchTerm) {
-            if (normInput === 'a') {
-                input.value = ''; appendMsg('user', "A (Diccionario)");
-                let cleanTerm = lastSearchTerm.trim().split(/\s+/).pop();
-                await processSpecificIntent(cleanTerm, 'DiccionarioAPI'); return;
-            }
-            if (normInput === 'b') {
-                input.value = ''; appendMsg('user', "B (Wikipedia)");
-                await processSpecificIntent(lastSearchTerm, 'Wikipedia/WEB'); return;
-            }
-            if (normInput === 'c') {
-                input.value = ''; appendMsg('user', "C (Libros)");
-                await processSpecificIntent(lastSearchTerm, 'Biblioteca/WEB'); return;
-            }
+            if (normInput === 'a') { input.value = ''; appendMsg('user', "A (Diccionario)"); let cleanTerm = lastSearchTerm.trim().split(/\s+/).pop(); await processSpecificIntent(cleanTerm, 'DiccionarioAPI'); return; }
+            if (normInput === 'b') { input.value = ''; appendMsg('user', "B (Wikipedia)"); await processSpecificIntent(lastSearchTerm, 'Wikipedia/WEB'); return; }
+            if (normInput === 'c') { input.value = ''; appendMsg('user', "C (Libros)"); await processSpecificIntent(lastSearchTerm, 'Biblioteca/WEB'); return; }
         }
 
-        if (typeof toxicityModel !== 'undefined' && toxicityModel) {
-            const btnSend = document.querySelector('.send-btn');
-            const oldIcon = btnSend.innerHTML;
-            btnSend.innerHTML = '<i class="fas fa-shield-alt fa-pulse"></i>';
-            try {
-                const translatedText = await translateText(originalText, "es|en");
-                const predictions = await toxicityModel.classify([translatedText]);
-                const isToxic = predictions.some(p => p.results[0].match === true);
-                if (isToxic) {
-                    input.value = ''; appendMsg('user', originalText);
-                    const warnings = ["⚠️ Detecto lenguaje ofensivo. Por favor, mantengamos el respeto.", "🚫 Mis protocolos de seguridad me impiden procesar ese mensaje.", "Oye, no es necesario ser grosero. Hablemos bien. 🤝", "No encuentro la necesidad de ser hostil. ¿Probamos de nuevo? 🔄"];
-                    const randomWarning = warnings[Math.floor(Math.random() * warnings.length)];
-                    appendMsg('ai', `<span style="color:#ff897d;">${randomWarning}</span>`, false, 'warn-'+Date.now());
-                    btnSend.innerHTML = oldIcon; return; 
-                }
-            } catch (err) { console.error("Error seguridad:", err); }
-            btnSend.innerHTML = oldIcon;
-        }
+        if (typeof toxicityModel !== 'undefined' && toxicityModel) { const btnSend = document.querySelector('.send-btn'); const oldIcon = btnSend.innerHTML; btnSend.innerHTML = '<i class="fas fa-shield-alt fa-pulse"></i>'; try { const translatedText = await translateText(originalText, "es|en"); const predictions = await toxicityModel.classify([translatedText]); const isToxic = predictions.some(p => p.results[0].match === true); if (isToxic) { input.value = ''; appendMsg('user', originalText); const warnings = ["⚠️ Detecto lenguaje ofensivo. Por favor, mantengamos el respeto.", "🚫 Mis protocolos de seguridad me impiden procesar ese mensaje.", "Oye, no es necesario ser grosero. Hablemos bien. 🤝", "No encuentro la necesidad de ser hostil. ¿Probamos de nuevo? 🔄"]; const randomWarning = warnings[Math.floor(Math.random() * warnings.length)]; appendMsg('ai', `<span style="color:#ff897d;">${randomWarning}</span>`, false, 'warn-'+Date.now()); btnSend.innerHTML = oldIcon; return; } } catch (err) { console.error("Error seguridad:", err); } btnSend.innerHTML = oldIcon; }
 
         document.getElementById('idea-btn').classList.remove('has-ideas');
 
-        if (chatState.mode === 'waiting_correction') {
-            const correction = originalText;
-            input.value = ''; appendMsg('user', originalText);
-            const sendingMsgId = 'sending-' + Date.now();
-            appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> Guardando...`, false, sendingMsgId);
-            try {
-                const qData = String(chatState.lastQuery || "Pregunta no detectada");
-                const aData = String(correction || "Respuesta vacía");
-                const finalUser = String(currentUser ? currentUser.email : "Anónimo");
-                await setDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayUnion({ q: qData, a: aData, user: finalUser, date: new Date().toISOString() }) }, { merge: true });
-                const sendingEl = document.getElementById(sendingMsgId);
-                if(sendingEl) {
-                    const respuestas = ["¡Gracias! Respuesta guardada. 💾", "¡Entendido! Pronto aprenderé esto. 🧠✨"];
-                    sendingEl.querySelector('.msg-bubble').innerHTML = respuestas[Math.floor(Math.random() * respuestas.length)];
-                }
-                document.querySelectorAll('.feedback-btn.active-teach').forEach(b => { b.classList.remove('active-teach'); b.innerHTML = '<i class="fas fa-graduation-cap"></i> Enseñar'; });
-            } catch (e) {
-                const sendingEl = document.getElementById(sendingMsgId);
-                if(sendingEl) sendingEl.querySelector('.msg-bubble').innerHTML = `❌ Error: ${e.message}`; 
-            }
-            chatState = { mode: 'normal' }; return;
-        }
+        if (chatState.mode === 'waiting_correction') { const correction = originalText; input.value = ''; appendMsg('user', originalText); const sendingMsgId = 'sending-' + Date.now(); appendMsg('ai', `<i class="fas fa-circle-notch fa-spin"></i> Guardando...`, false, sendingMsgId); try { const qData = String(chatState.lastQuery || "Pregunta no detectada"); const aData = String(correction || "Respuesta vacía"); const finalUser = String(currentUser ? currentUser.email : "Anónimo"); await setDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayUnion({ q: qData, a: aData, user: finalUser, date: new Date().toISOString() }) }, { merge: true }); const sendingEl = document.getElementById(sendingMsgId); if(sendingEl) { const respuestas = ["¡Gracias! Respuesta guardada. 💾", "¡Entendido! Pronto aprenderé esto. 🧠✨"]; sendingEl.querySelector('.msg-bubble').innerHTML = respuestas[Math.floor(Math.random() * respuestas.length)]; } document.querySelectorAll('.feedback-btn.active-teach').forEach(b => { b.classList.remove('active-teach'); b.innerHTML = '<i class="fas fa-graduation-cap"></i> Enseñar'; }); } catch (e) { const sendingEl = document.getElementById(sendingMsgId); if(sendingEl) sendingEl.querySelector('.msg-bubble').innerHTML = `❌ Error: ${e.message}`; } chatState = { mode: 'normal' }; return; }
         
         let normInputFull = removeDuplicates(normalize(originalText));
-        if (normInputFull.match(/quien (te )?(creo|hizo)|quien eres|que eres|como te llamas/i)) {
-            input.value = ''; appendMsg('user', originalText);
-            await finishResponse(originalText, "Soy <b>AleXIA</b>, creada por <b>Alexis García</b>.<br><br><small>Extraído de mi memoria</small>", false, false); return;
-        }
-
-        const conversationalReply = checkConversational(normInputFull);
-        if (conversationalReply) {
-            input.value = ''; appendMsg('user', originalText);
-            await finishResponse(originalText, conversationalReply + "<br><br><small>Extraído de mi memoria</small>", false, false); return;
-        }
-        
-        const flexibleMatch = normInputFull.match(/\b([abc])\b/i);
-        if (flexibleMatch && normInputFull.length < 30) {
-            const idx = flexibleMatch[1].toUpperCase().charCodeAt(0) - 65;
-            if (activeSuggestions[idx]) {
-                const suggestion = activeSuggestions[idx];
-                input.value = ""; appendMsg('user', originalText.toUpperCase() + " (" + suggestion.label.replace(/\*\*/g, '') + ")");
-                await processSpecificIntent(suggestion.query, suggestion.source); wasVoiceInput = false; return;
-            }
-        }
+        if (normInputFull.match(/quien (te )?(creo|hizo)|quien eres|que eres|como te llamas/i)) { input.value = ''; appendMsg('user', originalText); await finishResponse(originalText, "Soy <b>AleXIA</b>, creada por <b>Alexis García</b>.<br><br><small>Extraído de mi memoria</small>", false, false); return; }
+        const conversationalReply = checkConversational(normInputFull); if (conversationalReply) { input.value = ''; appendMsg('user', originalText); await finishResponse(originalText, conversationalReply + "<br><br><small>Extraído de mi memoria</small>", false, false); return; }
+        const flexibleMatch = normInputFull.match(/\b([abc])\b/i); if (flexibleMatch && normInputFull.length < 30) { const idx = flexibleMatch[1].toUpperCase().charCodeAt(0) - 65; if (activeSuggestions[idx]) { const suggestion = activeSuggestions[idx]; input.value = ""; appendMsg('user', originalText.toUpperCase() + " (" + suggestion.label.replace(/\*\*/g, '') + ")"); await processSpecificIntent(suggestion.query, suggestion.source); wasVoiceInput = false; return; } }
         
         input.value = ''; appendMsg('user', originalText); 
         const loadingId = 'loading-' + Date.now(); 
@@ -559,17 +233,13 @@
         
         const loadingSteps = ["Entendiendo intención...", "Buscando en base global...", "Sintetizando..."];
         let stepIdx = 0;
-        const loaderInterval = setInterval(() => {
-            const el = document.getElementById(`think-${loadingId}`);
-            if(el) { el.innerText = loadingSteps[stepIdx % loadingSteps.length]; stepIdx++; }
-        }, 800);
+        const loaderInterval = setInterval(() => { const el = document.getElementById(`think-${loadingId}`); if(el) { el.innerText = loadingSteps[stepIdx % loadingSteps.length]; stepIdx++; } }, 800);
 
         await new Promise(r => setTimeout(r, 800));
 
         const specificIntent = checkSpecificIntent(originalText);
         if (specificIntent) { 
-            clearInterval(loaderInterval); 
-            const loadEl = document.getElementById(loadingId); if(loadEl) loadEl.remove();
+            clearInterval(loaderInterval); const loadEl = document.getElementById(loadingId); if(loadEl) loadEl.remove();
             lastSearchTerm = specificIntent.query;
             await processSpecificIntent(specificIntent.query, specificIntent.source); wasVoiceInput = false; return; 
         }
@@ -582,15 +252,8 @@
         for (let i = 0; i < phraseWords.length; i++) {
             let subPhrase = phraseWords.slice(i).join(" ");
             if (subPhrase.length < 3 && i < phraseWords.length -1) continue; 
-
             let result = await searchInAllSources(subPhrase);
-            if (result) {
-                foundFullConcept = result;
-                foundFullConcept.word = subPhrase; 
-                lastSearchTerm = subPhrase; 
-                if (i > 0) skippedConnector = phraseWords.slice(0, i).join(" ");
-                break; 
-            }
+            if (result) { foundFullConcept = result; foundFullConcept.word = subPhrase; lastSearchTerm = subPhrase; if (i > 0) skippedConnector = phraseWords.slice(0, i).join(" "); break; }
         }
 
         if (foundFullConcept) {
@@ -598,21 +261,12 @@
              const loadEl = document.getElementById(loadingId); if(loadEl) loadEl.remove();
              
              let connectorDef = "";
-             if (skippedConnector) {
-                 const conDef = await getConnectorPhrase(skippedConnector); 
-                 if (conDef) connectorDef = conDef + " "; 
-             }
+             if (skippedConnector) { const conDef = await getConnectorPhrase(skippedConnector); if (conDef) connectorDef = conDef + " "; }
 
              let aiResponse = "";
-             if (connectorDef) {
-                 let cleanDef = foundFullConcept.def.replace(/<[^>]*>/g, '').trim();
-                 aiResponse = `${connectorDef}${cleanDef}`;
-             } else {
-                 aiResponse = `<strong>Sobre "${foundFullConcept.word}":</strong><br>${foundFullConcept.def}`;
-             }
+             if (connectorDef) { let cleanDef = foundFullConcept.def.replace(/<[^>]*>/g, '').trim(); aiResponse = `${connectorDef}${cleanDef}`; } else { aiResponse = `<strong>Sobre "${foundFullConcept.word}":</strong><br>${foundFullConcept.def}`; }
 
              aiResponse += formatExtras(foundFullConcept.extra);
-             
              let sources = "mi entrenamiento";
              if (foundFullConcept.src.includes("Wiki") || foundFullConcept.src.includes("Wikisource")) sources = "Wikipedia / Wikisource";
              if (foundFullConcept.src === "DiccionarioAPI") sources = "Diccionario Global";
@@ -621,17 +275,9 @@
              if (connectorDef) sources += " y mis palabras clave";
 
              aiResponse += `<br><br><div style="font-size:0.75rem; color:#888; border-top:1px solid #444; padding-top:5px;"><em>Extraído de ${sources}</em></div>`;
-             
-             aiResponse += `<br><div style="font-size:0.8rem; color:#888; margin-top:10px; border-top:1px solid #333; padding-top:8px;">
-                ¿Buscas otra cosa? Escribe:<br>
-                <span style="color:var(--text-main); font-weight:bold;">A</span> Diccionario <span style="color:var(--accent); margin:0 5px;">|</span>
-                <span style="color:var(--text-main); font-weight:bold;">B</span> Wiki <span style="color:var(--accent); margin:0 5px;">|</span>
-                <span style="color:var(--text-main); font-weight:bold;">C</span> Libros
-             </div>`;
+             aiResponse += `<br><div style="font-size:0.8rem; color:#888; margin-top:10px; border-top:1px solid #333; padding-top:8px;">¿Buscas otra cosa? Escribe:<br><span style="color:var(--text-main); font-weight:bold;">A</span> Diccionario <span style="color:var(--accent); margin:0 5px;">|</span> <span style="color:var(--text-main); font-weight:bold;">B</span> Wiki <span style="color:var(--accent); margin:0 5px;">|</span> <span style="color:var(--text-main); font-weight:bold;">C</span> Libros</div>`;
 
-             if (db) {
-                setDoc(doc(db, "alexia_db", "main_brain"), { missingLog: arrayUnion({ q: truncateLog(originalText), a: truncateLog(aiResponse.replace(/<[^>]*>/g, '')), user: currentUser?currentUser.email:"Invitado", date: new Date().toISOString() }) }, { merge: true });
-             }
+             if (db) { setDoc(doc(db, "alexia_db", "main_brain"), { missingLog: arrayUnion({ q: truncateLog(originalText), a: truncateLog(aiResponse.replace(/<[^>]*>/g, '')), user: currentUser?currentUser.email:"Invitado", date: new Date().toISOString() }) }, { merge: true }); }
 
              await finishResponse(originalText, aiResponse, true, true);
              wasVoiceInput = false;
@@ -654,7 +300,7 @@
                 synthesis.concepts.forEach(c => {
                     if (c.src === "Memoria") sources.add("mi diccionario personal");
                     if (c.src === "DiccionarioAPI") sources.add("Diccionario Global");
-                    if (c.src.includes("Wiki")) sources.add("Wikipedia");
+                    if (c.src.includes("Wikipedia")) sources.add("Wikipedia");
                 });
             }
             if (sources.size === 0) return "";
@@ -671,23 +317,13 @@
             let defClean = mainConcept.def.replace(/<[^>]*>/g, '').trim(); 
             aiResponse = `${finalConnectorPhrase} ${defClean}`;
             aiResponse += formatExtras(mainConcept.extra);
-            if (synthesis.concepts.length > 1) {
-                aiResponse += `<br><br><small>También encontré:</small><br>`;
-                for(let i=1; i<synthesis.concepts.length; i++) {
-                    let subItem = synthesis.concepts[i];
-                    aiResponse += `- <b>${subItem.word}:</b> ${subItem.def}${formatExtras(subItem.extra)}<br>`;
-                }
-            }
+            if (synthesis.concepts.length > 1) { aiResponse += `<br><br><small>También encontré:</small><br>`; for(let i=1; i<synthesis.concepts.length; i++) { let subItem = synthesis.concepts[i]; aiResponse += `- <b>${subItem.word}:</b> ${subItem.def}${formatExtras(subItem.extra)}<br>`; } }
             aiResponse += generateFooter();
             logThis = true;
         }
         else if (synthesis.concepts.length > 0) {
              const item = synthesis.concepts[0];
-             if (synthesis.concepts.length === 1 && item.src !== "Memoria") {
-                 aiResponse = `Encontré esto sobre <strong>${item.word}</strong>:<br>${item.def}`;
-             } else {
-                 aiResponse = `<strong>Analizando conceptos:</strong><br>` + synthesis.concepts.map(it => `- <b>${it.word}:</b> ${it.def}${formatExtras(it.extra)}`).join('<br>');
-             }
+             if (synthesis.concepts.length === 1 && item.src !== "Memoria") { aiResponse = `Encontré esto sobre <strong>${item.word}</strong>:<br>${item.def}`; } else { aiResponse = `<strong>Analizando conceptos:</strong><br>` + synthesis.concepts.map(it => `- <b>${it.word}:</b> ${it.def}${formatExtras(it.extra)}`).join('<br>'); }
              const cierres = ["<br><br>¿Te sirve esta información? 🤔", "<br><br>Espero haberte ayudado. ✨", "<br><br>¿Era esto lo que buscabas? 🧐"];
              aiResponse += cierres[Math.floor(Math.random() * cierres.length)];
              aiResponse += generateFooter();
@@ -719,41 +355,16 @@
         if (data.phonetic) html += ` <span style="color:#888; font-family:monospace; margin-left:5px;">[${data.phonetic}]</span>`;
         if (data.audio) html += ` <button onclick="new Audio('${data.audio}').play()" style="background:none; border:1px solid var(--accent); color:var(--accent); border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:0.7rem; margin-left:5px;" title="Escuchar">🔊</button>`;
         if (data.type) html += `<div style="margin-top:6px; color:#aaa; font-size:0.9rem; padding-left:10px; border-left:2px solid var(--accent);"><em>ℹ️ ${data.type}</em></div>`;
-        if (data.originalTerm) {
-            const enWord = data.originalTerm.charAt(0).toUpperCase() + data.originalTerm.slice(1);
-            html += `<div style="margin-top:4px; color:#aaa; font-size:0.85rem; padding-left:10px; border-left:2px solid #555;">🇬🇧 En inglés: <b>${enWord}</b></div>`;
-        }
+        if (data.originalTerm) { const enWord = data.originalTerm.charAt(0).toUpperCase() + data.originalTerm.slice(1); html += `<div style="margin-top:4px; color:#aaa; font-size:0.85rem; padding-left:10px; border-left:2px solid #555;">🇬🇧 En inglés: <b>${enWord}</b></div>`; }
         if (data.example) html += `<div style="margin-top:4px; color:#ccc; font-size:0.85rem; padding-left:10px; border-left:2px solid #555;">📝 "${data.example}"</div>`;
         return html;
     };
 
     function checkSpecificIntent(originalText) {
         const normText = cleanString(originalText); 
-        
-        if (normText.includes("ingles") || normText.includes("traduc") || normText.includes("como se dice")) {
-            let query = originalText.replace(/como se dice|en ingles|en inglés|traduce|traducir|el|la|los|las|un|una/gi, "").trim();
-            query = query.split(/\s+/).pop();
-            return { action: 'execute_search', source: 'DiccionarioAPI', query: query };
-        }
-
-        if (normText.startsWith("define") || normText.includes("significado de") || normText.includes("concepto de")) {
-             let query = originalText.replace(/define|significado de|concepto de|el|la|los|las/gi, "").trim();
-             return { action: 'execute_search', source: 'DiccionarioAPI', query: query };
-        }
-
-        // DETECTOR BÍBLICO (V1.8 - Solo si hay números)
-        // Busca Patrón: Palabra + Numero + DosPuntos + Numero (Ej: Mateo 10:5 o 1 Juan 2:4)
-        // Regex mejorado para aceptar "1 Juan", "2 Pedro", etc.
-        let bibleMatch = originalText.match(/(?:versiculo|biblia|libro de)?\s*(\d?\s*[a-zA-ZáéíóúÁÉÍÓÚñÑ]+)\s+(\d+)[\s:]+(\d+)/i);
-        if (bibleMatch) {
-            // bibleMatch[1] = Libro (1 Juan), bibleMatch[2] = Cap (5), bibleMatch[3] = Vers (4)
-            let libro = bibleMatch[1].trim();
-            let capitulo = bibleMatch[2];
-            let versiculo = bibleMatch[3];
-            let query = `${libro} ${capitulo}:${versiculo}`;
-            return { action: 'execute_search', source: 'BibleCombined', query: query };
-        }
-
+        if (normText.includes("ingles") || normText.includes("traduc") || normText.includes("como se dice")) { let query = originalText.replace(/como se dice|en ingles|en inglés|traduce|traducir|el|la|los|las|un|una/gi, "").trim(); query = query.split(/\s+/).pop(); return { action: 'execute_search', source: 'DiccionarioAPI', query: query }; }
+        if (normText.startsWith("define") || normText.includes("significado de") || normText.includes("concepto de")) { let query = originalText.replace(/define|significado de|concepto de|el|la|los|las/gi, "").trim(); return { action: 'execute_search', source: 'DiccionarioAPI', query: query }; }
+        let bibleMatch = originalText.match(/(?:versiculo|biblia|libro de)?\s*(\d?\s*[a-zA-ZáéíóúÁÉÍÓÚñÑ]+)\s+(\d+)[\s:]+(\d+)/i); if (bibleMatch) { let libro = bibleMatch[1].trim(); let capitulo = bibleMatch[2]; let versiculo = bibleMatch[3]; let query = `${libro} ${capitulo}:${versiculo}`; return { action: 'execute_search', source: 'BibleCombined', query: query }; }
         let match = normText.match(/(?:clima|tiempo)\s+(?:en|de)\s+(.+)/); if (match) return { action: 'execute_search', source: 'Meteo/WEB', query: match[1] };
         match = normText.match(/(?:libro|obra)\s+(?:de|titulado|sobre)?\s*(.+)/); if (match) return { action: 'execute_search', source: 'Biblioteca/WEB', query: match[1].replace(/^(de|sobre|el|la|los|las)\s+/, '') };
         match = normText.match(/(?:articulo|informacion|biografia)\s+(?:de|sobre|del|de la)\s+(.+)/); if (match) return { action: 'execute_search', source: 'Wikipedia/WEB', query: match[1] };
@@ -765,199 +376,58 @@
         if (source.includes('Biblioteca')) cleanQuery = query.replace(/^libro (de )?/i, '');
         else if (source.includes('Meteo')) cleanQuery = query.replace(/^clima (en )?/i, '');
         else if (source.includes('Wikipedia')) cleanQuery = query.replace(/^articulo (de )?/i, '');
-        
         lastSearchTerm = cleanQuery;
-
         const searchData = await fetchExternalData(cleanQuery, source);
         if (searchData) {
             let aiResponse = `<div class="rich-content"><strong>Sobre "${cleanQuery}":</strong><br><br>${searchData.def}</div>`;
             aiResponse += formatExtras(searchData.extra);
             aiResponse += `<div class="rich-source"><a href="${searchData.url}" target="_blank"><i class="fas fa-external-link-alt"></i> Fuente (${source})</a></div>`;
-            
-            aiResponse += `<br><div style="font-size:0.8rem; color:#888; margin-top:10px; border-top:1px solid #333; padding-top:8px;">
-                ¿Buscas otra cosa? Escribe:<br>
-                <span style="color:var(--text-main); font-weight:bold;">A</span> Diccionario <span style="color:var(--accent); margin:0 5px;">|</span>
-                <span style="color:var(--text-main); font-weight:bold;">B</span> Wiki <span style="color:var(--accent); margin:0 5px;">|</span>
-                <span style="color:var(--text-main); font-weight:bold;">C</span> Libros
-             </div>`;
-
+            aiResponse += `<br><div style="font-size:0.8rem; color:#888; margin-top:10px; border-top:1px solid #333; padding-top:8px;">¿Buscas otra cosa? Escribe:<br><span style="color:var(--text-main); font-weight:bold;">A</span> Diccionario <span style="color:var(--accent); margin:0 5px;">|</span> <span style="color:var(--text-main); font-weight:bold;">B</span> Wiki <span style="color:var(--accent); margin:0 5px;">|</span> <span style="color:var(--text-main); font-weight:bold;">C</span> Libros</div>`;
             await finishResponse(query, aiResponse, true, true); 
         } else { await finishResponse(query, `No pude encontrar "${cleanQuery}" en ${source}.`, true, true); }
     }
 
-    async function translateText(text, langPair) {
-        try {
-            const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`);
-            const data = await res.json();
-            return data.responseData.translatedText;
-        } catch (e) { console.error("Error traduciendo:", e); return text; }
-    }
+    async function translateText(text, langPair) { try { const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`); const data = await res.json(); return data.responseData.translatedText; } catch (e) { console.error("Error traduciendo:", e); return text; } }
     
     async function fetchExternalData(term, forceSource = 'Wikipedia/WEB') {
         const encoded = encodeURIComponent(term);
         
-        // --- BIBLE MODULE (V1.8 - Double Engine) ---
         if (forceSource === 'BibleCombined') {
-            // Regex para extraer partes: "1 Juan 5:4" -> Libro: "1 Juan", Cap: 5, Vers: 4
             let parts = term.match(/(\d?\s*[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+)\s+(\d+)[:\s]+(\d+)/);
             if (!parts) return null;
-
-            let libroRaw = parts[1].trim(); 
-            let capitulo = parts[2];
-            let versiculo = parts[3];
-
-            // 1. Corrector de Nombres para Wikisource
-            const libroMap = {
-                "apocalipsis": "Apocalipsis de Juan",
-                "hechos": "Hechos de los Apóstoles",
-                "cantares": "Cantar de los Cantares",
-                "salmos": "Salmos",
-                "1 juan": "Primera Epístola de Juan",
-                "2 juan": "Segunda Epístola de Juan",
-                "3 juan": "Tercera Epístola de Juan",
-                "1 pedro": "Primera Epístola de Pedro",
-                "2 pedro": "Segunda Epístola de Pedro",
-                "1 reyes": "I Reyes",
-                "2 reyes": "II Reyes",
-                "1 samuel": "I Samuel",
-                "2 samuel": "II Samuel",
-                "1 cronicas": "I Crónicas",
-                "2 cronicas": "II Crónicas",
-                "1 corintios": "Primera Epístola a los Corintios",
-                "2 corintios": "Segunda Epístola a los Corintios"
-            };
+            let libroRaw = parts[1].trim(); let capitulo = parts[2]; let versiculo = parts[3];
+            const libroMap = { "apocalipsis": "Apocalipsis de Juan", "hechos": "Hechos de los Apóstoles", "cantares": "Cantar de los Cantares", "salmos": "Salmos", "1 juan": "Primera Epístola de Juan", "2 juan": "Segunda Epístola de Juan", "3 juan": "Tercera Epístola de Juan", "1 pedro": "Primera Epístola de Pedro", "2 pedro": "Segunda Epístola de Pedro", "1 reyes": "I Reyes", "2 reyes": "II Reyes", "1 samuel": "I Samuel", "2 samuel": "II Samuel", "1 cronicas": "I Crónicas", "2 cronicas": "II Crónicas", "1 corintios": "Primera Epístola a los Corintios", "2 corintios": "Segunda Epístola a los Corintios" };
             let libroKey = libroRaw.toLowerCase();
             let libroWiki = libroMap[libroKey] || (libroRaw.charAt(0).toUpperCase() + libroRaw.slice(1));
-
-            // --- INTENTO 1: WIKISOURCE (Reina Valera 1909) ---
-            try {
-                let pageTitle = `Biblia_Reina-Valera_1909/${libroWiki}/${capitulo}`;
-                let wikiUrl = `https://es.wikisource.org/w/api.php?action=parse&page=${encodeURIComponent(pageTitle)}&format=json&prop=text&origin=*`;
-                
-                const resp = await fetch(wikiUrl);
-                const data = await resp.json();
-
-                if (!data.error && data.parse && data.parse.text) {
-                    let htmlContent = data.parse.text['*'];
-                    let tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = htmlContent;
-                    
-                    // Buscar versículo
-                    let verseText = "";
-                    let paragraphs = tempDiv.querySelectorAll('p, dd, li');
-                    for (let p of paragraphs) {
-                        let t = p.textContent.trim();
-                        // Regex flexible: empieza con numero + punto o espacio
-                        if (new RegExp(`^${versiculo}[\\s\\.]`).test(t)) {
-                            verseText = t; break;
-                        }
-                    }
-                    
-                    if (verseText) {
-                        let cleanVerse = verseText.replace(new RegExp(`^${versiculo}[\\s\\.]*`), '').trim();
-                        return {
-                            def: `<i>"${cleanVerse}"</i><br><br><b>📖 ${libroWiki} ${capitulo}:${versiculo}</b>`,
-                            src: "Wikisource (RV 1909)",
-                            url: `https://es.wikisource.org/wiki/${pageTitle}`,
-                            extra: { type: "Texto Sagrado", pais: "Reina Valera 1909" }
-                        };
-                    }
-                }
-            } catch(e) { console.log("Wikisource falló, probando API secundaria..."); }
-
-            // --- INTENTO 2: BIBLE-API.COM (Fallback) ---
-            try {
-                let apiQuery = `${libroRaw} ${capitulo}:${versiculo}`.replace(/\s+/g, '+');
-                const resp2 = await fetch(`https://bible-api.com/${apiQuery}?translation=rvr1909`);
-                const data2 = await resp2.json();
-                
-                if (data2.text) {
-                    return {
-                        def: `<i>"${data2.text.trim()}"</i><br><br><b>📖 ${data2.reference}</b>`,
-                        src: "BibleAPI (RV 1909)",
-                        url: "https://bible-api.com",
-                        extra: { type: "Versículo Bíblico", pais: "Reina Valera 1909" }
-                    };
-                }
-            } catch(e) {}
-
-            return null; // Falló todo
-        }
-
-        if (forceSource === 'Meteo/WEB') {
-            try {
-                const geoResp = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encoded}&count=1&language=es&format=json`);
-                const geoData = await geoResp.json();
-                if (geoData.results && geoData.results.length > 0) {
-                    const place = geoData.results[0];
-                    const weatherResp = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&current_weather=true`);
-                    const weatherData = await weatherResp.json();
-                    if (weatherData.current_weather) return { def: `<p>En <b>${place.name}</b>: <b>${weatherData.current_weather.temperature}°C</b>. Viento: ${weatherData.current_weather.windspeed} km/h.</p>`, src: "Meteo/WEB", url: `http://maps.google.com` };
-                }
-            } catch(e) {} return null;
-        }
-
-        if (forceSource === 'Biblioteca/WEB') {
-             try {
-                const searchResp = await fetch(`https://openlibrary.org/search.json?q=${encoded}&limit=1`);
-                const searchData = await searchResp.json();
-                if (searchData.docs && searchData.docs.length > 0) {
-                    const book = searchData.docs[0];
-                    let description = "Sin descripción.";
-                    try { const workResp = await fetch(`https://openlibrary.org${book.key}.json`); const workData = await workResp.json(); if(typeof workData.description === 'string') description = workData.description; else if(workData.description) description = workData.description.value; } catch(e){}
-                    return { def: `<p><b>Título:</b> ${book.title}</p><p><b>Autor:</b> ${book.author_name?book.author_name[0]:'?'}</p><p>${description.substring(0,500)}...</p>`, src: "Biblioteca/WEB", url: `https://openlibrary.org${book.key}` };
-                }
-            } catch(e) {} return null;
-        }
-
-        if (forceSource === 'DiccionarioAPI') {
-            try {
-                const englishWord = await translateText(term, "es|en");
-                const resp = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(englishWord)}`);
-                const data = await resp.json();
-                if (Array.isArray(data) && data.length > 0) {
-                    const entry = data[0];
-                    const firstMeaning = entry.meanings[0];
-                    const defObj = firstMeaning.definitions[0];
-                    const rawDef = defObj.definition;
-                    const rawExample = defObj.example || ""; 
-                    const rawType = firstMeaning.partOfSpeech;
-                    const phoneticText = entry.phonetic || ""; 
-                    let audioUrl = "";
-                    if (entry.phonetics) { const audioObj = entry.phonetics.find(p => p.audio && p.audio !== ""); if (audioObj) audioUrl = audioObj.audio; }
-                    const translatedDef = await translateText(rawDef, "en|es");
-                    const translatedType = await translateText(rawType, "en|es");
-                    let translatedExample = "";
-                    if (rawExample) { translatedExample = await translateText(rawExample, "en|es"); }
-                    return { 
-                        def: translatedDef, 
-                        src: "DiccionarioAPI", 
-                        url: entry.sourceUrls ? entry.sourceUrls[0] : "",
-                        extra: { type: translatedType, pais: "Global", phonetic: phoneticText, audio: audioUrl, example: translatedExample, originalTerm: englishWord }
-                    };
-                }
-            } catch(e) {}
+            try { let pageTitle = `Biblia_Reina-Valera_1909/${libroWiki}/${capitulo}`; let wikiUrl = `https://es.wikisource.org/w/api.php?action=parse&page=${encodeURIComponent(pageTitle)}&format=json&prop=text&origin=*`; const resp = await fetch(wikiUrl); const data = await resp.json(); if (!data.error && data.parse && data.parse.text) { let htmlContent = data.parse.text['*']; let tempDiv = document.createElement('div'); tempDiv.innerHTML = htmlContent; let verseText = ""; let paragraphs = tempDiv.querySelectorAll('p, dd, li'); for (let p of paragraphs) { let t = p.textContent.trim(); if (new RegExp(`^${versiculo}[\\s\\.]`).test(t)) { verseText = t; break; } } if (verseText) { let cleanVerse = verseText.replace(new RegExp(`^${versiculo}[\\s\\.]*`), '').trim(); return { def: `<i>"${cleanVerse}"</i><br><br><b>📖 ${libroWiki} ${capitulo}:${versiculo}</b>`, src: "Wikisource (RV 1909)", url: `https://es.wikisource.org/wiki/${pageTitle}`, extra: { type: "Texto Sagrado", pais: "Reina Valera 1909" } }; } } } catch(e) { console.log("Wikisource falló, probando API secundaria..."); }
+            try { let apiQuery = `${libroRaw} ${capitulo}:${versiculo}`.replace(/\s+/g, '+'); const resp2 = await fetch(`https://bible-api.com/${apiQuery}?translation=rvr1909`); const data2 = await resp2.json(); if (data2.text) { return { def: `<i>"${data2.text.trim()}"</i><br><br><b>📖 ${data2.reference}</b>`, src: "BibleAPI (RV 1909)", url: "https://bible-api.com", extra: { type: "Versículo Bíblico", pais: "Reina Valera 1909" } }; } } catch(e) {}
             return null;
         }
 
-        try {
-            const searchResp = await fetch(`https://es.wikipedia.org/w/api.php?action=opensearch&search=${encoded}&limit=1&namespace=0&format=json&origin=*`);
-            const searchData = await searchResp.json();
-            if (searchData[1] && searchData[1].length > 0) {
-                const cleanTitle = encodeURIComponent(searchData[1][0]);
-                const contentResp = await fetch(`https://es.wikipedia.org/w/api.php?action=query&prop=extracts&titles=${cleanTitle}&explaintext=1&exintro=1&format=json&origin=*`);
-                const contentData = await contentResp.json();
-                const pages = contentData.query.pages;
-                const pageId = Object.keys(pages)[0];
-                if (pageId !== "-1") {
-                    let text = pages[pageId].extract.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
-                    const sentences = text.split('. '); let formatted = ""; let chunk = "";
-                    sentences.forEach((s, i) => { chunk += s + ". "; if (i > 0 && i % 3 === 0) { formatted += `<p>${chunk}</p>`; chunk = ""; } });
-                    if(chunk) formatted += `<p>${chunk}</p>`;
-                    return { def: formatted, src: "Wikipedia/WEB", url: `https://es.wikipedia.org/?curid=${pageId}` };
-                }
+        if (forceSource === 'Meteo/WEB') { try { const geoResp = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encoded}&count=1&language=es&format=json`); const geoData = await geoResp.json(); if (geoData.results && geoData.results.length > 0) { const place = geoData.results[0]; const weatherResp = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&current_weather=true`); const weatherData = await weatherResp.json(); if (weatherData.current_weather) return { def: `<p>En <b>${place.name}</b>: <b>${weatherData.current_weather.temperature}°C</b>. Viento: ${weatherData.current_weather.windspeed} km/h.</p>`, src: "Meteo/WEB", url: `http://maps.google.com` }; } } catch(e) {} return null; }
+        if (forceSource === 'Biblioteca/WEB') { try { const searchResp = await fetch(`https://openlibrary.org/search.json?q=${encoded}&limit=1`); const searchData = await searchResp.json(); if (searchData.docs && searchData.docs.length > 0) { const book = searchData.docs[0]; let description = "Sin descripción."; try { const workResp = await fetch(`https://openlibrary.org${book.key}.json`); const workData = await workResp.json(); if(typeof workData.description === 'string') description = workData.description; else if(workData.description) description = workData.description.value; } catch(e){} return { def: `<p><b>Título:</b> ${book.title}</p><p><b>Autor:</b> ${book.author_name?book.author_name[0]:'?'}</p><p>${description.substring(0,500)}...</p>`, src: "Biblioteca/WEB", url: `https://openlibrary.org${book.key}` }; } } catch(e) {} return null; }
+        if (forceSource === 'DiccionarioAPI') { try { const englishWord = await translateText(term, "es|en"); const resp = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(englishWord)}`); const data = await resp.json(); if (Array.isArray(data) && data.length > 0) { const entry = data[0]; const firstMeaning = entry.meanings[0]; const defObj = firstMeaning.definitions[0]; const rawDef = defObj.definition; const rawExample = defObj.example || ""; const rawType = firstMeaning.partOfSpeech; const phoneticText = entry.phonetic || ""; let audioUrl = ""; if (entry.phonetics) { const audioObj = entry.phonetics.find(p => p.audio && p.audio !== ""); if (audioObj) audioUrl = audioObj.audio; } const translatedDef = await translateText(rawDef, "en|es"); const translatedType = await translateText(rawType, "en|es"); let translatedExample = ""; if (rawExample) { translatedExample = await translateText(rawExample, "en|es"); } return { def: translatedDef, src: "DiccionarioAPI", url: entry.sourceUrls ? entry.sourceUrls[0] : "", extra: { type: translatedType, pais: "Global", phonetic: phoneticText, audio: audioUrl, example: translatedExample, originalTerm: englishWord } }; } } catch(e) {} return null; }
+        try { const searchResp = await fetch(`https://es.wikipedia.org/w/api.php?action=opensearch&search=${encoded}&limit=1&namespace=0&format=json&origin=*`); const searchData = await searchResp.json(); if (searchData[1] && searchData[1].length > 0) { const cleanTitle = encodeURIComponent(searchData[1][0]); const contentResp = await fetch(`https://es.wikipedia.org/w/api.php?action=query&prop=extracts&titles=${cleanTitle}&explaintext=1&exintro=1&format=json&origin=*`); const contentData = await contentResp.json(); const pages = contentData.query.pages; const pageId = Object.keys(pages)[0]; if (pageId !== "-1") { let text = pages[pageId].extract.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim(); const sentences = text.split('. '); let formatted = ""; let chunk = ""; sentences.forEach((s, i) => { chunk += s + ". "; if (i > 0 && i % 3 === 0) { formatted += `<p>${chunk}</p>`; chunk = ""; } }); if(chunk) formatted += `<p>${chunk}</p>`; return { def: formatted, src: "Wikipedia/WEB", url: `https://es.wikipedia.org/?curid=${pageId}` }; } } } catch(e) {} return null;
+    }
+
+    // --- NUEVA FUNCIÓN: DETECTOR DE CITAS BÍBLICAS EN LA RESPUESTA ---
+    function detectBibleReferences(text) {
+        // Busca patrones como: Mateo 10:5, 1 Juan 2:4, Genesis 1:1
+        // (Excluye formatos de hora si no tienen nombre de libro antes)
+        const regex = /(?:en\s+|de\s+)?([1-3]?\s*[a-zA-ZáéíóúÁÉÍÓÚñÑ]+)\s+(\d+):(\d+)/gi;
+        const matches = [...text.matchAll(regex)];
+        
+        if (matches.length > 0) {
+            // Tomamos la primera coincidencia válida
+            // match[1] = Libro, match[2] = Cap, match[3] = Vers
+            const m = matches[0];
+            const fullRef = `${m[1]} ${m[2]}:${m[3]}`;
+            // Verificamos que el "Libro" sea una palabra válida (más de 2 letras) para no confundir con ruido
+            if (m[1].length > 2) {
+                return fullRef;
             }
-        } catch(e) {} return null;
+        }
+        return null;
     }
 
     async function runWordDecomposition(interpretedText, words) {
@@ -996,69 +466,26 @@
         if (showFeedback) {
             feedbackHTML = `<div class="feedback-area"><button class="feedback-btn" onclick="window.rateAnswer('good', '${safeUserTxt}', this)"><i class="fas fa-thumbs-up"></i> Útil</button><button class="feedback-btn bad" onclick="window.rateAnswer('bad', '${safeUserTxt}', this)"><i class="fas fa-graduation-cap"></i> Enseñar</button></div>`;
         }
+        
+        // --- V1.9 DETECTOR DE CITAS BÍBLICAS ---
+        const bibleRef = detectBibleReferences(aiTxt);
+        if (bibleRef) {
+            // Agregamos botón mágico al final del texto AI
+            aiTxt += `<br><button onclick="window.autoReadBible('${bibleRef}')" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid var(--accent); color:white; padding:5px 10px; border-radius:15px; cursor:pointer; font-size:0.85rem;"><i class="fas fa-book-bible"></i> Leer <b>${bibleRef}</b></button>`;
+        }
+        // ----------------------------------------
+
         appendMsg('ai', aiTxt + feedbackHTML, true, msgId); 
         saveLocalChat(userTxt, aiTxt + feedbackHTML);
         if (wasVoiceInput) { setTimeout(() => { const btnId = `btn-${msgId}`; const cleanSpeakTxt = aiTxt.replace(/<[^>]*>/g, " "); window.speakText(cleanSpeakTxt, btnId); }, 500); }
         if (shouldSuggest) { generateSuggestions(); }
     }
     
-    async function generateSuggestions() {
-        activeSuggestions = [];
-        try {
-            const randomSubject = bookSubjects[Math.floor(Math.random() * bookSubjects.length)];
-            const bookResp = await fetch(`https://openlibrary.org/search.json?q=${randomSubject}&limit=5&fields=title`);
-            const bookJson = await bookResp.json();
-            if (bookJson.docs && bookJson.docs.length > 0) {
-                activeSuggestions.push({ label: `Libro: **${bookJson.docs[0].title}**`, query: `libro de ${bookJson.docs[0].title}`, source: 'Biblioteca/WEB' });
-            }
-        } catch(e) {}
-        try {
-            const randomTopic = randomTopics[Math.floor(Math.random() * randomTopics.length)];
-            const wikiResp = await fetch(`https://es.wikipedia.org/w/api.php?action=query&list=search&srsearch=${randomTopic}&format=json&origin=*`);
-            const wikiJson = await wikiResp.json();
-            if(wikiJson.query && wikiJson.query.search.length > 0) {
-                 activeSuggestions.push({ label: `Artículo: **${wikiJson.query.search[0].title}**`, query: `articulo de ${wikiJson.query.search[0].title}`, source: 'Wikipedia/WEB' });
-            }
-        } catch(e) {}
-        try {
-            const randomCity = globalCities[Math.floor(Math.random() * globalCities.length)];
-            activeSuggestions.push({ label: `Clima en **${randomCity}**`, query: `clima en ${randomCity}`, source: 'Meteo/WEB' });
-        } catch(e) {}
-
-        localStorage.setItem('alexia_active_suggestions', JSON.stringify(activeSuggestions));
-        const ideaBtn = document.getElementById('idea-btn');
-        ideaBtn.classList.add('has-ideas');
-        const content = document.getElementById('suggestions-content');
-        content.innerHTML = "";
-        activeSuggestions.forEach(s => {
-            content.innerHTML += `<div class="sug-item" onclick="window.useSuggestion('${s.query}')">${s.label}</div>`;
-        });
-    }
-
-    window.rateAnswer = (type, query, btnElement) => {
-        if (type === 'good') { alert("¡Me alegra haber ayudado! 😊"); } else {
-            if (chatState.mode === 'waiting_correction') {
-                chatState = { mode: 'normal', lastQuery: '' };
-                btnElement.classList.remove('active-teach'); btnElement.innerHTML = `<i class="fas fa-graduation-cap"></i> Enseñar`;
-                appendMsg('ai', "Modo enseñanza cancelado.");
-            } else {
-                chatState = { mode: 'waiting_correction', lastQuery: query };
-                document.querySelectorAll('.feedback-btn.active-teach').forEach(b => b.classList.remove('active-teach'));
-                btnElement.classList.add('active-teach'); btnElement.innerHTML = `<i class="fas fa-times"></i> Cancelar`;
-                appendMsg('ai', "Entendido. 😔 ¿Qué respuesta debería haberte dado?");
-            }
-        }
-    }
-
-    // Funciones Admin/Aux
+    // ... resto de funciones (sin cambios) ...
+    async function generateSuggestions() { activeSuggestions = []; try { const randomSubject = bookSubjects[Math.floor(Math.random() * bookSubjects.length)]; const bookResp = await fetch(`https://openlibrary.org/search.json?q=${randomSubject}&limit=5&fields=title`); const bookJson = await bookResp.json(); if (bookJson.docs && bookJson.docs.length > 0) { activeSuggestions.push({ label: `Libro: **${bookJson.docs[0].title}**`, query: `libro de ${bookJson.docs[0].title}`, source: 'Biblioteca/WEB' }); } } catch(e) {} try { const randomTopic = randomTopics[Math.floor(Math.random() * randomTopics.length)]; const wikiResp = await fetch(`https://es.wikipedia.org/w/api.php?action=query&list=search&srsearch=${randomTopic}&format=json&origin=*`); const wikiJson = await wikiResp.json(); if(wikiJson.query && wikiJson.query.search.length > 0) { activeSuggestions.push({ label: `Artículo: **${wikiJson.query.search[0].title}**`, query: `articulo de ${wikiJson.query.search[0].title}`, source: 'Wikipedia/WEB' }); } } catch(e) {} try { const randomCity = globalCities[Math.floor(Math.random() * globalCities.length)]; activeSuggestions.push({ label: `Clima en **${randomCity}**`, query: `clima en ${randomCity}`, source: 'Meteo/WEB' }); } catch(e) {} localStorage.setItem('alexia_active_suggestions', JSON.stringify(activeSuggestions)); const ideaBtn = document.getElementById('idea-btn'); ideaBtn.classList.add('has-ideas'); const content = document.getElementById('suggestions-content'); content.innerHTML = ""; activeSuggestions.forEach(s => { content.innerHTML += `<div class="sug-item" onclick="window.useSuggestion('${s.query}')">${s.label}</div>`; }); }
+    window.rateAnswer = (type, query, btnElement) => { if (type === 'good') { alert("¡Me alegra haber ayudado! 😊"); } else { if (chatState.mode === 'waiting_correction') { chatState = { mode: 'normal', lastQuery: '' }; btnElement.classList.remove('active-teach'); btnElement.innerHTML = `<i class="fas fa-graduation-cap"></i> Enseñar`; appendMsg('ai', "Modo enseñanza cancelado."); } else { chatState = { mode: 'waiting_correction', lastQuery: query }; document.querySelectorAll('.feedback-btn.active-teach').forEach(b => b.classList.remove('active-teach')); btnElement.classList.add('active-teach'); btnElement.innerHTML = `<i class="fas fa-times"></i> Cancelar`; appendMsg('ai', "Entendido. 😔 ¿Qué respuesta debería haberte dado?"); } } }
     window.dashAct = async (act, idx) => { const item = brain.reviewQueue[idx]; const editedA = document.getElementById(`edit-a-${idx}`).value; if(act === 'app') { await updateDoc(doc(db, "alexia_db", "main_brain"), { memory: arrayUnion({ inputs: [processSynonyms(item.q)], output: editedA }), reviewQueue: arrayRemove(item) }); } else { await updateDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayRemove(item) }); } setTimeout(renderAdminQueue, 500); };
-    window.promoteToMemory = async (idx) => { 
-        const item = brain.missingLog[idx]; 
-        const newAnswer = document.getElementById(`teach-a-${idx}`).value; 
-        if(!newAnswer) return; 
-        await updateDoc(doc(db, "alexia_db", "main_brain"), { memory: arrayUnion({ inputs: [processSynonyms(item.q)], output: newAnswer }), missingLog: arrayRemove(item) }); 
-        setTimeout(renderAdminQueue, 500); 
-    };
+    window.promoteToMemory = async (idx) => { const item = brain.missingLog[idx]; const newAnswer = document.getElementById(`teach-a-${idx}`).value; if(!newAnswer) return; await updateDoc(doc(db, "alexia_db", "main_brain"), { memory: arrayUnion({ inputs: [processSynonyms(item.q)], output: newAnswer }), missingLog: arrayRemove(item) }); setTimeout(renderAdminQueue, 500); };
     window.deleteLog = async (idx) => { const item = brain.missingLog[idx]; await updateDoc(doc(db, "alexia_db", "main_brain"), { missingLog: arrayRemove(item) }); setTimeout(renderAdminQueue, 500); };
     window.openDash = () => { document.getElementById('admin-dash').style.display = 'flex'; renderAdminQueue(); }
     window.closeDash = () => document.getElementById('admin-dash').style.display = 'none';
@@ -1072,105 +499,15 @@
     window.googleLogin = () => signInWithPopup(auth, provider).then(()=>closeModal()).catch(e=>alert(e.message));
     window.logout = (e) => { if(e) e.stopPropagation(); const key = `alexia_chats_${currentUser ? currentUser.uid : 'guest'}`; localStorage.removeItem(key); localStorage.removeItem('alexia_last_chat_id'); signOut(auth).then(() => { window.location.reload(); }); }
     window.uploadDictionary = async () => { const fileInput = document.getElementById('json-upload'); const statusDiv = document.getElementById('upload-status'); if(fileInput.files.length === 0) return alert("Selecciona archivo"); statusDiv.innerHTML = "Analizando..."; const reader = new FileReader(); reader.onload = async (e) => { try { const words = JSON.parse(e.target.result); let added = 0; const chunkSize = 400; for (let i = 0; i < words.length; i += chunkSize) { const chunk = words.slice(i, i + chunkSize); const batch = writeBatch(db); chunk.forEach(word => { const ref = doc(db, "dictionary", cleanString(word.id)); batch.set(ref, word); added++; }); await batch.commit(); statusDiv.innerHTML = `Subiendo... (${added})`; } statusDiv.innerHTML = `✅ Terminado: ${added}`; } catch (err) { statusDiv.innerHTML = "❌ Error JSON"; } }; reader.readAsText(fileInput.files[0]); };
-    window.uploadKeywords = async () => { 
-        const fileInput = document.getElementById('json-keywords-upload'); 
-        const statusDiv = document.getElementById('upload-status-keywords'); 
-        if(fileInput.files.length === 0) return alert("Selecciona el archivo JSON de conectores"); 
-        statusDiv.innerHTML = "Analizando..."; 
-        const reader = new FileReader(); 
-        reader.onload = async (e) => { 
-            try { 
-                const words = JSON.parse(e.target.result); 
-                let added = 0; 
-                const chunkSize = 400; 
-                for (let i = 0; i < words.length; i += chunkSize) { 
-                    const chunk = words.slice(i, i + chunkSize); 
-                    const batch = writeBatch(db); 
-                    chunk.forEach(word => { 
-                        const ref = doc(db, "preguntaspalbraclave", cleanString(word.id)); 
-                        batch.set(ref, word); 
-                        added++; 
-                    }); 
-                    await batch.commit(); 
-                    statusDiv.innerHTML = `Subiendo... (${added})`; 
-                } 
-                statusDiv.innerHTML = `✅ ¡Listo! ${added} conectores subidos.`; 
-            } catch (err) { console.error(err); statusDiv.innerHTML = "❌ Error en el JSON"; } 
-        }; 
-        reader.readAsText(fileInput.files[0]); 
-    };
-    function renderAdminQueue() {
-        const content = document.getElementById('dash-content'); content.innerHTML = "";
-        let reviewHTML = `<div class="admin-section"><h4>📝 Pendientes</h4>`;
-        if(brain.reviewQueue.length === 0) reviewHTML += "<p style='color:#777; font-size:0.8rem;'>Nada.</p>";
-        else { brain.reviewQueue.forEach((item, idx) => { reviewHTML += `<div class="log-item review"><b>P: ${item.q}</b><br><input type="text" id="edit-a-${idx}" value="${item.a}" class="log-input"><div style="margin-top:5px;"><button onclick="window.dashAct('app', ${idx})" style="background:var(--success); border:none; padding:4px 8px; border-radius:4px; margin-right:5px;">Aprobar</button><button onclick="window.dashAct('rej', ${idx})" style="background:var(--danger); border:none; padding:4px 8px; border-radius:4px;">Borrar</button></div></div>`; }); }
-        reviewHTML += "</div>";
-        let missingHTML = `<div class="admin-section"><h4>🔍 Historial</h4>`;
-        if(!brain.missingLog || brain.missingLog.length === 0) missingHTML += "<p style='color:#777; font-size:0.8rem;'>Vacío.</p>";
-        else { const list = brain.missingLog.slice(-10).reverse(); list.forEach((item, i) => { const realIdx = brain.missingLog.length - 1 - i; missingHTML += `<div class="log-item missing"><div style="font-weight:bold; color:#ccc;">${item.q}</div><div style="font-size:0.8rem; color:#777; margin-bottom:5px;">IA: ${item.a}</div><input type="text" id="teach-a-${realIdx}" placeholder="Respuesta correcta..." class="log-input"><div style="margin-top:5px;"><button onclick="window.promoteToMemory(${realIdx})" style="background:var(--accent); color:#000; border:none; padding:4px 8px; border-radius:4px; margin-right:5px;">Guardar</button><button onclick="window.deleteLog(${realIdx})" style="background:transparent; border:1px solid #555; color:#777; padding:4px 8px; border-radius:4px;">Ignorar</button></div></div>`; }); }
-        missingHTML += "</div>";
-        content.innerHTML = reviewHTML + missingHTML;
-    }
-    function renderLocalHistory() {
-        const key = getLocalKey(); let chats = []; try { chats = JSON.parse(localStorage.getItem(key)); if (!Array.isArray(chats)) throw new Error("Invalid format"); } catch(e) { console.warn("Limpiando historial corrupto..."); localStorage.removeItem(key); localStorage.removeItem('alexia_last_chat_id'); chats = []; }
-        const pc = document.getElementById('pinned-container'); const hc = document.getElementById('history-container'); pc.innerHTML = ""; hc.innerHTML = ""; let hasPinned = false;
-        if(chats.length === 0) { hc.innerHTML = `<div style="text-align:center; padding:20px; color:#555; font-size:0.85rem;">Historial vacío</div>`; } else { chats.forEach(chat => { const active = (chat.id === currentChatId) ? 'active' : ''; const title = chat.title || "Chat sin título"; const pinClass = chat.isPinned ? 'pinned' : ''; const html = `<div class="chat-item ${active}" onclick="window.loadLocalChat('${chat.id}')"><div class="chat-title"><i class="far fa-comment-alt" style="opacity:0.7; margin-right:8px;"></i>${title}</div><button class="pin-btn ${pinClass}" onclick="togglePinLocal(event, '${chat.id}')"><i class="fas fa-thumbtack"></i></button></div>`; if (chat.isPinned) { pc.innerHTML += html; hasPinned = true; } else hc.innerHTML += html; }); } document.getElementById('pinned-section').style.display = hasPinned ? 'block' : 'none';
-    }
-    window.loadLocalChat = (id) => {
-        const key = getLocalKey(); 
-        const chats = JSON.parse(localStorage.getItem(key)) || []; 
-        const chat = chats.find(c => c.id === id); 
-        if (chat) { 
-            currentChatId = id; 
-            localStorage.setItem('alexia_last_chat_id', currentChatId); 
-            const box = document.getElementById('chat-box'); 
-            box.innerHTML = ""; 
-            chat.messages.forEach(m => appendMsg(m.r, m.t, m.r === 'ai')); 
-            renderLocalHistory(); 
-            if(window.innerWidth < 800) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('active'); } 
-        }
-    }
-    window.togglePinLocal = (e, id) => { 
-        e.stopPropagation(); 
-        const key = getLocalKey(); 
-        let chats = JSON.parse(localStorage.getItem(key)) || []; 
-        const idx = chats.findIndex(c => c.id === id); 
-        if (idx > -1) { 
-            chats[idx].isPinned = !chats[idx].isPinned; 
-            if(chats[idx].isPinned) { const c = chats.splice(idx, 1)[0]; chats.unshift(c); }
-            localStorage.setItem(key, JSON.stringify(chats)); 
-            renderLocalHistory(); 
-        } 
-    }
-    window.startNewChat = () => { 
-        currentChatId = null; 
-        localStorage.removeItem('alexia_last_chat_id'); 
-        chatState = { mode: 'normal' }; 
-        document.getElementById('chat-box').innerHTML = `<div style="text-align:center; margin-top:80px; opacity:0.7; animation:fadeIn 1s;"><div style="width:80px; height:80px; background:linear-gradient(135deg, var(--accent), #ec4899); border-radius:50%; margin:0 auto 25px auto; display:flex; align-items:center; justify-content:center; box-shadow:0 0 40px var(--accent-glow);"><i class="fas fa-robot" style="font-size:40px; color:white;"></i></div><h2 style="font-weight:500;">¿En qué puedo ayudarte?</h2></div>`; 
-        renderLocalHistory(); 
-        if(window.innerWidth < 800) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('active'); }
-    }
+    window.uploadKeywords = async () => { const fileInput = document.getElementById('json-keywords-upload'); const statusDiv = document.getElementById('upload-status-keywords'); if(fileInput.files.length === 0) return alert("Selecciona el archivo JSON de conectores"); statusDiv.innerHTML = "Analizando..."; const reader = new FileReader(); reader.onload = async (e) => { try { const words = JSON.parse(e.target.result); let added = 0; const chunkSize = 400; for (let i = 0; i < words.length; i += chunkSize) { const chunk = words.slice(i, i + chunkSize); const batch = writeBatch(db); chunk.forEach(word => { const ref = doc(db, "preguntaspalbraclave", cleanString(word.id)); batch.set(ref, word); added++; }); await batch.commit(); statusDiv.innerHTML = `Subiendo... (${added})`; } statusDiv.innerHTML = `✅ ¡Listo! ${added} conectores subidos.`; } catch (err) { console.error(err); statusDiv.innerHTML = "❌ Error en el JSON"; } }; reader.readAsText(fileInput.files[0]); };
+    function renderAdminQueue() { const content = document.getElementById('dash-content'); content.innerHTML = ""; let reviewHTML = `<div class="admin-section"><h4>📝 Pendientes</h4>`; if(brain.reviewQueue.length === 0) reviewHTML += "<p style='color:#777; font-size:0.8rem;'>Nada.</p>"; else { brain.reviewQueue.forEach((item, idx) => { reviewHTML += `<div class="log-item review"><b>P: ${item.q}</b><br><input type="text" id="edit-a-${idx}" value="${item.a}" class="log-input"><div style="margin-top:5px;"><button onclick="window.dashAct('app', ${idx})" style="background:var(--success); border:none; padding:4px 8px; border-radius:4px; margin-right:5px;">Aprobar</button><button onclick="window.dashAct('rej', ${idx})" style="background:var(--danger); border:none; padding:4px 8px; border-radius:4px;">Borrar</button></div></div>`; }); } reviewHTML += "</div>"; let missingHTML = `<div class="admin-section"><h4>🔍 Historial</h4>`; if(!brain.missingLog || brain.missingLog.length === 0) missingHTML += "<p style='color:#777; font-size:0.8rem;'>Vacío.</p>"; else { const list = brain.missingLog.slice(-10).reverse(); list.forEach((item, i) => { const realIdx = brain.missingLog.length - 1 - i; missingHTML += `<div class="log-item missing"><div style="font-weight:bold; color:#ccc;">${item.q}</div><div style="font-size:0.8rem; color:#777; margin-bottom:5px;">IA: ${item.a}</div><input type="text" id="teach-a-${realIdx}" placeholder="Respuesta correcta..." class="log-input"><div style="margin-top:5px;"><button onclick="window.promoteToMemory(${realIdx})" style="background:var(--accent); color:#000; border:none; padding:4px 8px; border-radius:4px; margin-right:5px;">Guardar</button><button onclick="window.deleteLog(${realIdx})" style="background:transparent; border:1px solid #555; color:#777; padding:4px 8px; border-radius:4px;">Ignorar</button></div></div>`; }); } missingHTML += "</div>"; content.innerHTML = reviewHTML + missingHTML; }
+    function renderLocalHistory() { const key = getLocalKey(); let chats = []; try { chats = JSON.parse(localStorage.getItem(key)); if (!Array.isArray(chats)) throw new Error("Invalid format"); } catch(e) { console.warn("Limpiando historial corrupto..."); localStorage.removeItem(key); localStorage.removeItem('alexia_last_chat_id'); chats = []; } const pc = document.getElementById('pinned-container'); const hc = document.getElementById('history-container'); pc.innerHTML = ""; hc.innerHTML = ""; let hasPinned = false; if(chats.length === 0) { hc.innerHTML = `<div style="text-align:center; padding:20px; color:#555; font-size:0.85rem;">Historial vacío</div>`; } else { chats.forEach(chat => { const active = (chat.id === currentChatId) ? 'active' : ''; const title = chat.title || "Chat sin título"; const pinClass = chat.isPinned ? 'pinned' : ''; const html = `<div class="chat-item ${active}" onclick="window.loadLocalChat('${chat.id}')"><div class="chat-title"><i class="far fa-comment-alt" style="opacity:0.7; margin-right:8px;"></i>${title}</div><button class="pin-btn ${pinClass}" onclick="togglePinLocal(event, '${chat.id}')"><i class="fas fa-thumbtack"></i></button></div>`; if (chat.isPinned) { pc.innerHTML += html; hasPinned = true; } else hc.innerHTML += html; }); } document.getElementById('pinned-section').style.display = hasPinned ? 'block' : 'none'; }
+    window.loadLocalChat = (id) => { const key = getLocalKey(); const chats = JSON.parse(localStorage.getItem(key)) || []; const chat = chats.find(c => c.id === id); if (chat) { currentChatId = id; localStorage.setItem('alexia_last_chat_id', currentChatId); const box = document.getElementById('chat-box'); box.innerHTML = ""; chat.messages.forEach(m => appendMsg(m.r, m.t, m.r === 'ai')); renderLocalHistory(); if(window.innerWidth < 800) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('active'); } } }
+    window.togglePinLocal = (e, id) => { e.stopPropagation(); const key = getLocalKey(); let chats = JSON.parse(localStorage.getItem(key)) || []; const idx = chats.findIndex(c => c.id === id); if (idx > -1) { chats[idx].isPinned = !chats[idx].isPinned; if(chats[idx].isPinned) { const c = chats.splice(idx, 1)[0]; chats.unshift(c); } localStorage.setItem(key, JSON.stringify(chats)); renderLocalHistory(); } }
+    window.startNewChat = () => { currentChatId = null; localStorage.removeItem('alexia_last_chat_id'); chatState = { mode: 'normal' }; document.getElementById('chat-box').innerHTML = `<div style="text-align:center; margin-top:80px; opacity:0.7; animation:fadeIn 1s;"><div style="width:80px; height:80px; background:linear-gradient(135deg, var(--accent), #ec4899); border-radius:50%; margin:0 auto 25px auto; display:flex; align-items:center; justify-content:center; box-shadow:0 0 40px var(--accent-glow);"><i class="fas fa-robot" style="font-size:40px; color:white;"></i></div><h2 style="font-weight:500;">¿En qué puedo ayudarte?</h2></div>`; renderLocalHistory(); if(window.innerWidth < 800) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('active'); } }
     function saveLocalChat(uMsg, aiMsg) { const key = getLocalKey(); let chats = JSON.parse(localStorage.getItem(key)) || []; if (!currentChatId) { currentChatId = Date.now().toString(); chats.unshift({ id: currentChatId, title: uMsg.substring(0, 25) + "...", timestamp: Date.now(), isPinned: false, messages: [{r:'user', t:uMsg}, {r:'ai', t:aiMsg}] }); } else { const idx = chats.findIndex(c => c.id === currentChatId); if (idx > -1) { chats[idx].messages.push({r:'user', t:uMsg}, {r:'ai', t:aiMsg}); chats[idx].timestamp = Date.now(); } } localStorage.setItem(key, JSON.stringify(chats)); localStorage.setItem('alexia_last_chat_id', currentChatId); renderLocalHistory(); }
     function getLocalKey() { const uid = currentUser ? currentUser.uid : 'guest'; return `alexia_chats_${uid}`; }
-    function updateUserUI(u) {
-        const btnLogin = document.getElementById('top-login-btn');
-        const headerProfile = document.getElementById('header-user-profile');
-        const headerAvatar = document.getElementById('header-avatar');
-        const ddName = document.getElementById('dd-name');
-        const ddEmail = document.getElementById('dd-email');
-        const adminLink = document.getElementById('admin-link-container');
-        if(u) {
-            if(btnLogin) btnLogin.style.display = 'none';
-            if(headerProfile) headerProfile.style.display = 'block';
-            if(headerAvatar) headerAvatar.innerHTML = u.name[0].toUpperCase();
-            if(ddName) ddName.innerText = u.name;
-            if(ddEmail) ddEmail.innerText = u.email;
-            if(adminLink) adminLink.style.display = (u.role === 'admin') ? 'block' : 'none';
-        } else {
-            if(btnLogin) btnLogin.style.display = 'block';
-            if(headerProfile) headerProfile.style.display = 'none';
-        }
-    }
+    function updateUserUI(u) { const btnLogin = document.getElementById('top-login-btn'); const headerProfile = document.getElementById('header-user-profile'); const headerAvatar = document.getElementById('header-avatar'); const ddName = document.getElementById('dd-name'); const ddEmail = document.getElementById('dd-email'); const adminLink = document.getElementById('admin-link-container'); if(u) { if(btnLogin) btnLogin.style.display = 'none'; if(headerProfile) headerProfile.style.display = 'block'; if(headerAvatar) headerAvatar.innerHTML = u.name[0].toUpperCase(); if(ddName) ddName.innerText = u.name; if(ddEmail) ddEmail.innerText = u.email; if(adminLink) adminLink.style.display = (u.role === 'admin') ? 'block' : 'none'; } else { if(btnLogin) btnLogin.style.display = 'block'; if(headerProfile) headerProfile.style.display = 'none'; } }
     document.getElementById('chat-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
 </script>
 </body>
