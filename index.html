@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V61 - UI Fix</title>
+    <title>AleXIA V62 - Fusión Estable</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -35,7 +35,7 @@
         }
 
         .sidebar-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #555; display: inline-block; margin-left: 10px; transition: 0.3s; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #555; display: inline-block; margin-left: 5px; transition: 0.3s; }
         .status-dot.online { background: var(--success); box-shadow: 0 0 8px var(--success); }
         .status-dot.offline { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
 
@@ -255,7 +255,7 @@
     const stopWords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'de', 'del', 'al', 'a', 'en', 'por', 'para', 'con', 'sin', 'que', 'como', 'cual', 'quien', 'es', 'son', 'fue', 'era', 'me', 'te', 'se', 'lo', 'mi', 'tu', 'su', 'nos', 'yo', 'tu', 'el', 'ella', 'dime', 'sobre', 'acerca', 'significa', 'busco', 'esta', 'está', 'cómo', 'hay', 'eres', 'soy', 'somos', 'todo', 'bien', 'tal', 'gracias']);
     const contextualReplies = { "que tal como estas": ["¿Qué gusto saludarte, yo muy bien, y tú?", "¿Cómo te ha ido últimamente?"], "hola": ["¡Hola! ¿Cómo andas?", "Saludos. ¿Qué me cuentas?"], "si": ["Perfecto.", "Excelente."], "no": ["Entendido."], "adios": ["¡Hasta luego!", "¡Cuídate mucho!"], "estoy bien y tu": ["Me alegra. Yo muy bien."] };
     
-    // --- FUNCIÓN DE LIMPIEZA TOTAL (BOTÓN PAPELERA) ---
+    // --- FUNCIÓN DE LIMPIEZA TOTAL ---
     window.emergencyReset = (e) => {
         if(e) e.stopPropagation();
         if(confirm("⚠️ ¿Restablecer aplicación?\nEsto borrará el historial local para corregir el error.")) {
@@ -348,12 +348,12 @@
                 const aData = String(correction || "Respuesta vacía");
                 const finalUser = String(currentUser ? currentUser.email : "Anónimo");
                 await setDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayUnion({ q: qData, a: aData, user: finalUser, date: new Date().toISOString() }) }, { merge: true });
+                
                 const sendingEl = document.getElementById(sendingMsgId);
                 if(sendingEl) sendingEl.querySelector('.msg-bubble').innerHTML = `¡Gracias! Respuesta guardada.`;
                 
-                // CORRECCIÓN V61: REINICIAR BOTONES VISUALMENTE
-                const activeButtons = document.querySelectorAll('.feedback-btn.active-teach');
-                activeButtons.forEach(b => {
+                // CORRECCIÓN V62: REINICIO VISUAL DEL BOTÓN
+                document.querySelectorAll('.feedback-btn.active-teach').forEach(b => {
                     b.classList.remove('active-teach');
                     b.innerHTML = '<i class="fas fa-graduation-cap"></i> Enseñar';
                 });
@@ -584,14 +584,73 @@
         content.innerHTML = reviewHTML + missingHTML;
     }
 
+    // --- REPARADOR AUTOMÁTICO DE HISTORIAL (SELF-HEALING) ---
     function renderLocalHistory() {
-        const key = getLocalKey(); let chats = []; try { chats = JSON.parse(localStorage.getItem(key)); if (!Array.isArray(chats)) throw new Error("Invalid format"); } catch(e) { console.warn("Limpiando historial corrupto..."); localStorage.removeItem(key); localStorage.removeItem('alexia_last_chat_id'); chats = []; }
-        const pc = document.getElementById('pinned-container'); const hc = document.getElementById('history-container'); pc.innerHTML = ""; hc.innerHTML = ""; let hasPinned = false;
-        if(chats.length === 0) { hc.innerHTML = `<div style="text-align:center; padding:20px; color:#555; font-size:0.85rem;">Historial vacío</div>`; } else { chats.forEach(chat => { const active = (chat.id === currentChatId) ? 'active' : ''; const title = chat.title || "Chat sin título"; const pinClass = chat.isPinned ? 'pinned' : ''; const html = `<div class="chat-item ${active}" onclick="loadLocalChat('${chat.id}')"><div class="chat-title"><i class="far fa-comment-alt" style="opacity:0.7; margin-right:8px;"></i>${title}</div><button class="pin-btn ${pinClass}" onclick="togglePinLocal(event, '${chat.id}')"><i class="fas fa-thumbtack"></i></button></div>`; if (chat.isPinned) { pc.innerHTML += html; hasPinned = true; } else hc.innerHTML += html; }); } document.getElementById('pinned-section').style.display = hasPinned ? 'block' : 'none';
+        const key = getLocalKey(); 
+        let chats = [];
+        try {
+            chats = JSON.parse(localStorage.getItem(key));
+            if (!Array.isArray(chats)) throw new Error("Invalid format");
+        } catch(e) {
+            console.warn("Historial corrupto detectado. Limpiando...");
+            localStorage.removeItem(key); // Borrar historial dañado
+            localStorage.removeItem('alexia_last_chat_id'); // Borrar estado anterior
+            chats = [];
+        }
+
+        const pc = document.getElementById('pinned-container'); const hc = document.getElementById('history-container');
+        pc.innerHTML = ""; hc.innerHTML = ""; let hasPinned = false;
+        
+        if(chats.length === 0) {
+            hc.innerHTML = `<div style="text-align:center; padding:20px; color:#555; font-size:0.85rem;">Historial vacío</div>`;
+        } else {
+            chats.forEach(chat => {
+                const active = (chat.id === currentChatId) ? 'active' : ''; 
+                // Protección extra contra objetos vacíos
+                const title = chat.title || "Chat sin título";
+                const pinClass = chat.isPinned ? 'pinned' : '';
+                const html = `<div class="chat-item ${active}" onclick="loadLocalChat('${chat.id}')"><div class="chat-title"><i class="far fa-comment-alt" style="opacity:0.7; margin-right:8px;"></i>${title}</div><button class="pin-btn ${pinClass}" onclick="togglePinLocal(event, '${chat.id}')"><i class="fas fa-thumbtack"></i></button></div>`;
+                if (chat.isPinned) { pc.innerHTML += html; hasPinned = true; } else hc.innerHTML += html;
+            });
+        }
+        document.getElementById('pinned-section').style.display = hasPinned ? 'block' : 'none';
     }
 
     function saveLocalChat(uMsg, aiMsg) { const key = getLocalKey(); let chats = []; try { chats = JSON.parse(localStorage.getItem(key)) || []; } catch(e){ chats = []; } if (!currentChatId) { currentChatId = Date.now().toString(); chats.unshift({ id: currentChatId, title: uMsg.substring(0, 25) + "...", timestamp: Date.now(), isPinned: false, messages: [{r:'user', t:uMsg}, {r:'ai', t:aiMsg}] }); } else { const idx = chats.findIndex(c => c.id === currentChatId); if (idx > -1) { chats[idx].messages.push({r:'user', t:uMsg}, {r:'ai', t:aiMsg}); chats[idx].timestamp = Date.now(); } } localStorage.setItem(key, JSON.stringify(chats)); localStorage.setItem('alexia_last_chat_id', currentChatId); renderLocalHistory(); }
-    function getLocalKey() { const uid = currentUser ? currentUser.uid : 'guest'; return `alexia_chats_${uid}`; }
+    
+    function getLocalKey() { 
+        const uid = currentUser ? currentUser.uid : 'guest';
+        return `alexia_chats_${uid}`; 
+    }
+
+    // --- FUNCIÓN SAFE LOAD PARA ACTUALIZAR UI ---
+    function updateUserUI(u) {
+        // Obtenemos elementos con seguridad
+        const uName = document.getElementById('u-name');
+        const uRole = document.getElementById('u-role');
+        const uAvatar = document.getElementById('u-avatar');
+        const btnLogout = document.getElementById('btn-logout');
+        const btnLogin = document.getElementById('top-login-btn');
+        const adminBtn = document.getElementById('admin-menu-container');
+
+        if (!uName || !uRole || !uAvatar) return;
+
+        if(u) {
+            uName.innerText = u.name;
+            uRole.innerText = u.role === 'admin' ? 'Admin' : 'Usuario';
+            uAvatar.innerHTML = u.name[0].toUpperCase();
+            btnLogout.style.display = 'block';
+            if(btnLogin) btnLogin.style.display = 'none';
+            if(adminBtn) adminBtn.style.display = (u.role === 'admin') ? 'block' : 'none';
+        } else {
+            uName.innerText = "Invitado";
+            uRole.innerText = "Clic para entrar";
+            uAvatar.innerHTML = `<i class="fas fa-user"></i>`;
+            btnLogout.style.display = 'none';
+            if(btnLogin) btnLogin.style.display = 'block';
+            if(adminBtn) adminBtn.style.display = 'none';
+        }
+    }
 
     document.getElementById('chat-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
 </script>
