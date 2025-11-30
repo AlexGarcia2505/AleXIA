@@ -753,5 +753,255 @@
 
     document.getElementById('chat-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
 </script>
+
+<!-- BEGIN: AleXIA - Improvements injected -->
+<script>
+(function(){
+    console.log("AleXIA patch loaded: enhancements active.");
+
+    // --- User name detection & persistent memory ---
+    function saveUserName(name) {
+        if(!name) return;
+        name = name.trim();
+        localStorage.setItem('alexia_user_name', name);
+        if(window.currentUser && window.currentUser.email && window.db) {
+            try {
+                // best-effort: store in Firebase user doc if available
+                const uid = window.currentUser.uid;
+                if(uid) {
+                    const uref = doc(window.db, "users", uid);
+                    // non-blocking update
+                    updateDoc(uref, { displayName: name }).catch(()=>{/*ignore*/});
+                }
+            } catch(e) {}
+        }
+    }
+    function getUserName() { return localStorage.getItem('alexia_user_name') || (window.currentUser && window.currentUser.name) || null; }
+
+    // Listen for explicit phrases telling the bot the user's name
+    const namePatterns = [/^(me llamo|mi nombre es|soy|soy llamado|llamame)\s+(.{2,50})/i, /mi nombre\s+es\s+(.{2,50})/i];
+    const greetingPatterns = ['hola', 'buenas', 'buenos dias', 'buenas tardes', 'buenas noches'];
+
+    const original_send = window.sendMessage;
+    window.sendMessage = async function() {
+        const input = document.getElementById('chat-input');
+        const text = input.value.trim();
+        // quick name detection
+        try {
+            for(const p of namePatterns) {
+                const m = text.match(p);
+                if(m && m[2]) {
+                    const nm = m[2].replace(/[.!?]/g,'').trim();
+                    saveUserName(nm);
+                    input.value = '';
+                    appendMsg('user', text);
+                    await finishResponse(text, `Mucho gusto, ${nm}. Guardé tu nombre para futuras conversaciones.`, false, false);
+                    return;
+                }
+            }
+        } catch(e){}
+        return original_send();
+    };
+
+    // --- Trigram similarity for fuzzy matching ---
+    function trigrams(s) {
+        s = s.toLowerCase().replace(/[^a-z0-9áéíóúñü ]+/g,' ').replace(/\s+/g,' ');
+        const t = '  ' + s + '  ';
+        const res = new Set();
+        for(let i=0;i<t.length-2;i++){ res.add(t.slice(i,i+3)); }
+        return res;
+    }
+    function trigramSimilarity(a,b) {
+        if(!a || !b) return 0;
+        const A = trigrams(a), B = trigrams(b);
+        const inter = [...A].filter(x=>B.has(x)).length;
+        const union = new Set([...A,...B]).size;
+        return union===0?0:inter/union;
+    }
+
+    // Override matching logic to use fuzzy trigram match
+    const orig_processSpecificIntent = window.processSpecificIntent;
+    const orig_runWordDecomposition = window.runWordDecomposition;
+
+    window.findBestMemoryMatch = function(interpretedText) {
+        let best=null; let bestScore=0;
+        try {
+            (window.brain && window.brain.memory || []).forEach(mem=>{
+                const keys = mem.inputs || [];
+                keys.forEach(k=>{
+                    const score = trigramSimilarity(k, interpretedText);
+                    if(score>bestScore){ bestScore=score; best=mem; }
+                });
+            });
+        } catch(e){}
+        return {best, score: bestScore};
+    };
+
+    // patch sendMessage's memory matching part by listening to finishResponse call - simpler approach:
+    const orig_finish = window.finishResponse;
+    window.finishResponse = async function(userTxt, aiTxt, shouldSuggest, showFeedback) {
+        // include user's name in responses when suitable
+        const name = getUserName();
+        if(name && typeof aiTxt === 'string' && Math.random() < 0.6) { // sometimes use name
+            aiTxt = aiTxt + `<br><small style="color:#aaa;"> — ${name}</small>`;
+        }
+        return orig_finish(userTxt, aiTxt, shouldSuggest, showFeedback);
+    };
+
+    // Patch runWordDecomposition to try local dict -> free dictionary API -> wikipedia
+    window.runWordDecomposition = async function(interpretedText, words) {
+        let synthesis = [];
+        for (let word of words) {
+            let definition = null; let source = "";
+            try {
+                const dictSnap = await getDoc(doc(window.db, "dictionary", word));
+                if (dictSnap && dictSnap.exists()) { definition = dictSnap.data().def; source = "Memoria"; }
+            } catch(e){}
+            if(!definition) {
+                // Try Free Dictionary API (Wiktionary-based) - supports many languages incl. Spanish via 'es' path in some services
+                try {
+                    // Freedictionaryapi.com endpoint example: https://api.dictionaryapi.dev/api/v2/entries/es/<word>
+                    const d1 = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/es/${encodeURIComponent(word)}`);
+                    if(d1 && d1.ok) {
+                        const jd = await d1.json();
+                        if(Array.isArray(jd) && jd.length>0) {
+                            const entry = jd[0];
+                            let defs = [];
+                            if(entry.meanings) {
+                                entry.meanings.forEach(m=> {
+                                    (m.definitions||[]).slice(0,2).forEach(d=> defs.push(d.definition));
+                                });
+                            }
+                            if(defs.length>0) { definition = `<p>${defs.slice(0,3).join('<br>')}</p>`; source="Wiktionary"; }
+                        }
+                    }
+                } catch(e){/*ignore*/}
+            }
+            if(!definition) {
+                // Try FreeDictionaryAPI (alternate) which provides Spanish dataset
+                try {
+                    const d2 = await fetch(`https://api.freedictionaryapi.com/api/v2/entries/es/${encodeURIComponent(word)}`);
+                    if(d2 && d2.ok) {
+                        const jd = await d2.json();
+                        if(Array.isArray(jd) && jd.length>0) {
+                            const entry = jd[0];
+                            let defs = [];
+                            if(entry.meanings) {
+                                entry.meanings.forEach(m=> (m.definitions||[]).slice(0,2).forEach(d=> defs.push(d.definition)));
+                            }
+                            if(defs.length>0) { definition = `<p>${defs.slice(0,3).join('<br>')}</p>`; source="FreeDic"; }
+                        }
+                    }
+                } catch(e){/*ignore*/}
+            }
+            if(!definition) {
+                // Fallback to Wikipedia (existing function) - reuse existing fetchExternalData
+                try {
+                    const extData = await fetchExternalData(word, 'Wikipedia/WEB');
+                    if(extData) { definition = extData.def; source = "Wikipedia"; }
+                } catch(e){}
+            }
+            if(definition) synthesis.push({ word, def: definition, src: source });
+        }
+        return synthesis;
+    };
+
+    // --- Bible support: quick helper to fetch verses (try multiple free endpoints) ---
+    window.fetchBibleVerse = async function(query) {
+        // query examples: 'Juan 3:16' or 'John 3:16' - prefer Spanish translation param 'rv1960' or 'RVR1960' if supported
+        try {
+            // 1) Try bible-api.com with translation param 'rv' or 'rv1960'
+            try {
+                const resp = await fetch(`https://bible-api.com/${encodeURIComponent(query)}?translation=rv1960`);
+                if(resp && resp.ok) {
+                    const j = await resp.json();
+                    if(j.text) return { def: `<p><b>${j.reference}:</b> ${j.text.replace(/\n/g,'<br>')}</p>`, src:'bible-api.com', url:`https://bible-api.com/${encodeURIComponent(query)}` };
+                }
+            } catch(e){}
+            // 2) Try Free Use Bible API (helloao) - check available translations then fetch chapter
+            try {
+                const available = await fetch('https://bible.helloao.org/api/available_translations.json');
+                if(available && available.ok) {
+                    const j = await available.json();
+                    // try to pick a Spanish translation ID if present
+                    let trans = null;
+                    if(j && j.translations) {
+                        trans = j.translations.find(t=>/spanish|reina|rv/i.test(t.name));
+                        if(!trans) trans = j.translations[0];
+                        if(trans) {
+                            // attempt to split book/chapter: 'Juan 3:16' -> bookId 'john' maybe; fallback to bible-api earlier
+                            // Simpler: call bible.helloao.org with same path pattern if supported:
+                            const path = `https://bible.helloao.org/api/${trans.id}/${encodeURIComponent(query)}.json`;
+                            const r2 = await fetch(path);
+                            if(r2 && r2.ok) {
+                                const j2 = await r2.json();
+                                if(j2 && (j2.chapter || j2.verses)) {
+                                    let text = JSON.stringify(j2).slice(0,2000);
+                                    return { def:`<pre style="white-space:pre-wrap; font-size:0.95rem;">${text}</pre>`, src:'helloao', url:path };
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch(e){}
+        } catch(e){}
+        return null;
+    };
+
+    // Add simple intent for bible queries into checkSpecificIntent
+    const orig_checkSpecificIntent = window.checkSpecificIntent;
+    window.checkSpecificIntent = function(originalText){
+        const base = orig_checkSpecificIntent ? orig_checkSpecificIntent(originalText) : null;
+        if(base) return base;
+        // detect patterns like "leer Juan 3:16" or "versiculo Juan 3:16" or "biblia Juan 3:16"
+        const nt = (originalText||'').toLowerCase();
+        const m = nt.match(/(?:versiculo|versículo|biblia|leer|cita)\s+([a-zA-Zñáéíóú0-9\s:.]+)/i);
+        if(m && m[1]) return { action: 'bible', source: 'Bible/WEB', query: m[1].trim() };
+        return null;
+    };
+
+    // Integrate bible intent into processSpecificIntent
+    const orig_processSpecificIntent2 = window.processSpecificIntent;
+    window.processSpecificIntent = async function(query, source) {
+        if(source && source.includes('Bible')) {
+            const res = await window.fetchBibleVerse(query);
+            if(res) { await finishResponse(query, `<div class="rich-content"><strong>${query} — Biblia:</strong><br>${res.def}</div><div class="rich-source"><a href="${res.url}" target="_blank"><i class="fas fa-external-link-alt"></i> Fuente</a></div>`, true, true); return; }
+            else { await finishResponse(query, `No pude obtener ese pasaje de la Biblia.`, true, true); return; }
+        }
+        // fallback to original implementation
+        if(orig_processSpecificIntent2) return orig_processSpecificIntent2(query, source);
+    };
+
+    // --- Suggestions focus: keep the existing "foco" (idea-btn) but allow external focus presets ---
+    window.setSuggestionsFocus = function(focusLabel, queriesArray) {
+        // prepares suggestions content quickly
+        const content = document.getElementById('suggestions-content');
+        activeSuggestions = queriesArray.map(q=>({ label: q.label, query: q.query, source: q.source || 'Wikipedia/WEB' }));
+        localStorage.setItem('alexia_active_suggestions', JSON.stringify(activeSuggestions));
+        content.innerHTML = "";
+        activeSuggestions.forEach(s => content.innerHTML += `<div class="sug-item" onclick="window.useSuggestion('${s.query}')">${s.label}</div>`);
+        document.getElementById('idea-btn').classList.add('has-ideas');
+    };
+
+    // expose utilities for debugging
+    window.alexia_tools = {
+        saveUserName, getUserName, trigramSimilarity, findBestMemoryMatch
+    };
+
+    // show stored name in UI header if available
+    setTimeout(()=> {
+        const nm = getUserName();
+        if(nm) {
+            try {
+                document.getElementById('header-avatar').innerText = nm[0].toUpperCase();
+                document.getElementById('dd-name').innerText = nm;
+            } catch(e){}
+        }
+    }, 1200);
+
+})();
+</script>
+<!-- END: AleXIA - Improvements injected -->
+
 </body>
 </html>
