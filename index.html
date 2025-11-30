@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AleXIA V1.2</title>
+    <title>AleXIA V1.5 (Context Aware)</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -175,7 +175,7 @@
 <div class="main-content">
     <div class="top-bar">
         <button class="menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-        <span style="font-weight:500;">AleXIA V1.2</span>
+        <span style="font-weight:500;">AleXIA V1.5</span>
         <div style="flex:1"></div>
         
         <button id="top-login-btn" onclick="openLogin()" class="btn-login">Entrar</button>
@@ -276,6 +276,9 @@
     let currentUser = null;
     let brain = { memory: [], reviewQueue: [], missingLog: [] };
     
+    // VARIABLE GLOBAL PARA EL SISTEMA DE REBOTE (A/B/C)
+    let lastSearchTerm = null;
+
     // --- CARGAR CEREBRO DE TOXICIDAD ---
     let toxicityModel = null;
     if(window.toxicity) {
@@ -300,7 +303,6 @@
 
     const slangMap = { "andas": "estas", "onda": "pasa", "hubo": "paso", "pex": "pasa", "pedo": "problema", "chido": "bueno", "padre": "bueno", "gwey": "amigo", "wey": "amigo", "camara": "adios", "simon": "si", "nelson": "no", "chale": "que mal", "neto": "verdad", "neta": "verdad", "jalo": "acepto", "sobres": "esta bien" };
     
-    // NOTA: No usamos stopWords en el "Escaneo de Cebolla", solo en el último recurso
     const stopWords = new Set([
         'el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 
         'lo', 'al', 'del', 'y', 'o', 'a', 'e', 'u', 'de', 'en', 'con', 
@@ -367,8 +369,6 @@
     function resetSpeakerIcons() { document.querySelectorAll('.tts-btn').forEach(b => { b.classList.remove('speaking'); b.innerHTML = '<i class="fas fa-volume-up"></i>'; }); }
 
     // --- FUNCIONES DE LIMPIEZA Y FUZZY SEARCH ---
-    
-    // Algoritmo Levenshtein para "distancia" entre palabras (Corrector)
     function levenshteinDistance(a, b) {
         const matrix = [];
         for (let i = 0; i <= b.length; i++) matrix[i] = [i];
@@ -378,20 +378,14 @@
                 if (b.charAt(i - 1) === a.charAt(j - 1)) {
                     matrix[i][j] = matrix[i - 1][j - 1];
                 } else {
-                    matrix[i][j] = Math.min(
-                        matrix[i - 1][j - 1] + 1, // sustitución
-                        Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1) // inserción/borrado
-                    );
+                    matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1));
                 }
             }
         }
         return matrix[b.length][a.length];
     }
 
-    function cleanString(str) { 
-        return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim(); 
-    }
-    
+    function cleanString(str) { return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim(); }
     function normalize(str) { return cleanString(str).replace(/[¿?¡!.,]/g, ""); }
     function processSynonyms(text) { return text.split(" ").map(w => { const cw = normalize(w); return slangMap[cw] || cw; }).join(" "); }
     function removeDuplicates(text) { const words = text.split(/\s+/); return [...new Set(words)].join(" "); }
@@ -400,32 +394,24 @@
     async function getConnectorPhrase(word) {
         if(!word) return null;
         try {
-            const cleanId = cleanString(word); // Usamos cleanString para buscar IDs
+            const cleanId = cleanString(word);
             const docRef = doc(db, "preguntaspalbraclave", cleanId);
             const snap = await getDoc(docRef);
-            if (snap.exists()) {
-                return snap.data().def;
-            }
+            if (snap.exists()) { return snap.data().def; }
         } catch (e) { console.error("Error buscando conector:", e); }
         return null;
     }
     
-    // Busca en memoria RAM con tolerancia a fallos ortográficos
     function findInMemoryFuzzy(phrase) {
         if(!brain || !brain.memory) return null;
         const target = cleanString(phrase);
-        
-        // 1. Búsqueda exacta primero (Rápida)
         const exact = brain.memory.find(mem => mem.inputs.some(inp => cleanString(inp) === target));
         if(exact) return { def: exact.output, src: "Memoria", extra: { type: "Entrenamiento", pais: "Local" } };
-
-        // 2. Búsqueda borrosa (Solo si no es muy corta)
         if(target.length > 4) {
              const fuzzy = brain.memory.find(mem => mem.inputs.some(inp => {
                  const cln = cleanString(inp);
-                 // Si la distancia es pequeña (ej: 1 o 2 letras de error)
                  const dist = levenshteinDistance(target, cln);
-                 return dist <= 2; // Tolerancia de 2 errores
+                 return dist <= 2; 
              }));
              if(fuzzy) return { def: fuzzy.output, src: "Memoria", extra: { type: "Entrenamiento (Corregido)", pais: "Local" } };
         }
@@ -450,52 +436,37 @@
         return null;
     }
 
-    // --- FUNCIÓN DE BÚSQUEDA INTELIGENTE CON PRIORIDADES DINÁMICAS ---
+    // --- BÚSQUEDA INTELIGENTE CON PRIORIDADES ---
     async function searchInAllSources(phrase) {
         const cleanPhrase = cleanString(phrase);
         const wordCount = phrase.trim().split(/\s+/).length;
         if(!cleanPhrase) return null;
 
-        // CASO A: FRASE LARGA (>= 3 palabras) -> WIKI PRIMERO
+        // Si es largo -> Wiki primero
         if (wordCount >= 3) {
-            // 1. Wikipedia (Maneja redirects automáticos)
             const wikiData = await fetchExternalData(phrase, 'Wikipedia/WEB');
             if(wikiData) return wikiData;
-
-            // 2. Memoria Local (Con Fuzzy Search)
             const memData = findInMemoryFuzzy(phrase);
             if(memData) return memData;
-        } 
-        
-        // CASO B: FRASE CORTA (1-2 palabras) -> DICCIONARIO PRIMERO
-        else {
-            // 1. Diccionario Personal (Firebase)
+        } else {
+            // Si es corto -> Diccionario primero
             try {
                 const docRef = doc(db, "dictionary", cleanPhrase);
                 const snap = await getDoc(docRef);
                 if(snap.exists()) return { def: snap.data().def, src: "Memoria", extra: snap.data() };
             } catch(e) {}
-
-            // 2. Memoria Local (Con Fuzzy Search)
             const memData = findInMemoryFuzzy(phrase);
             if(memData) return memData;
-
-            // 3. Palabras Clave
             try {
                 const docRef = doc(db, "preguntaspalbraclave", cleanPhrase);
                 const snap = await getDoc(docRef);
                 if(snap.exists()) return { def: snap.data().def, src: "Memoria", extra: { type: "Palabra Clave" } };
             } catch(e) {}
-            
-            // 4. Diccionario Global
             const apiData = await fetchExternalData(phrase, 'DiccionarioAPI');
             if (apiData) return apiData;
-
-            // 5. Wikipedia (Fallback)
             const wikiData = await fetchExternalData(phrase, 'Wikipedia/WEB');
             if(wikiData) return wikiData;
         }
-
         return null;
     }
 
@@ -504,6 +475,23 @@
         const input = document.getElementById('chat-input');
         const originalText = input.value.trim();
         if(!originalText) return;
+
+        // --- MANEJO DE REBOTE (MENÚ A/B/C) ---
+        const normInput = cleanString(originalText);
+        if (lastSearchTerm) {
+            if (normInput === 'a') {
+                input.value = ''; appendMsg('user', "A (Diccionario)");
+                await processSpecificIntent(lastSearchTerm, 'DiccionarioAPI'); return;
+            }
+            if (normInput === 'b') {
+                input.value = ''; appendMsg('user', "B (Wikipedia)");
+                await processSpecificIntent(lastSearchTerm, 'Wikipedia/WEB'); return;
+            }
+            if (normInput === 'c') {
+                input.value = ''; appendMsg('user', "C (Libros)");
+                await processSpecificIntent(lastSearchTerm, 'Biblioteca/WEB'); return;
+            }
+        }
 
         // --- FILTRO DE TOXICIDAD ---
         if (typeof toxicityModel !== 'undefined' && toxicityModel) {
@@ -514,28 +502,19 @@
                 const translatedText = await translateText(originalText, "es|en");
                 const predictions = await toxicityModel.classify([translatedText]);
                 const isToxic = predictions.some(p => p.results[0].match === true);
-
                 if (isToxic) {
                     input.value = ''; appendMsg('user', originalText);
-                    const warnings = [
-                        "⚠️ Detecto lenguaje ofensivo. Por favor, mantengamos el respeto.",
-                        "🚫 Mis protocolos de seguridad me impiden procesar ese mensaje.",
-                        "Oye, no es necesario ser grosero. Hablemos bien. 🤝",
-                        "No encuentro la necesidad de ser hostil. ¿Probamos de nuevo? 🔄"
-                    ];
+                    const warnings = ["⚠️ Detecto lenguaje ofensivo. Por favor, mantengamos el respeto.", "🚫 Mis protocolos de seguridad me impiden procesar ese mensaje.", "Oye, no es necesario ser grosero. Hablemos bien. 🤝", "No encuentro la necesidad de ser hostil. ¿Probamos de nuevo? 🔄"];
                     const randomWarning = warnings[Math.floor(Math.random() * warnings.length)];
                     appendMsg('ai', `<span style="color:#ff897d;">${randomWarning}</span>`, false, 'warn-'+Date.now());
-                    btnSend.innerHTML = oldIcon;
-                    return; 
+                    btnSend.innerHTML = oldIcon; return; 
                 }
             } catch (err) { console.error("Error seguridad:", err); }
             btnSend.innerHTML = oldIcon;
         }
-        // -----------------------------
 
         document.getElementById('idea-btn').classList.remove('has-ideas');
 
-        // MODO ENSEÑANZA
         if (chatState.mode === 'waiting_correction') {
             const correction = originalText;
             input.value = ''; appendMsg('user', originalText);
@@ -545,9 +524,7 @@
                 const qData = String(chatState.lastQuery || "Pregunta no detectada");
                 const aData = String(correction || "Respuesta vacía");
                 const finalUser = String(currentUser ? currentUser.email : "Anónimo");
-                await setDoc(doc(db, "alexia_db", "main_brain"), { 
-                    reviewQueue: arrayUnion({ q: qData, a: aData, user: finalUser, date: new Date().toISOString() }) 
-                }, { merge: true });
+                await setDoc(doc(db, "alexia_db", "main_brain"), { reviewQueue: arrayUnion({ q: qData, a: aData, user: finalUser, date: new Date().toISOString() }) }, { merge: true });
                 const sendingEl = document.getElementById(sendingMsgId);
                 if(sendingEl) {
                     const respuestas = ["¡Gracias! Respuesta guardada. 💾", "¡Entendido! Pronto aprenderé esto. 🧠✨"];
@@ -561,22 +538,20 @@
             chatState = { mode: 'normal' }; return;
         }
         
-        // IDENTIDAD
-        let normInput = removeDuplicates(normalize(originalText));
-        if (normInput.match(/quien (te )?(creo|hizo)|quien eres|que eres|como te llamas/i)) {
+        let normInputFull = removeDuplicates(normalize(originalText));
+        if (normInputFull.match(/quien (te )?(creo|hizo)|quien eres|que eres|como te llamas/i)) {
             input.value = ''; appendMsg('user', originalText);
             await finishResponse(originalText, "Soy <b>AleXIA</b>, creada por <b>Alexis García</b>.<br><br><small>Extraído de mi memoria</small>", false, false); return;
         }
 
-        const conversationalReply = checkConversational(normInput);
+        const conversationalReply = checkConversational(normInputFull);
         if (conversationalReply) {
             input.value = ''; appendMsg('user', originalText);
             await finishResponse(originalText, conversationalReply + "<br><br><small>Extraído de mi memoria</small>", false, false); return;
         }
         
-        // SUGERENCIAS ABC
-        const flexibleMatch = normInput.match(/\b([abc])\b/i);
-        if (flexibleMatch && normInput.length < 30) {
+        const flexibleMatch = normInputFull.match(/\b([abc])\b/i);
+        if (flexibleMatch && normInputFull.length < 30) {
             const idx = flexibleMatch[1].toUpperCase().charCodeAt(0) - 65;
             if (activeSuggestions[idx]) {
                 const suggestion = activeSuggestions[idx];
@@ -585,62 +560,55 @@
             }
         }
         
-        // --- ANIMACIÓN ---
         input.value = ''; appendMsg('user', originalText); 
         const loadingId = 'loading-' + Date.now(); 
         appendMsg('ai', `<i class="fas fa-sparkles fa-pulse" style="color:var(--accent)"></i> <span id="think-${loadingId}">Analizando...</span>`, false, loadingId);
         
-        const loadingSteps = ["Escaneando frase completa...", "Verificando memoria...", "Consultando web..."];
+        const loadingSteps = ["Entendiendo intención...", "Buscando en base global...", "Sintetizando..."];
         let stepIdx = 0;
         const loaderInterval = setInterval(() => {
             const el = document.getElementById(`think-${loadingId}`);
             if(el) { el.innerText = loadingSteps[stepIdx % loadingSteps.length]; stepIdx++; }
         }, 800);
-        // -----------------
 
         await new Promise(r => setTimeout(r, 800));
 
-        // INTENCIONES ESPECÍFICAS
+        // INTENCIONES ESPECÍFICAS (CON TRADUCTOR Y DEFINICIÓN)
         const specificIntent = checkSpecificIntent(originalText);
         if (specificIntent) { 
             clearInterval(loaderInterval); 
             const loadEl = document.getElementById(loadingId); if(loadEl) loadEl.remove();
+            // Guardamos término para el rebote
+            lastSearchTerm = specificIntent.query;
             await processSpecificIntent(specificIntent.query, specificIntent.source); wasVoiceInput = false; return; 
         }
 
         // =================================================================================
-        // 🔥 ESCANEO DE CEBOLLA CON PEGAMENTO INTELIGENTE
+        // 🔥 ESCANEO DE CEBOLLA
         // =================================================================================
-        const interpretedText = processSynonyms(normInput); 
+        const interpretedText = processSynonyms(normInputFull); 
         let phraseWords = originalText.trim().split(/\s+/); 
         let foundFullConcept = null;
-        let skippedConnector = ""; // Para guardar lo que nos saltamos (ej: "Quién fue")
+        let skippedConnector = "";
 
-        // Bucle: Buscar frase entera -> Quitar 1era palabra -> Buscar frase entera...
         for (let i = 0; i < phraseWords.length; i++) {
             let subPhrase = phraseWords.slice(i).join(" ");
-            if (subPhrase.length < 3 && i < phraseWords.length -1) continue; // Evitar buscar "de" o "el" si no es la última palabra
+            if (subPhrase.length < 3 && i < phraseWords.length -1) continue; 
 
-            // Busca con las NUEVAS prioridades dinámicas
             let result = await searchInAllSources(subPhrase);
             if (result) {
                 foundFullConcept = result;
                 foundFullConcept.word = subPhrase; 
-                
-                // Si encontramos algo, recuperamos lo que saltamos (el conector)
-                if (i > 0) {
-                    skippedConnector = phraseWords.slice(0, i).join(" ");
-                }
-                break; // ¡Alto! Encontrado.
+                lastSearchTerm = subPhrase; // Guardar para rebote
+                if (i > 0) skippedConnector = phraseWords.slice(0, i).join(" ");
+                break; 
             }
         }
 
-        // SI ENCONTRAMOS LA FRASE COMPLETA (O PARCIAL)
         if (foundFullConcept) {
              clearInterval(loaderInterval);
              const loadEl = document.getElementById(loadingId); if(loadEl) loadEl.remove();
              
-             // UNIR CONECTOR + DEFINICIÓN
              let connectorDef = "";
              if (skippedConnector) {
                  const conDef = await getConnectorPhrase(skippedConnector); 
@@ -649,42 +617,34 @@
 
              let aiResponse = "";
              if (connectorDef) {
-                 // Respuesta Fluida: "Conector... Definición"
                  let cleanDef = foundFullConcept.def.replace(/<[^>]*>/g, '').trim();
                  aiResponse = `${connectorDef}${cleanDef}`;
              } else {
-                 // Respuesta Estándar
                  aiResponse = `<strong>Sobre "${foundFullConcept.word}":</strong><br>${foundFullConcept.def}`;
              }
 
              aiResponse += formatExtras(foundFullConcept.extra);
              
              let sources = "mi entrenamiento";
-             if (foundFullConcept.src === "Wiki" || foundFullConcept.src.includes("Wiki")) sources = "Wikipedia";
+             if (foundFullConcept.src.includes("Wiki")) sources = "Wikipedia";
              if (foundFullConcept.src === "DiccionarioAPI") sources = "Diccionario Global";
              if (foundFullConcept.src === "Memoria") sources = "mi diccionario personal";
              if (connectorDef) sources += " y mis palabras clave";
 
              aiResponse += `<br><br><div style="font-size:0.75rem; color:#888; border-top:1px solid #444; padding-top:5px;"><em>Extraído de ${sources}</em></div>`;
-             
-             // Guardar log
+             // AGREGAR MENU DE REBOTE
+             aiResponse += `<br><div style="font-size:0.8rem; color:#aaa; margin-top:10px;">¿No es lo que buscabas? Responde: <b>A</b> (Diccionario), <b>B</b> (Wikipedia), <b>C</b> (Libros)</div>`;
+
              if (db) {
-                setDoc(doc(db, "alexia_db", "main_brain"), { 
-                    missingLog: arrayUnion({ q: truncateLog(originalText), a: truncateLog(aiResponse.replace(/<[^>]*>/g, '')), user: currentUser?currentUser.email:"Invitado", date: new Date().toISOString() }) 
-                }, { merge: true });
+                setDoc(doc(db, "alexia_db", "main_brain"), { missingLog: arrayUnion({ q: truncateLog(originalText), a: truncateLog(aiResponse.replace(/<[^>]*>/g, '')), user: currentUser?currentUser.email:"Invitado", date: new Date().toISOString() }) }, { merge: true });
              }
 
              await finishResponse(originalText, aiResponse, true, true);
              wasVoiceInput = false;
-             return; // TERMINAMOS AQUÍ
+             return; 
         }
 
-        // =================================================================================
-        // SI NO ENCONTRAMOS NADA COMPLETO -> USAMOS EL MÉTODO ANTIGUO (PALABRA X PALABRA)
-        // =================================================================================
         const words = interpretedText.split(/\s+/).filter(w => !stopWords.has(w) && w.length > 2);
-        
-        // Ahora `runWordDecomposition` usa la misma lógica
         const synthesis = await runWordDecomposition(interpretedText, words);
         
         clearInterval(loaderInterval);
@@ -700,7 +660,7 @@
                 synthesis.concepts.forEach(c => {
                     if (c.src === "Memoria") sources.add("mi diccionario personal");
                     if (c.src === "DiccionarioAPI") sources.add("Diccionario Global");
-                    if (c.src === "Wiki" || c.src.includes("Wikipedia")) sources.add("Wikipedia");
+                    if (c.src.includes("Wikipedia")) sources.add("Wikipedia");
                 });
             }
             if (sources.size === 0) return "";
@@ -732,8 +692,7 @@
              if (synthesis.concepts.length === 1 && item.src !== "Memoria") {
                  aiResponse = `Encontré esto sobre <strong>${item.word}</strong>:<br>${item.def}`;
              } else {
-                 aiResponse = `<strong>Analizando conceptos:</strong><br>` + 
-                     synthesis.concepts.map(it => `- <b>${it.word}:</b> ${it.def}${formatExtras(it.extra)}`).join('<br>');
+                 aiResponse = `<strong>Analizando conceptos:</strong><br>` + synthesis.concepts.map(it => `- <b>${it.word}:</b> ${it.def}${formatExtras(it.extra)}`).join('<br>');
              }
              const cierres = ["<br><br>¿Te sirve esta información? 🤔", "<br><br>Espero haberte ayudado. ✨", "<br><br>¿Era esto lo que buscabas? 🧐"];
              aiResponse += cierres[Math.floor(Math.random() * cierres.length)];
@@ -746,12 +705,7 @@
             logThis = true;
         }
         else { 
-            const noSeRespuestas = [
-                "Espera 🥺 No logré encontrar información. 🙏 ¿Podrías enseñarme? Soy aprendiz.",
-                "¡Ups! 🤯 Me has atrapado, no sé la respuesta. Pero me encantaría aprenderla.",
-                "Lo siento 😔, busqué en todos lados pero no encontré nada.",
-                "Aún soy pequeña y no sé todo del mundo. 🐣 ¿Me ayudas a crecer enseñándome esto?"
-            ];
+            const noSeRespuestas = ["Espera 🥺 No logré encontrar información. 🙏 ¿Podrías enseñarme? Soy aprendiz.", "¡Ups! 🤯 Me has atrapado, no sé la respuesta. Pero me encantaría aprenderla.", "Lo siento 😔, busqué en todos lados pero no encontré nada.", "Aún soy pequeña y no sé todo del mundo. 🐣 ¿Me ayudas a crecer enseñándome esto?"];
             aiResponse = noSeRespuestas[Math.floor(Math.random() * noSeRespuestas.length)];
             logThis = true; 
         }
@@ -781,6 +735,20 @@
 
     function checkSpecificIntent(originalText) {
         const normText = cleanString(originalText); 
+        
+        // 1. TRADUCCIÓN (NUEVO: PRIORIDAD SUPREMA)
+        if (normText.includes("ingles") || normText.includes("traduc") || normText.includes("como se dice")) {
+            // Limpieza agresiva para sacar la palabra clave
+            let query = originalText.replace(/como se dice|en ingles|en inglés|traduce|traducir|el|la|los|las|un|una/gi, "").trim();
+            return { action: 'execute_search', source: 'DiccionarioAPI', query: query };
+        }
+
+        // 2. DEFINICIÓN ESTRICTA (NUEVO)
+        if (normText.startsWith("define") || normText.includes("significado de") || normText.includes("concepto de")) {
+             let query = originalText.replace(/define|significado de|concepto de|el|la|los|las/gi, "").trim();
+             return { action: 'execute_search', source: 'DiccionarioAPI', query: query };
+        }
+
         let match = normText.match(/(?:clima|tiempo)\s+(?:en|de)\s+(.+)/); if (match) return { action: 'execute_search', source: 'Meteo/WEB', query: match[1] };
         match = normText.match(/(?:libro|obra)\s+(?:de|titulado|sobre)?\s*(.+)/); if (match) return { action: 'execute_search', source: 'Biblioteca/WEB', query: match[1].replace(/^(de|sobre|el|la|los|las)\s+/, '') };
         match = normText.match(/(?:articulo|informacion|biografia)\s+(?:de|sobre|del|de la)\s+(.+)/); if (match) return { action: 'execute_search', source: 'Wikipedia/WEB', query: match[1] };
@@ -792,11 +760,21 @@
         if (source.includes('Biblioteca')) cleanQuery = query.replace(/^libro (de )?/i, '');
         else if (source.includes('Meteo')) cleanQuery = query.replace(/^clima (en )?/i, '');
         else if (source.includes('Wikipedia')) cleanQuery = query.replace(/^articulo (de )?/i, '');
+        
+        // Guardamos para rebote
+        lastSearchTerm = cleanQuery;
+
         const searchData = await fetchExternalData(cleanQuery, source);
         if (searchData) {
-            let aiResponse = `<div class="rich-content"><strong>Sobre "${cleanQuery}":</strong><br><br>${searchData.def}</div><div class="rich-source"><a href="${searchData.url}" target="_blank"><i class="fas fa-external-link-alt"></i> Fuente</a></div>`;
+            let aiResponse = `<div class="rich-content"><strong>Sobre "${cleanQuery}":</strong><br><br>${searchData.def}</div>`;
+            aiResponse += formatExtras(searchData.extra);
+            aiResponse += `<div class="rich-source"><a href="${searchData.url}" target="_blank"><i class="fas fa-external-link-alt"></i> Fuente (${source})</a></div>`;
+            
+            // AGREGAR MENU DE REBOTE
+            aiResponse += `<br><div style="font-size:0.8rem; color:#aaa; margin-top:10px;">¿No es lo que buscabas? Responde: <b>A</b> (Diccionario), <b>B</b> (Wikipedia), <b>C</b> (Libros)</div>`;
+
             await finishResponse(query, aiResponse, true, true); 
-        } else { await finishResponse(query, `No pude conectar con ${source}.`, true, true); }
+        } else { await finishResponse(query, `No pude encontrar "${cleanQuery}" en ${source}.`, true, true); }
     }
 
     async function translateText(text, langPair) {
@@ -809,8 +787,7 @@
     
     async function fetchExternalData(term, forceSource = 'Wikipedia/WEB') {
         const encoded = encodeURIComponent(term);
-        const cleanTerm = cleanString(term); 
-
+        
         if (forceSource === 'Meteo/WEB') {
             try {
                 const geoResp = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encoded}&count=1&language=es&format=json`);
@@ -892,8 +869,6 @@
         for (let word of words) {
             const phrase = await getConnectorPhrase(word);
             if (phrase) { synthesis.connectors.push(phrase); continue; }
-            
-            // Usamos searchInAllSources aquí para respetar la prioridad estricta
             const result = await searchInAllSources(word);
             if(result) {
                 synthesis.concepts.push({ word: word, def: result.def, src: result.src, extra: result.extra });
