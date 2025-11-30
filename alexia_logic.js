@@ -8,20 +8,23 @@ import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPas
 // =========================================================================
 // I. INICIALIZACIÓN DE FIREBASE
 // =========================================================================
+
+// En tu alexia_logic.js (Línea 10, aproximadamente, dentro de la inicialización)
+
 let app, db, auth, provider;
 try {
-    // Usa la configuración expuesta en el HTML
+    // CAMBIO CLAVE: Checamos que la configuración exista
+    if (!window.FIREBASE_CONFIG) {
+        console.error("FIREBASE_CONFIG no encontrado en el window object. La inicialización fallará.");
+        return; // Detiene la inicialización si no hay config
+    }
+    
     app = initializeApp(window.FIREBASE_CONFIG); 
-    db = getFirestore(app);
-    auth = getAuth(app);
-    provider = new GoogleAuthProvider();
-    const dot = document.getElementById('connection-dot');
-    if(dot) { dot.classList.add('online'); dot.classList.remove('offline'); }
+    // ... (el resto del try/catch sigue igual)
+    
 } catch(e) { 
-    console.error("Firebase Init Error:", e);
-    // Si falla, los botones de Firebase no funcionarán, pero la UI sí.
+    // ...
 }
-
 // Variables de Estado
 let currentUser = null;
 let brain = { memory: [], reviewQueue: [], missingLog: [] };
@@ -437,3 +440,4 @@ window.sendMessage = async function() {
 // Iniciar Enter listener
 const inputField = document.getElementById('chat-input');
 if(inputField) inputField.addEventListener('keypress', (e) => { if(e.key === 'Enter') window.sendMessage(); });
+
